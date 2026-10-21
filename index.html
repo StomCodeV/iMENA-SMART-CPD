@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <meta name="theme-color" content="#0ea5e9" />
-  <title>iMENA Smart CPD Attendance</title>
+  <meta name="theme-color" content="#071B33" />
+  <title>iMENA Smart CPD — The Living Ocean</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
   <link rel="apple-touch-icon" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
@@ -20,249 +25,263 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       color: #0f172a;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       min-height: 100vh;
       overflow-x: hidden;
     }
     button { font-family: inherit; cursor: pointer; border: none; background: none; }
-    input, textarea { font-family: inherit; }
 
-    .scene {
+    /* ============ LIVE OCEAN LANDING ============ */
+    .landing-root { position: relative; width: 100%; background: #071B33; }
+    .landing-canvas-fixed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+    #ocean-canvas { display: block; }
+    #droplet-canvas { display: block; z-index: 2; }
+    .landing-scroll { position: relative; z-index: 3; pointer-events: none; }
+    .landing-section {
       position: relative;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 45%, #fae8ff 100%);
-      overflow: hidden;
-      isolation: isolate;
-    }
-    .scene.admin {
-      background: linear-gradient(135deg, #0b1220 0%, #1e1b4b 55%, #312e81 100%);
-      color: #e2e8f0;
-    }
-
-    .aurora-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(90px);
-      opacity: 0.55;
-      pointer-events: none;
-      animation: floatOrb 24s ease-in-out infinite;
-      will-change: transform;
-    }
-    .aurora-orb.o1 { width: 380px; height: 380px; background: #60a5fa; top: -80px; left: -100px; animation-delay: 0s; }
-    .aurora-orb.o2 { width: 460px; height: 460px; background: #c084fc; top: 20%; right: -150px; animation-delay: -6s; }
-    .aurora-orb.o3 { width: 340px; height: 340px; background: #f0abfc; bottom: -120px; left: 20%; animation-delay: -12s; }
-    .aurora-orb.o4 { width: 300px; height: 300px; background: #38bdf8; bottom: 10%; right: 10%; animation-delay: -18s; }
-
-    .admin .aurora-orb.o1 { background: #6366f1; opacity: 0.4; }
-    .admin .aurora-orb.o2 { background: #a855f7; opacity: 0.35; }
-    .admin .aurora-orb.o3 { background: #0ea5e9; opacity: 0.35; }
-    .admin .aurora-orb.o4 { background: #ec4899; opacity: 0.25; }
-
-    @keyframes floatOrb {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(40px, -60px) scale(1.08); }
-      50% { transform: translate(-30px, 50px) scale(0.94); }
-      75% { transform: translate(60px, 30px) scale(1.04); }
-    }
-
-    .scene::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);
-      -webkit-mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .admin.scene::before {
-      background-image:
-        linear-gradient(rgba(139,92,246,0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(139,92,246,0.08) 1px, transparent 1px);
-    }
-
-    .scene-inner { position: relative; z-index: 1; }
-
-    .card {
-      background: rgba(255, 255, 255, 0.72);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: 22px;
-      box-shadow:
-        0 8px 32px rgba(59, 130, 246, 0.09),
-        0 2px 8px rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  box-shadow 0.4s ease,
-                  border-color 0.4s ease;
-      transform-style: preserve-3d;
-      will-change: transform;
-    }
-    .card.hoverable:hover {
-      transform: translateY(-6px) rotateX(-1.5deg);
-      box-shadow:
-        0 24px 60px rgba(59, 130, 246, 0.18),
-        0 4px 16px rgba(0, 0, 0, 0.06),
-        inset 0 1px 0 rgba(255, 255, 255, 1);
-    }
-
-    .admin .card {
-      background: rgba(30, 27, 75, 0.55);
-      border: 1px solid rgba(139, 92, 246, 0.22);
-      box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-      color: #e2e8f0;
-    }
-    .admin .card.hoverable:hover {
-      transform: translateY(-6px) rotateX(-1.5deg);
-      border-color: rgba(139, 92, 246, 0.5);
-      box-shadow:
-        0 24px 60px rgba(139, 92, 246, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .btn {
-      display: inline-flex;
+      height: 100vh;
+      width: 100%;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 12px 20px;
-      border-radius: 14px;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-      min-height: 44px;
+      padding: 24px;
+      opacity: 1;
+      transition: opacity 0.15s linear;
+      pointer-events: auto;
     }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .btn-primary {
-      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-      color: #fff;
-      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
-    }
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(14, 165, 233, 0.45);
-    }
-    .btn-danger {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: #fff;
-      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
-    }
-    .btn-danger:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(239, 68, 68, 0.45);
-    }
-    .btn-ghost {
-      background: rgba(255, 255, 255, 0.5);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      color: #334155;
-    }
-    .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.85); }
-    .admin .btn-ghost {
-      background: rgba(139, 92, 246, 0.12);
-      border-color: rgba(139, 92, 246, 0.35);
-      color: #c4b5fd;
-    }
-    .admin .btn-ghost:hover:not(:disabled) { background: rgba(139, 92, 246, 0.22); }
+    .landing-section-inner { max-width: 1100px; width: 100%; text-align: center; color: #F8FAFC; }
 
-    .badge {
+    /* Top-right floating dashboard link (only when signed in) */
+    #floating-dashboard {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 50;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: rgba(248, 250, 252, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #071B33;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    #floating-dashboard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0, 217, 255, 0.35);
+      background: #F8FAFC;
+    }
+    #floating-dashboard.visible { display: inline-flex; }
+    @media (max-width: 640px) {
+      #floating-dashboard { top: 12px; right: 12px; padding: 8px 14px; font-size: 12px; }
+    }
+
+    /* ============ HERO TYPOGRAPHY ============ */
+    .landing-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
+      gap: 8px;
+      padding: 8px 16px;
       border-radius: 999px;
+      background: rgba(0, 217, 255, 0.12);
+      border: 1px solid rgba(0, 217, 255, 0.35);
+      color: #00D9FF;
       font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
+      font-weight: 700;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      margin-bottom: 24px;
     }
-    .badge-live { background: rgba(16, 185, 129, 0.15); color: #059669; }
-    .admin .badge-live { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .badge-upcoming { background: rgba(148, 163, 184, 0.2); color: #475569; }
-    .admin .badge-upcoming { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
-    .badge-ended { background: rgba(148, 163, 184, 0.15); color: #64748b; }
-    .admin .badge-ended { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
-    .badge-ongoing { background: rgba(14, 165, 233, 0.15); color: #0284c7; }
-    .admin .badge-ongoing { background: rgba(14, 165, 233, 0.2); color: #38bdf8; }
-
-    .pulse-dot {
-      display: inline-block;
-      width: 8px; height: 8px;
+    .landing-badge .dot {
+      width: 6px; height: 6px;
       border-radius: 50%;
-      background: #10b981;
-      position: relative;
+      background: #00D9FF;
+      box-shadow: 0 0 12px #00D9FF;
+      animation: pulse-cyan 2s ease-in-out infinite;
     }
-    .pulse-dot::after {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      background: #10b981;
-      opacity: 0.6;
-      animation: pulse 1.8s ease-out infinite;
+    @keyframes pulse-cyan {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.5); }
     }
-    @keyframes pulse {
-      0% { transform: scale(0.6); opacity: 0.8; }
-      100% { transform: scale(2.4); opacity: 0; }
+    .landing-h1 {
+      font-size: clamp(38px, 7vw, 92px);
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      margin: 0 0 24px;
+      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(180deg, #FFFFFF 0%, #B8E8F5 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-
-    .fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    .slide-up { animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
+    .landing-h1 .accent {
+      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .landing-h2 {
+      font-size: clamp(28px, 5vw, 60px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin: 0 0 20px;
+      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+      color: #F8FAFC;
+    }
+    .landing-h2 .accent {
+      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .landing-sub {
+      font-size: clamp(15px, 1.6vw, 19px);
+      color: rgba(248, 250, 252, 0.78);
+      line-height: 1.6;
+      max-width: 640px;
+      margin: 0 auto 40px;
+      font-weight: 400;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    }
+    .landing-cta-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .btn-google {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 32px;
+      border-radius: 16px;
+      background: #F8FAFC;
+      color: #071B33;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 12px 32px rgba(0, 217, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      border: none;
+    }
+    .btn-google:hover { transform: translateY(-3px); box-shadow: 0 20px 48px rgba(0, 217, 255, 0.4), 0 8px 20px rgba(0, 0, 0, 0.4); }
+    .btn-google:disabled { opacity: 0.6; cursor: wait; }
+    .btn-google.dashboard-mode {
+      background: linear-gradient(135deg, #00D9FF, #10B981);
+      color: #071B33;
+      box-shadow: 0 12px 32px rgba(0, 217, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .btn-google.dashboard-mode:hover {
+      box-shadow: 0 20px 48px rgba(0, 217, 255, 0.65), 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
     .spin { animation: spin 0.9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .app-header {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      padding: 12px 0;
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    .landing-logo-hero {
+      width: 120px; height: 120px;
+      margin: 0 auto 32px;
+      filter: drop-shadow(0 12px 40px rgba(0, 217, 255, 0.4));
     }
-    .admin .app-header {
-      background: rgba(15, 23, 42, 0.55);
-      border-bottom-color: rgba(139, 92, 246, 0.15);
+    .landing-logo-hero img { width: 100%; height: 100%; object-fit: contain; }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(248, 250, 252, 0.6);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      animation: floatDown 2s ease-in-out infinite;
+    }
+    @keyframes floatDown {
+      0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
+      50% { transform: translate(-50%, 8px); opacity: 1; }
     }
 
-    .input {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(255, 255, 255, 0.7);
-      font-size: 14px;
-      transition: all 0.2s;
-      min-height: 44px;
+    .glass-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 40px auto 0;
     }
-    .input:focus {
-      outline: none;
-      border-color: #0ea5e9;
-      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
-      background: rgba(255, 255, 255, 0.95);
+    .glass-panel {
+      padding: 32px 24px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(24px) saturate(150%);
+      -webkit-backdrop-filter: blur(24px) saturate(150%);
+      text-align: left;
+      color: #F8FAFC;
+      transition: all 0.35s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
-    .admin .input {
-      background: rgba(30, 27, 75, 0.5);
-      border-color: rgba(139, 92, 246, 0.28);
-      color: #e2e8f0;
+    .glass-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.5), transparent);
     }
-    .admin .input:focus {
-      border-color: #a855f7;
-      box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
-      background: rgba(30, 27, 75, 0.75);
+    .glass-panel:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(0, 217, 255, 0.35);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .glass-panel-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: #00D9FF;
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+    .glass-panel-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #F8FAFC; letter-spacing: -0.01em; }
+    .glass-panel-text { font-size: 13px; color: rgba(248, 250, 252, 0.65); line-height: 1.6; }
+
+    .landing-footer {
+      position: absolute;
+      bottom: 24px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      color: rgba(248, 250, 252, 0.4);
     }
 
+    .landing-fallback {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, #0a2540 0%, #075985 40%, #0c4a6e 70%, #082f49 100%);
+      z-index: 1;
+    }
+
+    /* Toast */
     .toast {
       padding: 14px 18px;
       border-radius: 14px;
@@ -274,147 +293,18 @@
     }
     @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
     .toast.success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-    .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-    .toast.warn { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-    .toast.info { background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; }
+    .toast.error   { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+    .toast.warn    { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .toast.info    { background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; }
 
-    .data-cell {
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.6);
+    @media (prefers-reduced-motion: reduce) {
+      .scroll-hint, .landing-badge .dot { animation: none !important; }
+      .landing-section { transition: none; }
     }
-    .admin .data-cell {
-      background: rgba(30, 27, 75, 0.4);
-      border-color: rgba(139, 92, 246, 0.18);
-    }
-    .data-cell-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #64748b;
-      margin-bottom: 3px;
-      font-weight: 500;
-    }
-    .admin .data-cell-label { color: #94a3b8; }
-    .data-cell-value { font-size: 14px; font-weight: 600; color: #1e293b; }
-    .admin .data-cell-value { color: #e2e8f0; }
-
-    .stat-card {
-      padding: 18px 20px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      position: relative;
-      overflow: hidden;
-    }
-    .admin .stat-card {
-      background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(49, 46, 129, 0.4) 100%);
-      border: 1px solid rgba(139, 92, 246, 0.28);
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #0ea5e9, #6366f1, #a855f7);
-      opacity: 0.8;
-    }
-    .stat-value {
-      font-size: clamp(22px, 4vw, 32px);
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #0f172a;
-      line-height: 1.1;
-    }
-    .admin .stat-value { color: #f1f5f9; }
-    .stat-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #64748b;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .admin .stat-label { color: #94a3b8; }
-
-    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .data-table th {
-      text-align: left;
-      padding: 10px 8px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #64748b;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-    }
-    .admin .data-table th { color: #94a3b8; border-bottom-color: rgba(139, 92, 246, 0.2); }
-    .data-table td {
-      padding: 12px 8px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-      vertical-align: top;
-    }
-    .admin .data-table td { border-bottom-color: rgba(139, 92, 246, 0.12); }
-    .data-table tr:last-child td { border-bottom: none; }
-
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .table-wrap::-webkit-scrollbar { height: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 3px; }
-
-    .map-wrap {
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-    .admin .map-wrap { border-color: rgba(139, 92, 246, 0.22); }
-
-    .banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    .banner-warn {
-      background: rgba(254, 240, 199, 0.7);
-      border: 1px solid rgba(251, 191, 36, 0.4);
-      color: #78350f;
-    }
-    .banner-error {
-      background: rgba(254, 226, 226, 0.7);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #7f1d1d;
-    }
-    .banner-info {
-      background: rgba(219, 234, 254, 0.7);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: #1e3a8a;
-    }
-    .admin .banner-warn {
-      background: rgba(120, 53, 15, 0.35);
-      border-color: rgba(251, 191, 36, 0.3);
-      color: #fcd34d;
-    }
-    .admin .banner-error {
-      background: rgba(127, 29, 29, 0.4);
-      border-color: rgba(239, 68, 68, 0.35);
-      color: #fca5a5;
-    }
-    .admin .banner-info {
-      background: rgba(30, 58, 138, 0.35);
-      border-color: rgba(59, 130, 246, 0.3);
-      color: #93c5fd;
-    }
-
-    .loader {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 3px solid rgba(14, 165, 233, 0.2);
-      border-top-color: #0ea5e9;
-      animation: spin 0.9s linear infinite;
+    @media (max-width: 640px) {
+      .landing-section { padding: 16px; }
+      .glass-panel { padding: 22px 18px; }
+      .btn-google { padding: 14px 24px; font-size: 14px; }
     }
   </style>
 </head>
@@ -423,18 +313,21 @@
   <div id="toast-root" style="position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none"></div>
 
   <script type="module">
+    import * as THREE from 'three';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
     import {
       getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect,
-      getRedirectResult, GoogleAuthProvider, signOut, setPersistence,
+      getRedirectResult, GoogleAuthProvider, setPersistence,
       browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import {
-      getFirestore, collection, doc, getDoc, setDoc, addDoc,
-      updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
+      getFirestore, doc, getDoc, setDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+    /* ============================================================
+       FIREBASE CONFIG (same project as userboard.html)
+    ============================================================ */
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
       authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
@@ -448,102 +341,21 @@
     const firebaseApp = initializeApp(FIREBASE_CONFIG);
     const auth = getAuth(firebaseApp);
     const db = getFirestore(firebaseApp);
-    try { getAnalytics(firebaseApp); } catch { /* analytics blocked */ }
-
+    try { getAnalytics(firebaseApp); } catch {}
     setPersistence(auth, browserLocalPersistence).catch(() => {});
-
     const googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
-
-    getRedirectResult(auth).catch(err => {
-      if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err);
-    });
+    getRedirectResult(auth).catch(err => { if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err); });
 
     /* ============================================================
-       SATELLITE MAP TILES (Esri World Imagery + Labels)
+       ROUTES
     ============================================================ */
-    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    const SATELLITE_LABELS_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
-    const SATELLITE_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
-
-    function addSatelliteBase(map) {
-      L.tileLayer(SATELLITE_URL, {
-        attribution: SATELLITE_ATTRIBUTION,
-        maxZoom: 19,
-      }).addTo(map);
-      L.tileLayer(SATELLITE_LABELS_URL, {
-        maxZoom: 19,
-        pane: 'overlayPane',
-      }).addTo(map);
-    }
+    const DASHBOARD_URL = 'userboard.html';
 
     /* ============================================================
-       STATE
+       STATE + UTILS
     ============================================================ */
-    const DEFAULT_LAT = -2.129565168007717;
-    const DEFAULT_LNG = 29.77740799677921;
-
-    const state = {
-      user: null, profile: null, view: 'login',
-      cpds: [], myAttendances: [],
-      selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
-      subCpds: null, subMine: null, subDetail: null, subDetailAtt: null,
-      watchId: null, watchingFor: null, liveMap: null,
-      firestoreError: null, loading: true,
-    };
-
-    /* ============================================================
-       HELPERS
-    ============================================================ */
-    function escapeHtml(s) {
-      return String(s ?? '').replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      }[c]));
-    }
-    function toDate(ts) {
-      if (!ts) return null;
-      if (ts.toDate) return ts.toDate();
-      if (ts instanceof Date) return ts;
-      return new Date(ts);
-    }
-    function fmtTime(ts) {
-      const d = toDate(ts);
-      return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
-    }
-    function fmtDateTime(ts) {
-      const d = toDate(ts);
-      return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
-    }
-    function formatDist(m) {
-      if (m == null || isNaN(m)) return '—';
-      return m >= 1000 ? `${(m/1000).toFixed(2)} km` : `${Math.round(m)} m`;
-    }
-    function distanceMeters(lat1, lng1, lat2, lng2) {
-      const R = 6371000, toRad = d => d * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-    function classify(m, r) { return m <= r ? 'near' : 'far'; }
-
-    function getPositionOnce() {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) return reject(new Error('Geolocation is not supported by this browser.'));
-        navigator.geolocation.getCurrentPosition(
-          pos => resolve({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-          }),
-          err => reject(new Error(
-            err.code === 1 ? 'Location permission denied. Please enable location access and try again.' :
-            err.code === 2 ? 'Unable to determine your location. Please check your signal.' :
-            'Location request timed out. Please try again.'
-          )),
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-        );
-      });
-    }
+    const state = { user: null, view: 'boot' };
 
     function toast(message, type = 'info') {
       const el = document.createElement('div');
@@ -559,1034 +371,681 @@
       }, 4500);
     }
 
-    function clearWatch() {
-      if (state.watchId != null) {
-        navigator.geolocation.clearWatch(state.watchId);
-        state.watchId = null;
-        state.watchingFor = null;
-      }
-    }
-    function clearAllSubs() {
-      ['subCpds','subMine','subDetail','subDetailAtt'].forEach(k => {
-        if (state[k]) { try { state[k](); } catch {} state[k] = null; }
-      });
-    }
-    function handleFirestoreError(scope, err) {
-      console.error(`[firestore/${scope}]`, err);
-      const msg = String(err?.code || err?.message || err);
-      if (msg.includes('unavailable') || msg.includes('transport') || msg.includes('deadline')) {
-        state.firestoreError = 'connection';
-      } else if (msg.includes('permission')) {
-        state.firestoreError = 'permission';
-      } else {
-        state.firestoreError = 'unknown';
-      }
-      if (state.view !== 'login') renderErrorBanner();
-    }
-    function renderErrorBanner() {
-      const el = document.getElementById('firestore-banner');
-      if (!el) return;
-      const messages = {
-        connection: 'Connection to Firestore failed. Please verify that the Firestore database has been created in your Firebase Console, then refresh.',
-        permission: 'Firestore rules are blocking access. Please verify that your security rules allow signed-in users.',
-        unknown: 'An unexpected Firestore error occurred. Check the browser console for details.'
-      };
-      el.innerHTML = `
-        <div class="banner banner-error">
-          <span style="font-size:18px;line-height:1">⚠️</span>
-          <div>
-            <strong>Database connectivity issue.</strong><br/>
-            ${escapeHtml(messages[state.firestoreError] || messages.unknown)}
-            <button id="btn-retry" class="btn btn-ghost" style="margin-top:10px;padding:8px 14px;font-size:12px;min-height:auto">Retry</button>
-          </div>
-        </div>`;
-      document.getElementById('btn-retry').onclick = () => {
-        state.firestoreError = null;
-        clearAllSubs();
-        location.reload();
-      };
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
     }
 
-    function ensureWatchForActive() {
-      const active = state.myAttendances.find(a => a.state === 'active');
-      if (!active) { clearWatch(); return; }
-      if (state.watchingFor === active.id) return;
-      clearWatch();
-      state.watchingFor = active.id;
-      state.watchId = navigator.geolocation.watchPosition(
-        pos => {
-          updateDoc(doc(db, 'attendance', active.id), {
-            liveLat: pos.coords.latitude,
-            liveLng: pos.coords.longitude,
-            liveAccuracy: pos.coords.accuracy,
-            liveUpdatedAt: serverTimestamp(),
-          }).catch(err => console.warn('[live ping]', err));
-        },
-        err => console.warn('[watch]', err),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
-      );
+    /* ============================================================
+       OCEAN ENGINE (unchanged — copy from your original)
+       Full ocean scene preserved exactly as-is.
+    ============================================================ */
+    const oceanScene = {
+      renderer: null, scene: null, camera: null,
+      ocean: null, sky: null, sunDir: null, sunColor: null,
+      clock: null, animationId: null, isActive: false,
+      container: null, dropletCanvas: null, dropletCtx: null, droplets: [],
+      lastScrollY: 0, scrollVelocity: 0,
+      targetProgress: 0, currentProgress: 0,
+      cameraTarget: new THREE.Vector3(0, 8, -100),
+      reducedMotion: false, isMobile: false,
+      oceanTime: 0,
+
+      waveTable: [
+        { dir: [ 0.78,  0.63], len: 110, amp: 0.95, spd: 0.55, steep: 0.42 },
+        { dir: [ 0.92,  0.39], len:  78, amp: 0.62, spd: 0.62, steep: 0.48 },
+        { dir: [ 0.55,  0.83], len:  56, amp: 0.42, spd: 0.72, steep: 0.55 },
+        { dir: [ 0.28,  0.96], len:  40, amp: 0.28, spd: 0.82, steep: 0.60 },
+        { dir: [-0.42,  0.91], len:  30, amp: 0.20, spd: 0.92, steep: 0.66 },
+        { dir: [ 0.87, -0.49], len:  22, amp: 0.13, spd: 1.02, steep: 0.72 },
+        { dir: [-0.72,  0.69], len:  16, amp: 0.09, spd: 1.12, steep: 0.78 },
+        { dir: [ 0.91, -0.30], len:  12, amp: 0.06, spd: 1.22, steep: 0.82 },
+        { dir: [ 0.40, -0.91], len:   9, amp: 0.04, spd: 1.32, steep: 0.86 },
+        { dir: [-0.55, -0.83], len: 6.5, amp: 0.025, spd: 1.42, steep: 0.90 },
+        { dir: [ 0.62,  0.78], len: 4.5, amp: 0.016, spd: 1.52, steep: 0.92 },
+        { dir: [-0.83,  0.42], len: 3.0, amp: 0.010, spd: 1.62, steep: 0.94 },
+      ],
+
+      _buildWaveGLSL() {
+        return this.waveTable.map(w => {
+          const k  = (2 * Math.PI / w.len).toFixed(6);
+          const c  = Math.sqrt(9.81 / (2 * Math.PI / w.len)).toFixed(4);
+          const dx = w.dir[0].toFixed(3);
+          const dz = w.dir[1].toFixed(3);
+          const a  = w.amp.toFixed(3);
+          const st = w.steep.toFixed(3);
+          const spd = w.spd.toFixed(3);
+          return `
+          {
+            float k = ${k};
+            float cw = ${c};
+            vec2 d = normalize(vec2(${dx}, ${dz}));
+            float f = k * (dot(d, p.xz) - cw * ${spd} * uTime);
+            float cf = cos(f);
+            float sf = sin(f);
+            float A = ${a};
+            float st = ${st};
+            float Q = st / (k * max(A, 1e-3) * float(${this.waveTable.length}));
+            p.x += d.x * Q * A * cf;
+            p.z += d.y * Q * A * cf;
+            p.y += A * sf;
+            grad.x += A * k * d.x * cf;
+            grad.z += A * k * d.y * cf;
+            steepAcc += abs(A * k * cf);
+          }`;
+        }).join('\n');
+      },
+
+      _skyGLSL() {
+        return `
+          float hash21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+          float vnoise(vec2 p){
+            vec2 i = floor(p), f = fract(p);
+            f = f*f*(3.0-2.0*f);
+            float a = hash21(i), b = hash21(i + vec2(1.0, 0.0));
+            float c = hash21(i + vec2(0.0, 1.0)), d = hash21(i + vec2(1.0, 1.0));
+            return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
+          }
+          float fbm3(vec2 p){
+            float s = 0.0, a = 0.5;
+            for (int i = 0; i < 4; i++) { s += a * vnoise(p); p *= 2.03; a *= 0.5; }
+            return s;
+          }
+          vec3 skyColor(vec3 dir){
+            float y = max(dir.y, 0.0);
+            vec3 zenith  = vec3(0.030, 0.115, 0.335);
+            vec3 mid     = vec3(0.180, 0.380, 0.640);
+            vec3 horizon = vec3(0.680, 0.780, 0.870);
+            vec3 sky = mix(horizon, mid, smoothstep(0.0, 0.35, y));
+            sky = mix(sky, zenith, smoothstep(0.30, 0.85, y));
+            float sunDot = dot(dir, uSunDirection);
+            float disc = smoothstep(0.99965, 0.99990, sunDot);
+            float glow = pow(max(sunDot, 0.0), 60.0) * 0.35;
+            float aureole = pow(max(sunDot, 0.0), 6.0) * 0.06;
+            sky += uSunColor * (disc * 12.0 + glow + aureole);
+            if (dir.y > 0.015) {
+              float t = 1.0 / (dir.y + 0.05);
+              vec2 cp = dir.xz * t * 0.16 + vec2(uTime * 0.0022, uTime * 0.0014);
+              float base = fbm3(cp * 1.4);
+              float detail = fbm3(cp * 4.2 + 7.0);
+              float density = smoothstep(0.50, 0.80, base * 0.72 + detail * 0.28);
+              float shSample = fbm3(cp + uSunDirection.xz * 0.10);
+              float shadow = smoothstep(0.55, 0.85, shSample);
+              float lit = clamp(1.0 - shadow * 0.7, 0.0, 1.0);
+              lit = mix(lit, 1.0, smoothstep(0.0, 0.4, sunDot) * 0.35);
+              vec3 cloudCol = mix(vec3(0.42, 0.47, 0.55), vec3(1.02, 0.99, 0.94), lit);
+              cloudCol += uSunColor * pow(max(sunDot, 0.0), 12.0) * 0.12;
+              float haze = smoothstep(0.015, 0.14, dir.y);
+              sky = mix(sky, cloudCol, density * haze * 0.9);
+            }
+            float hz = exp(-y * 22.0) * 0.55;
+            sky = mix(sky, vec3(0.72, 0.80, 0.88), hz);
+            return sky;
+          }
+        `;
+      },
+
+      init(container) {
+        if (!this.webglSupported()) { this.buildFallback(container); return; }
+        this.container = container;
+        this.isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: document.getElementById('ocean-canvas'),
+          antialias: !this.isMobile,
+          alpha: false,
+          powerPreference: 'high-performance'
+        });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.02;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x071B33);
+        this.camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 3000);
+        this.camera.position.set(0, 15, 20);
+
+        this.clock = new THREE.Clock();
+        this.sunDir = new THREE.Vector3(0.42, 0.32, -0.85).normalize();
+        this.sunColor = new THREE.Color(1.00, 0.94, 0.84);
+
+        this.sky = this.createSky(this.sunDir);
+        this.scene.add(this.sky);
+        this.ocean = this.createOcean(this.sunDir);
+        this.scene.add(this.ocean);
+
+        const sunLight = new THREE.DirectionalLight(0xfff2dd, 1.1);
+        sunLight.position.copy(this.sunDir).multiplyScalar(100);
+        this.scene.add(sunLight);
+        this.scene.add(new THREE.AmbientLight(0x4a7fa5, 0.35));
+
+        this.dropletCanvas = document.getElementById('droplet-canvas');
+        this.dropletCtx = this.dropletCanvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', this.handleResize);
+        this.boundScrollHandler = () => this.onScroll();
+        window.addEventListener('scroll', this.boundScrollHandler, { passive: true });
+
+        const initial = this.getCameraAtProgress(0);
+        this.camera.position.set(initial.pos.x, initial.pos.y, initial.pos.z);
+        this.cameraTarget.set(initial.target.x, initial.target.y, initial.target.z);
+        this.camera.lookAt(this.cameraTarget);
+
+        this.isActive = true;
+        this.animate();
+      },
+
+      webglSupported() {
+        try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch { return false; }
+      },
+      buildFallback(container) {
+        const fb = document.createElement('div');
+        fb.className = 'landing-fallback';
+        container.insertBefore(fb, container.firstChild);
+        this.isActive = false;
+      },
+
+      createSky(sunDir) {
+        const geo = new THREE.SphereGeometry(1500, this.isMobile ? 32 : 64, this.isMobile ? 16 : 32);
+        const skyUniforms = {
+          uSunDirection: { value: sunDir.clone() },
+          uSunColor:     { value: this.sunColor.clone() },
+          uTime:         { value: 0 },
+        };
+        const mat = new THREE.ShaderMaterial({
+          side: THREE.BackSide,
+          depthWrite: false,
+          uniforms: skyUniforms,
+          vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+              vec4 wp = modelMatrix * vec4(position, 1.0);
+              vWorldPosition = wp.xyz;
+              gl_Position = projectionMatrix * viewMatrix * wp;
+            }
+          `,
+          fragmentShader: `
+            precision highp float;
+            uniform vec3  uSunDirection;
+            uniform vec3  uSunColor;
+            uniform float uTime;
+            varying vec3 vWorldPosition;
+            ${this._skyGLSL()}
+            void main() {
+              vec3 dir = normalize(vWorldPosition);
+              gl_FragColor = vec4(skyColor(dir), 1.0);
+            }
+          `,
+        });
+        const sky = new THREE.Mesh(geo, mat);
+        sky.userData.uniforms = skyUniforms;
+        return sky;
+      },
+
+      createOcean(sunDir) {
+        const segs = this.isMobile ? 128 : 448;
+        const size = 1200;
+        const geo = new THREE.PlaneGeometry(size, size, segs, segs);
+        geo.rotateX(-Math.PI / 2);
+        const waveBody = this._buildWaveGLSL();
+        const oceanUniforms = {
+          uTime:         { value: 0 },
+          uSunDirection: { value: sunDir.clone() },
+          uSunColor:     { value: this.sunColor.clone() },
+          uCameraPos:    { value: new THREE.Vector3() },
+        };
+        const mat = new THREE.ShaderMaterial({
+          uniforms: oceanUniforms,
+          side: THREE.DoubleSide,
+          vertexShader: `
+            precision highp float;
+            uniform float uTime;
+            varying vec3 vWorldPosition;
+            varying vec3 vNormal;
+            varying float vHeight;
+            varying float vSteep;
+            const float PI = 3.141592653589793;
+            void main() {
+              vec3 p = position; p.y = 0.0;
+              vec3 grad = vec3(0.0);
+              float steepAcc = 0.0;
+              ${waveBody}
+              vec3 n = normalize(vec3(-grad.x, 1.0, -grad.z));
+              vHeight = p.y;
+              vNormal = n;
+              vSteep  = steepAcc;
+              vec4 wp = modelMatrix * vec4(p, 1.0);
+              vWorldPosition = wp.xyz;
+              gl_Position = projectionMatrix * viewMatrix * wp;
+            }
+          `,
+          fragmentShader: `
+            precision highp float;
+            uniform float uTime;
+            uniform vec3  uSunDirection;
+            uniform vec3  uSunColor;
+            uniform vec3  uCameraPos;
+            varying vec3 vWorldPosition;
+            varying vec3 vNormal;
+            varying float vHeight;
+            varying float vSteep;
+            ${this._skyGLSL()}
+            void main() {
+              vec3 N = normalize(vNormal);
+              vec3 V = normalize(uCameraPos - vWorldPosition);
+              vec3 L = normalize(uSunDirection);
+              vec2 q = vWorldPosition.xz;
+              float t = uTime;
+              N.x += cos(q.x * 2.6 + q.y * 1.9 + t * 2.1) * 0.045 + cos(q.x * 6.3 - q.y * 5.1 + t * 3.4) * 0.018;
+              N.z += cos(q.x * 1.8 - q.y * 2.7 + t * 1.7) * 0.045 + cos(q.x * 5.2 + q.y * 6.2 + t * 3.0) * 0.018;
+              N = normalize(N);
+              float NdotV = max(dot(N, V), 0.0);
+              float F = 0.02 + 0.98 * pow(1.0 - NdotV, 5.0);
+              vec3 deepC   = vec3(0.008, 0.035, 0.095);
+              vec3 midC    = vec3(0.020, 0.095, 0.200);
+              vec3 crestC  = vec3(0.050, 0.250, 0.320);
+              float depthF = smoothstep(-1.2, 1.2, vHeight);
+              vec3 water = mix(deepC, midC, depthF);
+              float crestF = smoothstep(0.30, 1.10, vHeight) * smoothstep(0.40, 0.90, vSteep);
+              water = mix(water, crestC, crestF * 0.55);
+              vec3 R = reflect(-V, N);
+              R.y = max(R.y, 0.0);
+              vec3 refl = skyColor(normalize(R));
+              vec3 H = normalize(L + V);
+              float NdotL = max(dot(N, L), 0.0);
+              float NdotH = max(dot(N, H), 0.0);
+              float m = mix(0.05, 0.28, clamp(vSteep * 0.35, 0.0, 1.0));
+              float c2 = max(NdotH * NdotH, 1e-4);
+              float D  = exp(-(1.0 - c2) / (c2 * m * m)) / (3.14159 * m * m * c2 * c2 + 1e-5);
+              float spec = D * NdotL * F * 8.0;
+              float sss = pow(max(dot(-V, L) * 0.5 + 0.5, 0.0), 3.0);
+              sss *= smoothstep(0.20, 1.10, vHeight) * (1.0 - F);
+              vec3 sssCol = vec3(0.08, 0.28, 0.24) * sss * 0.7;
+              vec3 color = mix(water, refl, F);
+              color += uSunColor * spec;
+              color += sssCol;
+              float foamMask = smoothstep(0.95, 1.45, vHeight) * smoothstep(0.55, 0.95, vSteep);
+              float foamNoise = fbm3(q * 1.4 + vec2(t * 0.20, t * 0.10));
+              foamMask *= smoothstep(0.55, 0.85, foamNoise);
+              color = mix(color, vec3(0.93, 0.96, 0.98), clamp(foamMask * 0.85, 0.0, 1.0));
+              float dist = length(uCameraPos - vWorldPosition);
+              float fog = 1.0 - exp(-dist * 0.00085);
+              color = mix(color, vec3(0.68, 0.78, 0.86), clamp(fog * 0.7, 0.0, 1.0));
+              gl_FragColor = vec4(color, 1.0);
+            }
+          `,
+        });
+        const ocean = new THREE.Mesh(geo, mat);
+        ocean.frustumCulled = false;
+        ocean.userData.uniforms = oceanUniforms;
+        return ocean;
+      },
+
+      getCameraAtProgress(p) {
+        const keyframes = [
+          { p: 0.00, pos: { x:  0, y: 14, z:  20 }, target: { x:  0, y:  7, z: -100 } },
+          { p: 0.25, pos: { x:  2, y:  9, z:  -5 }, target: { x:  1, y:  4, z: -130 } },
+          { p: 0.50, pos: { x: -3, y:  4, z: -40 }, target: { x: -1, y:  2, z: -170 } },
+          { p: 0.75, pos: { x:  4, y:  7, z: -75 }, target: { x:  2, y:  3, z: -210 } },
+          { p: 1.00, pos: { x:  0, y: 24, z:-110 }, target: { x:  0, y:  6, z: -260 } },
+        ];
+        let i = 0;
+        while (i < keyframes.length - 1 && keyframes[i + 1].p < p) i++;
+        const a = keyframes[i], b = keyframes[Math.min(i + 1, keyframes.length - 1)];
+        const t = b.p === a.p ? 0 : (p - a.p) / (b.p - a.p);
+        const e = t * t * (3 - 2 * t);
+        const L = (av, bv) => av + (bv - av) * e;
+        return {
+          pos:    { x: L(a.pos.x, b.pos.x),    y: L(a.pos.y, b.pos.y),    z: L(a.pos.z, b.pos.z) },
+          target: { x: L(a.target.x, b.target.x), y: L(a.target.y, b.target.y), z: L(a.target.z, b.target.z) },
+        };
+      },
+
+      onScroll() {
+        const sy = window.scrollY;
+        const d = Math.abs(sy - this.lastScrollY);
+        this.scrollVelocity = d;
+        this.lastScrollY = sy;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        this.targetProgress = max > 0 ? Math.min(1, Math.max(0, sy / max)) : 0;
+      },
+
+      updateCamera(dt) {
+        this.currentProgress += (this.targetProgress - this.currentProgress) * Math.min(1, dt * 3.5);
+        const cam = this.getCameraAtProgress(this.currentProgress);
+        const k = Math.min(1, dt * 5.5);
+        this.camera.position.x += (cam.pos.x - this.camera.position.x) * k;
+        this.camera.position.y += (cam.pos.y - this.camera.position.y) * k;
+        this.camera.position.z += (cam.pos.z - this.camera.position.z) * k;
+        this.cameraTarget.x += (cam.target.x - this.cameraTarget.x) * k;
+        this.cameraTarget.y += (cam.target.y - this.cameraTarget.y) * k;
+        this.cameraTarget.z += (cam.target.z - this.cameraTarget.z) * k;
+        this.camera.lookAt(this.cameraTarget);
+      },
+
+      spawnDroplet() {
+        const w = window.innerWidth;
+        const s = 3 + Math.random() * 12;
+        this.droplets.push({
+          x: Math.random() * w, y: -s,
+          vx: (Math.random() - 0.5) * 0.3, vy: 0.5 + Math.random() * 2.5,
+          size: s, life: 1,
+          wobble: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.05,
+        });
+      },
+
+      updateDroplets(dt) {
+        const ctx = this.dropletCtx; if (!ctx) return;
+        const dpr = window.devicePixelRatio || 1;
+        const w = this.dropletCanvas.width / dpr;
+        const h = this.dropletCanvas.height / dpr;
+        ctx.clearRect(0, 0, w, h);
+        const inWater = this.currentProgress > 0.30 && this.currentProgress < 0.72;
+        const fast = this.scrollVelocity > 25;
+        if (!this.reducedMotion && (inWater || fast)) {
+          const chance = this.isMobile ? 0.025 : 0.05;
+          const boost = fast ? 0.14 : 0;
+          if (Math.random() < chance + boost) this.spawnDroplet();
+        }
+        for (let i = this.droplets.length - 1; i >= 0; i--) {
+          const d = this.droplets[i];
+          d.wobble += d.wobbleSpeed;
+          d.x += d.vx + Math.sin(d.wobble) * 0.4;
+          d.y += d.vy; d.vy += 0.08;
+          if (d.y > h + d.size) d.life -= 0.15; else d.life = Math.min(1, d.life + 0.05);
+          if (d.life <= 0) { this.droplets.splice(i, 1); continue; }
+          const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size);
+          g.addColorStop(0,    `rgba(180,220,255,${0.08 * d.life})`);
+          g.addColorStop(0.55, `rgba(120,180,230,${0.15 * d.life})`);
+          g.addColorStop(0.90, `rgba(60,120,180,${0.25 * d.life})`);
+          g.addColorStop(1,    `rgba(60,120,180,0)`);
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2); ctx.fill();
+          const hl = ctx.createRadialGradient(d.x - d.size * .3, d.y - d.size * .35, 0, d.x - d.size * .3, d.y - d.size * .35, d.size * .35);
+          hl.addColorStop(0, `rgba(255,255,255,${0.7 * d.life})`);
+          hl.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = hl; ctx.beginPath(); ctx.arc(d.x - d.size * .3, d.y - d.size * .35, d.size * .35, 0, Math.PI * 2); ctx.fill();
+        }
+      },
+
+      animate() {
+        if (!this.isActive) return;
+        this.animationId = requestAnimationFrame(() => this.animate());
+        if (document.hidden) return;
+        const dt = Math.min(this.clock.getDelta(), 0.1);
+        this.oceanTime += dt;
+        if (this.sky?.userData.uniforms)  this.sky.userData.uniforms.uTime.value = this.oceanTime;
+        if (this.ocean?.userData.uniforms) {
+          this.ocean.userData.uniforms.uTime.value = this.oceanTime;
+          this.ocean.userData.uniforms.uCameraPos.value.copy(this.camera.position);
+        }
+        this.updateCamera(dt);
+        this.updateDroplets(dt);
+        this.renderer.render(this.scene, this.camera);
+        this.scrollVelocity *= 0.92;
+      },
+
+      handleResize() {
+        if (!this.renderer) return;
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
+        this.resize();
+      },
+
+      resize() {
+        if (!this.dropletCanvas) return;
+        const dpr = window.devicePixelRatio || 1;
+        this.dropletCanvas.width = window.innerWidth * dpr;
+        this.dropletCanvas.height = window.innerHeight * dpr;
+        this.dropletCanvas.style.width = window.innerWidth + 'px';
+        this.dropletCanvas.style.height = window.innerHeight + 'px';
+        this.dropletCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      },
+
+      dispose() {
+        this.isActive = false;
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+        if (this.boundScrollHandler) window.removeEventListener('scroll', this.boundScrollHandler);
+        window.removeEventListener('resize', this.handleResize);
+        if (this.ocean) { this.ocean.geometry.dispose(); this.ocean.material.dispose(); }
+        if (this.sky)   { this.sky.geometry.dispose();   this.sky.material.dispose();   }
+        if (this.renderer) {
+          this.renderer.dispose();
+          const c = this.renderer.domElement;
+          if (c && c.parentNode) c.parentNode.removeChild(c);
+        }
+        this.droplets = [];
+        this.renderer = null; this.scene = null; this.camera = null;
+        this.ocean = null; this.sky = null;
+        this.dropletCanvas = null; this.dropletCtx = null;
+      },
+    };
+
+    /* ============================================================
+       LANDING PAGE
+    ============================================================ */
+    function goLanding() {
+      state.view = 'landing';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+
+      const signedIn = !!state.user;
+
+      document.getElementById('app').innerHTML = `
+        <div class="landing-root">
+          <canvas id="ocean-canvas" class="landing-canvas-fixed"></canvas>
+          <canvas id="droplet-canvas" class="landing-canvas-fixed" style="pointer-events:none"></canvas>
+
+          <a id="floating-dashboard" href="${DASHBOARD_URL}" class="${signedIn ? 'visible' : ''}">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+            Dashboard
+          </a>
+
+          <div class="landing-scroll" id="landing-scroll">
+            <section class="landing-section" data-scene="1">
+              <div class="landing-section-inner">
+                <div class="landing-logo-hero">
+                  <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD" />
+                </div>
+                <div class="landing-badge"><span class="dot"></span>The Living Ocean</div>
+                <h1 class="landing-h1">Smarter CPD.<br/><span class="accent">Verified Presence.</span></h1>
+                <p class="landing-sub">A modern attendance and location verification platform for teacher professional development — where the ocean meets attendance.</p>
+                <div class="landing-cta-row">
+                  <button class="btn-google ${signedIn ? 'dashboard-mode' : ''}" data-cta>
+                    ${signedIn ? dashboardButtonContent() : signinButtonContent()}
+                  </button>
+                </div>
+                <div class="scroll-hint"><span>Scroll to sail</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </section>
+
+            <section class="landing-section" data-scene="2">
+              <div class="landing-section-inner">
+                <h2 class="landing-h2">Every Session.<br/>Every Teacher.<br/><span class="accent">Accounted For.</span></h2>
+                <p class="landing-sub">Attendance is recorded the moment a teacher joins. Verified presence, session trails, and audit-grade records — all flowing naturally from the session.</p>
+              </div>
+            </section>
+
+            <section class="landing-section" data-scene="3">
+              <div class="landing-section-inner">
+                <h2 class="landing-h2">Feel the <span class="accent">Living Water.</span></h2>
+                <p class="landing-sub">As you travel across the ocean, the water responds. Sessions leave ripples. Attendance flows with presence.</p>
+              </div>
+            </section>
+
+            <section class="landing-section" data-scene="4">
+              <div class="landing-section-inner">
+                <h2 class="landing-h2">Built for <span class="accent">Real Schools.</span></h2>
+                <p class="landing-sub">Four core capabilities, engineered to work reliably in the field.</p>
+                <div class="glass-grid">
+                  <div class="glass-panel"><div class="glass-panel-num">01</div><div class="glass-panel-title">GPS Attendance</div><div class="glass-panel-text">Teachers mark attendance from their device. Live GPS ensures they are where they should be.</div></div>
+                  <div class="glass-panel"><div class="glass-panel-num">02</div><div class="glass-panel-title">Live Location Monitoring</div><div class="glass-panel-text">Administrators see attendance in real time on a live satellite map.</div></div>
+                  <div class="glass-panel"><div class="glass-panel-num">03</div><div class="glass-panel-title">Smart CPD Verification</div><div class="glass-panel-text">Attendance is verified only when the teacher attends and ends within the venue geofence.</div></div>
+                  <div class="glass-panel"><div class="glass-panel-num">04</div><div class="glass-panel-title">Real-Time Administration</div><div class="glass-panel-text">Directors and head teachers monitor all sessions, teachers, and verification status live.</div></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="landing-section" data-scene="5">
+              <div class="landing-section-inner">
+                <h2 class="landing-h2">Professional Development,<br/><span class="accent">Beautifully Connected.</span></h2>
+                <p class="landing-sub">${signedIn ? 'You are already signed in. Continue to your dashboard.' : 'Sign in to enter your iMENA Smart CPD dashboard. Your attendance begins now.'}</p>
+                <div class="landing-cta-row">
+                  <button class="btn-google ${signedIn ? 'dashboard-mode' : ''}" data-cta>
+                    ${signedIn ? dashboardButtonContent() : signinButtonContent()}
+                  </button>
+                </div>
+                <div class="landing-footer">© iMENA Smart CPD · GS St Etienne · Powered by Firebase</div>
+              </div>
+            </section>
+          </div>
+        </div>`;
+
+      document.getElementById('landing-scroll').style.height = '500vh';
+
+      // Attach CTA handlers
+      document.querySelectorAll('[data-cta]').forEach(btn => {
+        btn.onclick = signedIn
+          ? () => { window.location.href = DASHBOARD_URL; }
+          : () => handleGoogleSignIn(btn);
+      });
+
+      // Init ocean
+      requestAnimationFrame(() => {
+        try { oceanScene.init(document.querySelector('.landing-root')); }
+        catch (e) { console.warn('[ocean init failed]', e); oceanScene.buildFallback(document.querySelector('.landing-root')); }
+        startLandingFadeLoop();
+      });
+    }
+
+    function signinButtonContent() {
+      return `
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.4-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2c-.4.4 6.7-4.9 6.7-14.9 0-1.2-.1-2.4-.4-3.5z"/>
+        </svg>
+        Continue with Google`;
+    }
+
+    function dashboardButtonContent() {
+      return `
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>
+        </svg>
+        Go to Dashboard`;
+    }
+
+    let landingFadeRAF = null;
+    function startLandingFadeLoop() {
+      if (landingFadeRAF) cancelAnimationFrame(landingFadeRAF);
+      const sections = document.querySelectorAll('.landing-section');
+      function loop() {
+        if (state.view !== 'landing') { landingFadeRAF = null; return; }
+        const vh = window.innerHeight, center = vh / 2;
+        sections.forEach(s => {
+          const r = s.getBoundingClientRect();
+          const d = Math.abs(r.top + r.height / 2 - center);
+          const o = Math.max(0, 1 - d / (vh * 0.7));
+          s.style.opacity = o.toFixed(3);
+          s.style.pointerEvents = o > 0.6 ? 'auto' : 'none';
+        });
+        landingFadeRAF = requestAnimationFrame(loop);
+      }
+      landingFadeRAF = requestAnimationFrame(loop);
+    }
+
+    /* ============================================================
+       AUTH: sign in → ensure profile → redirect to dashboard
+    ============================================================ */
+    async function handleGoogleSignIn(btn) {
+      btn.disabled = true;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<span class="spin" style="display:inline-block;width:18px;height:18px;border:2px solid rgba(7,27,51,.25);border-top-color:#071B33;border-radius:50%"></span> Signing in…';
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        if (result?.user) {
+          await ensureProfile(result.user);
+          // Small delay so user sees confirmation before nav
+          btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px">✓ Signed in. Redirecting…</span>';
+          window.location.href = DASHBOARD_URL;
+          return;
+        }
+      } catch (err) {
+        if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
+          try {
+            await signInWithRedirect(auth, googleProvider);
+            return;
+          } catch (e2) {
+            toast('Sign-in failed: ' + e2.message, 'error');
+          }
+        } else if (err.code !== 'auth/popup-closed-by-user') {
+          toast('Sign-in failed: ' + err.message, 'error');
+        }
+      }
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+
+    async function ensureProfile(user) {
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          email: user.email,
+          fullName: user.displayName || user.email,
+          role: 'teacher',
+          createdAt: serverTimestamp(),
+        });
+      }
     }
 
     /* ============================================================
        AUTH LIFECYCLE
+       - If signed in while on landing → swap CTA to "Go to Dashboard"
+       - If signed out → swap back to "Continue with Google"
     ============================================================ */
-    onAuthStateChanged(auth, async user => {
-      if (user) {
-        state.user = user;
-        try {
-          const ref = doc(db, 'users', user.uid);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            state.profile = snap.data();
-          } else {
-            const newProfile = {
-              email: user.email,
-              fullName: user.displayName || user.email,
-              role: 'teacher',
-              createdAt: serverTimestamp(),
-            };
-            await setDoc(ref, newProfile);
-            state.profile = newProfile;
-          }
-        } catch (err) {
-          console.error('[profile load]', err);
-          toast('Could not load your profile. Please check your Firestore setup.', 'error');
-          state.loading = false;
-          goLogin();
-          return;
-        }
-        state.loading = false;
-        if (state.profile.role === 'admin') goAdmin();
-        else goTeacher();
-      } else {
-        clearAllSubs();
-        clearWatch();
-        Object.assign(state, {
-          user: null, profile: null, cpds: [], myAttendances: [],
-          cpdAttendances: [], selectedCpd: null, selectedCpdId: null,
-          firestoreError: null, loading: false,
-        });
-        goLogin();
+    onAuthStateChanged(auth, user => {
+      const wasSignedIn = !!state.user;
+      state.user = user || null;
+      state.loading = false;
+
+      // Only re-render landing if auth state actually changed and we're on it
+      if (state.view === 'landing' && wasSignedIn !== !!state.user) {
+        // Re-render landing to update CTA text
+        if (oceanScene.isActive) oceanScene.dispose();
+        goLanding();
       }
     });
 
     /* ============================================================
-       SCENE WRAPPER + HEADER
-    ============================================================ */
-    function sceneWrapper(innerHtml, isAdmin = false) {
-      return `
-        <div class="scene ${isAdmin ? 'admin' : ''}">
-          <div class="aurora-orb o1"></div>
-          <div class="aurora-orb o2"></div>
-          <div class="aurora-orb o3"></div>
-          <div class="aurora-orb o4"></div>
-          <div class="scene-inner">${innerHtml}</div>
-        </div>`;
-    }
-
-    function headerHtml() {
-      const isAdmin = state.profile?.role === 'admin';
-      return `
-        <header class="app-header">
-          <div style="max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <div style="display:flex;align-items:center;gap:10px;min-width:0">
-              <div style="width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
-                <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD Logo" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.15))" />
-              </div>
-              <div style="min-width:0">
-                <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em;color:${isAdmin ? '#f1f5f9' : '#0f172a'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                  iMENA <span style="background:linear-gradient(135deg,#0ea5e9,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Smart CPD</span>
-                </div>
-                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:${isAdmin ? '#94a3b8' : '#64748b'};font-weight:500">
-                  ${isAdmin ? 'Administrator Console' : 'Attendance Portal'}
-                </div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="text-align:right;display:none" class="sm-show">
-                <div style="font-size:13px;font-weight:600;color:${isAdmin ? '#e2e8f0' : '#1e293b'}">${escapeHtml(state.profile?.fullName || '')}</div>
-                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:${isAdmin ? '#a855f7' : '#0ea5e9'};font-weight:600">${escapeHtml(state.profile?.role || '')}</div>
-              </div>
-              <button id="btn-logout" class="btn btn-ghost" style="padding:10px;min-height:auto;width:42px;height:42px" title="Sign out" aria-label="Sign out">
-                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-              </button>
-            </div>
-          </div>
-        </header>
-        <style>
-          @media (min-width:640px) { .sm-show { display:block !important; } }
-        </style>`;
-    }
-
-    function bindHeader() {
-      const lo = document.getElementById('btn-logout');
-      if (lo) lo.onclick = () => { if (confirm('Are you sure you want to sign out?')) signOut(auth); };
-    }
-
-    /* ============================================================
-       LOGIN
-    ============================================================ */
-    function goLogin() {
-      state.view = 'login';
-      document.getElementById('app').innerHTML = sceneWrapper(`
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px">
-          <div class="card slide-up" style="max-width:440px;width:100%;padding:40px 32px;text-align:center">
-            <div style="width:150px;height:150px;margin:0 auto 24px;display:flex;align-items:center;justify-content:center">
-              <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD Logo" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 32px rgba(14,165,233,.3))" />
-            </div>
-            <h1 style="font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-0.03em;margin:0 0 8px;line-height:1.15">
-              iMENA <span style="background:linear-gradient(135deg,#0ea5e9,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Smart CPD</span>
-            </h1>
-            <p style="font-size:14px;color:#64748b;margin:0 0 32px;line-height:1.6">
-              Attendance management and live location verification<br/>for continuing professional development sessions.
-            </p>
-            <button id="btn-login" class="btn btn-primary" style="width:100%;padding:15px;font-size:15px">
-              <svg width="20" height="20" viewBox="0 0 48 48">
-                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
-                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.4-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2c-.4.4 6.7-4.9 6.7-14.9 0-1.2-.1-2.4-.4-3.5z"/>
-              </svg>
-              Continue with Google
-            </button>
-            <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(148,163,184,.2);font-size:11px;color:#94a3b8;line-height:1.6">
-              Access is restricted to authorized iMENA staff.<br/>
-              Administrators must be granted a role via the Firebase Console after their first sign-in.
-            </div>
-          </div>
-        </div>
-      `);
-      document.getElementById('btn-login').onclick = async () => {
-        const btn = document.getElementById('btn-login');
-        btn.disabled = true;
-        const original = btn.innerHTML;
-        btn.innerHTML = '<span class="spin" style="display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%"></span> Signing in…';
-        try {
-          await signInWithPopup(auth, googleProvider);
-        } catch (err) {
-          if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
-            try {
-              await signInWithRedirect(auth, googleProvider);
-              return;
-            } catch (err2) {
-              toast('Sign-in failed: ' + err2.message, 'error');
-            }
-          } else {
-            toast('Sign-in failed: ' + err.message, 'error');
-          }
-          btn.disabled = false;
-          btn.innerHTML = original;
-        }
-      };
-    }
-
-    /* ============================================================
-       TEACHER VIEW
-    ============================================================ */
-    function cpdStatus(cpd) {
-      const start = toDate(cpd.startTime)?.getTime();
-      const end = toDate(cpd.endTime)?.getTime();
-      const now = Date.now();
-      if (!start || !end) return 'unknown';
-      if (now < start - 15 * 60 * 1000) return 'upcoming';
-      if (now > end) return 'ended';
-      return 'ongoing';
-    }
-
-    function goTeacher() {
-      state.view = 'teacher';
-      if (!state.subCpds) {
-        state.subCpds = onSnapshot(collection(db, 'cpds'),
-          snap => {
-            state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            state.firestoreError = null;
-            if (state.view === 'teacher') renderTeacher();
-          },
-          err => handleFirestoreError('cpds', err)
-        );
-      }
-      if (!state.subMine && state.user) {
-        const q = query(collection(db, 'attendance'), where('teacherId', '==', state.user.uid));
-        state.subMine = onSnapshot(q,
-          snap => {
-            state.myAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            ensureWatchForActive();
-            if (state.view === 'teacher') renderTeacher();
-          },
-          err => handleFirestoreError('mine', err)
-        );
-      }
-      renderTeacher();
-    }
-
-    function renderTeacher() {
-      const activeAtt = state.myAttendances.find(a => a.state === 'active');
-      const ongoing = state.cpds.filter(c => cpdStatus(c) === 'ongoing');
-      const upcoming = state.cpds.filter(c => cpdStatus(c) === 'upcoming');
-      const ended = state.cpds.filter(c => cpdStatus(c) === 'ended');
-
-      const cards = state.cpds
-        .sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0))
-        .map(cpd => renderTeacherCpdCard(cpd, activeAtt, !!activeAtt))
-        .join('');
-
-      const inner = `
-        ${headerHtml()}
-        <main style="max-width:1200px;margin:0 auto;padding:28px 16px 60px">
-          ${state.firestoreError ? `<div id="firestore-banner" style="margin-bottom:20px"></div>` : '<div id="firestore-banner"></div>'}
-
-          <div class="fade-in" style="margin-bottom:28px">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#0ea5e9;font-weight:700;margin-bottom:6px">Welcome back</div>
-            <h1 style="font-size:clamp(22px,4.5vw,30px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2">
-              ${escapeHtml((state.profile?.fullName || '').split(' ')[0] || 'Teacher')}
-            </h1>
-            <p style="font-size:14px;color:#64748b;margin:0">
-              ${activeAtt ? `You are currently attending <strong>${escapeHtml(activeAtt.cpdTitle)}</strong>.` : 'View available sessions and record your attendance.'}
-            </p>
-          </div>
-
-          ${activeAtt ? `
-            <div class="banner banner-warn slide-up" style="margin-bottom:20px">
-              <span style="font-size:20px;line-height:1">🔴</span>
-              <div>
-                <strong>Live tracking is active.</strong> Please keep this tab open until the session ends.
-                If you lock your phone or switch applications, tracking will pause and the administrator will see your last recorded position.
-              </div>
-            </div>` : ''}
-
-          ${state.myAttendances.length > 0 ? `
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
-              <div class="stat-card">
-                <div class="stat-label">Sessions attended</div>
-                <div class="stat-value">${state.myAttendances.filter(a => a.state === 'ended').length}</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Verified</div>
-                <div class="stat-value" style="color:#059669">${state.myAttendances.filter(a => a.verified).length}</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">In progress</div>
-                <div class="stat-value" style="color:#0ea5e9">${state.myAttendances.filter(a => a.state === 'active').length}</div>
-              </div>
-            </div>` : ''}
-
-          ${state.cpds.length === 0
-            ? `<div class="card" style="padding:60px 24px;text-align:center">
-                <div style="font-size:48px;margin-bottom:16px">📚</div>
-                <div style="font-size:16px;font-weight:600;margin-bottom:6px">No sessions yet</div>
-                <div style="font-size:14px;color:#64748b">Your administrator will publish sessions here.</div>
-              </div>`
-            : `
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-                <h2 style="font-size:15px;font-weight:700;margin:0;letter-spacing:-0.01em">Available Sessions</h2>
-                <div style="font-size:12px;color:#64748b">${ongoing.length} ongoing · ${upcoming.length} upcoming</div>
-              </div>
-              <div style="display:grid;gap:14px">${cards}</div>
-            `}
-        </main>
-      `;
-      document.getElementById('app').innerHTML = sceneWrapper(inner, false);
-      bindHeader();
-      bindTeacherEvents();
-      if (state.firestoreError) renderErrorBanner();
-    }
-
-    function renderTeacherCpdCard(cpd, activeAtt, hasActiveElsewhere) {
-      const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
-      const status = myAtt?.state === 'active' ? 'live'
-        : myAtt?.state === 'ended' ? 'ended'
-        : cpdStatus(cpd);
-
-      const badgeMap = {
-        upcoming: '<span class="badge badge-upcoming">Upcoming</span>',
-        ongoing: '<span class="badge badge-ongoing">● Ongoing</span>',
-        ended: '<span class="badge badge-ended">Ended</span>',
-        live: '<span class="badge badge-live">● Live</span>',
-        unknown: '',
-      };
-      const badge = badgeMap[status] || '';
-
-      let actionHtml = '';
-      if (!myAtt) {
-        if (status === 'upcoming') {
-          actionHtml = `<button disabled class="btn btn-ghost" style="padding:12px 18px;font-size:13px">Not started</button>`;
-        } else if (status === 'ended') {
-          actionHtml = `<button disabled class="btn btn-ghost" style="padding:12px 18px;font-size:13px">Ended</button>`;
-        } else if (hasActiveElsewhere) {
-          actionHtml = `<button disabled class="btn btn-ghost" style="padding:12px 18px;font-size:13px">Finish current</button>`;
-        } else {
-          actionHtml = `<button data-attend="${cpd.id}" class="btn btn-primary" style="padding:12px 20px;font-size:13px">
-            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Attend
-          </button>`;
-        }
-      } else if (myAtt.state === 'active') {
-        actionHtml = `<button data-end="${myAtt.id}" class="btn btn-danger" style="padding:12px 20px;font-size:13px">
-          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg> End Session
-        </button>`;
-      } else {
-        actionHtml = myAtt.verified
-          ? `<div style="display:flex;align-items:center;gap:6px;color:#059669;font-size:13px;font-weight:700;padding:10px 14px;background:rgba(16,185,129,.1);border-radius:12px">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Verified
-            </div>`
-          : `<div style="display:flex;align-items:center;gap:6px;color:#d97706;font-size:13px;font-weight:700;padding:10px 14px;background:rgba(245,158,11,.1);border-radius:12px">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 7v5m0 3v.5"/></svg> Flagged
-            </div>`;
-      }
-
-      let liveRow = '';
-      if (myAtt && myAtt.state === 'active' && myAtt.liveLat != null) {
-        const dist = distanceMeters(myAtt.liveLat, myAtt.liveLng, cpd.venueLat, cpd.venueLng);
-        const near = dist <= cpd.radiusMeters;
-        liveRow = `
-          <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#475569">
-            <span class="pulse-dot"></span>
-            <span style="font-weight:600">Live tracking</span>
-            <span style="opacity:.5">·</span>
-            <span>${formatDist(dist)} from venue</span>
-            <span style="opacity:.5">·</span>
-            <span style="color:${near ? '#059669' : '#d97706'};font-weight:700">${near ? 'At venue' : 'Away from venue'}</span>
-          </div>`;
-      }
-
-      const detailRow = myAtt ? `
-        <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
-          <div class="data-cell"><div class="data-cell-label">Attended</div><div class="data-cell-value">${fmtTime(myAtt.attendedAt)}</div></div>
-          <div class="data-cell"><div class="data-cell-label">Ended</div><div class="data-cell-value">${fmtTime(myAtt.endedAt)}</div></div>
-          <div class="data-cell"><div class="data-cell-label">Start distance</div><div class="data-cell-value">${formatDist(myAtt.attendedDistanceMeters)}</div></div>
-          <div class="data-cell"><div class="data-cell-label">End distance</div><div class="data-cell-value">${formatDist(myAtt.endedDistanceMeters)}</div></div>
-        </div>` : '';
-
-      return `
-        <div class="card hoverable fade-in" style="padding:20px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-                <h3 style="font-size:15px;font-weight:700;margin:0;letter-spacing:-0.01em;line-height:1.3">${escapeHtml(cpd.title)}</h3>
-                ${badge}
-              </div>
-              ${cpd.theme ? `<p style="font-size:13px;color:#64748b;margin:0 0 6px;line-height:1.4">${escapeHtml(cpd.theme)}</p>` : ''}
-              <p style="font-size:12px;color:#94a3b8;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <span style="display:inline-flex;align-items:center;gap:4px">
-                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                  ${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)}
-                </span>
-                <span style="opacity:.5">·</span>
-                <span>${escapeHtml(cpd.venueName)}</span>
-                <span style="opacity:.5">·</span>
-                <span>${cpd.radiusMeters}m radius</span>
-              </p>
-              ${liveRow}
-            </div>
-            <div style="flex-shrink:0">${actionHtml}</div>
-          </div>
-          ${detailRow}
-        </div>`;
-    }
-
-    function bindTeacherEvents() {
-      document.querySelectorAll('[data-attend]').forEach(btn => {
-        btn.onclick = () => handleAttend(btn.dataset.attend, btn);
-      });
-      document.querySelectorAll('[data-end]').forEach(btn => {
-        btn.onclick = () => handleEnd(btn.dataset.end, btn);
-      });
-    }
-
-    async function handleAttend(cpdId, btn) {
-      const cpd = state.cpds.find(c => c.id === cpdId);
-      if (!cpd) return;
-      if (state.myAttendances.some(a => a.state === 'active')) {
-        toast('Please end your current session before starting another.', 'warn');
-        return;
-      }
-      btn.disabled = true;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%"></span> Locating…';
-      try {
-        const pos = await getPositionOnce();
-        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
-        const status = classify(dist, cpd.radiusMeters);
-        await addDoc(collection(db, 'attendance'), {
-          cpdId,
-          cpdTitle: cpd.title,
-          teacherId: state.user.uid,
-          teacherName: state.profile?.fullName || state.user.email,
-          teacherEmail: state.user.email,
-          attendedAt: serverTimestamp(),
-          attendedLat: pos.lat,
-          attendedLng: pos.lng,
-          attendedDistanceMeters: dist,
-          attendedStatus: status,
-          liveLat: pos.lat,
-          liveLng: pos.lng,
-          liveAccuracy: pos.accuracy,
-          liveUpdatedAt: serverTimestamp(),
-          state: 'active',
-          verified: false,
-        });
-        toast(status === 'near'
-          ? `Attendance recorded. You are ${formatDist(dist)} from the venue. Please keep this tab open.`
-          : `Attendance recorded, but you are ${formatDist(dist)} from the venue.`,
-          status === 'near' ? 'success' : 'warn');
-      } catch (err) {
-        toast(err.message || 'Unable to capture your location.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-      }
-    }
-
-    async function handleEnd(attId, btn) {
-      const att = state.myAttendances.find(a => a.id === attId);
-      const cpd = state.cpds.find(c => c.id === att?.cpdId);
-      if (!att || !cpd) return;
-      btn.disabled = true;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%"></span> Finalizing…';
-      try {
-        const pos = await getPositionOnce();
-        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
-        const status = classify(dist, cpd.radiusMeters);
-        const verified = att.attendedStatus === 'near' && status === 'near';
-        await updateDoc(doc(db, 'attendance', att.id), {
-          endedAt: serverTimestamp(),
-          endedLat: pos.lat,
-          endedLng: pos.lng,
-          endedDistanceMeters: dist,
-          endedStatus: status,
-          state: 'ended',
-          verified,
-        });
-        clearWatch();
-        toast(verified
-          ? 'Session completed successfully. Your attendance is verified.'
-          : `Session completed, but you were ${formatDist(dist)} from the venue. The administrator will review your record.`,
-          verified ? 'success' : 'warn');
-      } catch (err) {
-        toast(err.message || 'Could not complete the session.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-      }
-    }
-
-    /* ============================================================
-       ADMIN VIEW
-    ============================================================ */
-    function goAdmin() {
-      state.view = 'admin';
-      clearWatch();
-      if (state.subMine) { try { state.subMine(); } catch {} state.subMine = null; }
-      if (state.subDetail) { try { state.subDetail(); } catch {} state.subDetail = null; }
-      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} state.subDetailAtt = null; }
-      if (!state.subCpds) {
-        state.subCpds = onSnapshot(collection(db, 'cpds'),
-          snap => {
-            state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            state.firestoreError = null;
-            if (state.view === 'admin') renderAdmin();
-          },
-          err => handleFirestoreError('admin-cpds', err)
-        );
-      }
-      renderAdmin();
-    }
-
-    function renderAdmin() {
-      const list = [...state.cpds].sort((a, b) => {
-        const ta = toDate(a.startTime)?.getTime() || 0;
-        const tb = toDate(b.startTime)?.getTime() || 0;
-        return tb - ta;
-      });
-
-      const ongoing = list.filter(c => cpdStatus(c) === 'ongoing').length;
-      const upcoming = list.filter(c => cpdStatus(c) === 'upcoming').length;
-      const ended = list.filter(c => cpdStatus(c) === 'ended').length;
-
-      const rows = list.map(cpd => {
-        const st = cpdStatus(cpd);
-        const badge = {
-          upcoming: '<span class="badge badge-upcoming">Upcoming</span>',
-          ongoing: '<span class="badge badge-ongoing">● Ongoing</span>',
-          ended: '<span class="badge badge-ended">Ended</span>',
-        }[st] || '';
-        return `
-          <div class="card hoverable fade-in" style="padding:20px">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-                  <h3 style="font-size:15px;font-weight:700;margin:0;letter-spacing:-0.01em;color:#f1f5f9;line-height:1.3">${escapeHtml(cpd.title)}</h3>
-                  ${badge}
-                </div>
-                ${cpd.theme ? `<p style="font-size:13px;color:#94a3b8;margin:0 0 6px;line-height:1.4">${escapeHtml(cpd.theme)}</p>` : ''}
-                <p style="font-size:12px;color:#94a3b8;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <span>${fmtDateTime(cpd.startTime)} → ${fmtTime(cpd.endTime)}</span>
-                  <span style="opacity:.5">·</span>
-                  <span>${escapeHtml(cpd.venueName)}</span>
-                  <span style="opacity:.5">·</span>
-                  <span>${cpd.radiusMeters}m</span>
-                </p>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                <button data-open-cpd="${cpd.id}" class="btn btn-primary" style="padding:10px 16px;font-size:12px">Open</button>
-                <button data-del-cpd="${cpd.id}" class="btn btn-ghost" style="padding:10px;min-height:auto;width:40px;height:40px;color:#f87171" title="Delete CPD" aria-label="Delete CPD">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-
-      const inner = `
-        ${headerHtml()}
-        <main style="max-width:1200px;margin:0 auto;padding:28px 16px 60px">
-          <div id="firestore-banner" style="margin-bottom:20px"></div>
-
-          <div class="fade-in" style="margin-bottom:28px">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#a855f7;font-weight:700;margin-bottom:6px">Administrator Console</div>
-            <h1 style="font-size:clamp(22px,4.5vw,30px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2;color:#f1f5f9">
-              Sessions Overview
-            </h1>
-            <p style="font-size:14px;color:#94a3b8;margin:0">
-              Create sessions, monitor live attendance, and review verification status in real time.
-            </p>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px">
-            <div class="stat-card">
-              <div class="stat-label">Total sessions</div>
-              <div class="stat-value">${list.length}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Ongoing</div>
-              <div class="stat-value" style="color:#38bdf8">${ongoing}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Upcoming</div>
-              <div class="stat-value" style="color:#c4b5fd">${upcoming}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Completed</div>
-              <div class="stat-value" style="color:#94a3b8">${ended}</div>
-            </div>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
-            <h2 style="font-size:15px;font-weight:700;margin:0;color:#f1f5f9;letter-spacing:-0.01em">All Sessions</h2>
-            <button id="btn-new-cpd" class="btn btn-primary" style="padding:12px 20px;font-size:13px">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-              New Session
-            </button>
-          </div>
-
-          ${list.length === 0
-            ? `<div class="card" style="padding:60px 24px;text-align:center;color:#94a3b8">
-                <div style="font-size:48px;margin-bottom:16px">📋</div>
-                <div style="font-size:16px;font-weight:600;margin-bottom:6px;color:#e2e8f0">No sessions yet</div>
-                <div style="font-size:14px">Click "New Session" to create your first CPD.</div>
-              </div>`
-            : `<div style="display:grid;gap:14px">${rows}</div>`}
-        </main>`;
-
-      document.getElementById('app').innerHTML = sceneWrapper(inner, true);
-      bindHeader();
-      if (state.firestoreError) renderErrorBanner();
-
-      document.getElementById('btn-new-cpd').onclick = () => goCreateCpd();
-      document.querySelectorAll('[data-open-cpd]').forEach(el => {
-        el.onclick = () => goCpdDetail(el.dataset.openCpd);
-      });
-      document.querySelectorAll('[data-del-cpd]').forEach(el => {
-        el.onclick = async () => {
-          if (!confirm('Delete this CPD session? Attendance records will remain but become unlinked.')) return;
-          try {
-            await deleteDoc(doc(db, 'cpds', el.dataset.delCpd));
-            toast('Session deleted.', 'success');
-          } catch (err) {
-            toast('Delete failed: ' + err.message, 'error');
-          }
-        };
-      });
-    }
-
-    /* ============================================================
-       CREATE CPD
-    ============================================================ */
-    function goCreateCpd() {
-      state.view = 'create-cpd';
-      if (state.subDetail) { try { state.subDetail(); } catch {} state.subDetail = null; }
-      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} state.subDetailAtt = null; }
-
-      const inner = `
-        ${headerHtml()}
-        <main style="max-width:820px;margin:0 auto;padding:28px 16px 60px">
-          <div class="fade-in" style="margin-bottom:24px">
-            <button id="btn-back" class="btn btn-ghost" style="padding:8px 14px;font-size:12px;min-height:auto;margin-bottom:16px">← Back to sessions</button>
-            <h1 style="font-size:clamp(22px,4.5vw,28px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2;color:#f1f5f9">
-              Create Session
-            </h1>
-            <p style="font-size:14px;color:#94a3b8;margin:0">Configure the venue location and geofence radius. Distance from this point will be used for verification.</p>
-          </div>
-
-          <form id="cpd-form" class="card slide-up" style="padding:24px">
-            <div id="form-error" style="display:none;margin-bottom:16px" class="banner banner-error"></div>
-
-            <div style="display:grid;gap:16px">
-              <label>
-                <div class="data-cell-label" style="margin-bottom:6px">Session title *</div>
-                <input name="title" required placeholder="e.g. Teaching Methodologies 2025" class="input" />
-              </label>
-
-              <label>
-                <div class="data-cell-label" style="margin-bottom:6px">Theme</div>
-                <input name="theme" placeholder="e.g. Modern classroom practices" class="input" />
-              </label>
-
-              <label>
-                <div class="data-cell-label" style="margin-bottom:6px">Description</div>
-                <textarea name="description" rows="3" class="input" placeholder="Brief agenda or notes (optional)"></textarea>
-              </label>
-
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
-                <label>
-                  <div class="data-cell-label" style="margin-bottom:6px">Start time *</div>
-                  <input type="datetime-local" name="startTime" required class="input" />
-                </label>
-                <label>
-                  <div class="data-cell-label" style="margin-bottom:6px">End time *</div>
-                  <input type="datetime-local" name="endTime" required class="input" />
-                </label>
-              </div>
-
-              <label>
-                <div class="data-cell-label" style="margin-bottom:6px">Venue name</div>
-                <input name="venueName" value="GS St Etienne" class="input" />
-              </label>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-                <label>
-                  <div class="data-cell-label" style="margin-bottom:6px">Latitude</div>
-                  <input name="venueLat" value="${DEFAULT_LAT}" class="input" />
-                </label>
-                <label>
-                  <div class="data-cell-label" style="margin-bottom:6px">Longitude</div>
-                  <input name="venueLng" value="${DEFAULT_LNG}" class="input" />
-                </label>
-                <label>
-                  <div class="data-cell-label" style="margin-bottom:6px">Radius (m)</div>
-                  <input name="radiusMeters" type="number" value="100" min="10" class="input" />
-                </label>
-              </div>
-
-              <div>
-                <div class="data-cell-label" style="margin-bottom:8px">Pin the venue on the map (satellite view)</div>
-                <div id="venue-map" class="map-wrap" style="height:320px"></div>
-                <button type="button" id="btn-use-location" style="margin-top:10px;font-size:12px;color:#a855f7;background:none;padding:6px 0;font-weight:600">
-                  📍 Use my current location
-                </button>
-              </div>
-
-              <div style="display:flex;gap:10px;padding-top:8px;flex-wrap:wrap">
-                <button type="submit" id="btn-save-cpd" class="btn btn-primary" style="flex:1;min-width:150px">Create Session</button>
-                <button type="button" id="btn-cancel" class="btn btn-ghost" style="flex:1;min-width:150px">Cancel</button>
-              </div>
-            </div>
-          </form>
-        </main>`;
-
-      document.getElementById('app').innerHTML = sceneWrapper(inner, true);
-      bindHeader();
-      document.getElementById('btn-back').onclick = () => goAdmin();
-      document.getElementById('btn-cancel').onclick = () => goAdmin();
-
-      const form = document.getElementById('cpd-form');
-      const latInput = form.elements.venueLat;
-      const lngInput = form.elements.venueLng;
-      const radiusInput = form.elements.radiusMeters;
-
-      const map = L.map('venue-map', { zoomControl: true }).setView(
-        [parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], 18
-      );
-      addSatelliteBase(map);
-
-      const marker = L.marker([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG]).addTo(map);
-      const circle = L.circle([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], {
-        radius: parseFloat(radiusInput.value) || 100,
-        color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.15, weight: 2,
-      }).addTo(map);
-
-      map.on('click', e => {
-        const { lat, lng } = e.latlng;
-        latInput.value = lat.toFixed(6);
-        lngInput.value = lng.toFixed(6);
-        marker.setLatLng([lat, lng]);
-        circle.setLatLng([lat, lng]);
-      });
-      radiusInput.oninput = () => circle.setRadius(parseFloat(radiusInput.value) || 100);
-
-      document.getElementById('btn-use-location').onclick = async () => {
-        try {
-          const pos = await getPositionOnce();
-          latInput.value = pos.lat.toFixed(6);
-          lngInput.value = pos.lng.toFixed(6);
-          marker.setLatLng([pos.lat, pos.lng]);
-          circle.setLatLng([pos.lat, pos.lng]);
-          map.setView([pos.lat, pos.lng], 19);
-          toast('Venue location set to your current position.', 'success');
-        } catch (e) {
-          toast(e.message, 'error');
-        }
-      };
-
-      form.onsubmit = async ev => {
-        ev.preventDefault();
-        const btn = document.getElementById('btn-save-cpd');
-        const errEl = document.getElementById('form-error');
-        errEl.style.display = 'none';
-        btn.disabled = true;
-        btn.textContent = 'Creating…';
-        try {
-          const fd = new FormData(form);
-          const data = {
-            title: String(fd.get('title')).trim(),
-            theme: String(fd.get('theme') || '').trim(),
-            description: String(fd.get('description') || '').trim(),
-            startTime: new Date(fd.get('startTime')),
-            endTime: new Date(fd.get('endTime')),
-            venueName: String(fd.get('venueName') || 'Venue').trim(),
-            venueLat: Number(fd.get('venueLat')),
-            venueLng: Number(fd.get('venueLng')),
-            radiusMeters: Number(fd.get('radiusMeters')) || 100,
-            createdBy: state.user.uid,
-            createdAt: serverTimestamp(),
-          };
-          if (!data.title) throw new Error('Session title is required.');
-          if (isNaN(data.venueLat) || isNaN(data.venueLng)) throw new Error('Venue coordinates are invalid.');
-          if (data.endTime <= data.startTime) throw new Error('End time must be later than start time.');
-          await addDoc(collection(db, 'cpds'), data);
-          toast('Session created successfully.', 'success');
-          goAdmin();
-        } catch (err) {
-          errEl.className = 'banner banner-error';
-          errEl.innerHTML = `<span>⚠️</span><div>${escapeHtml(err.message)}</div>`;
-          errEl.style.display = 'flex';
-          btn.disabled = false;
-          btn.textContent = 'Create Session';
-        }
-      };
-    }
-
-    /* ============================================================
-       CPD DETAIL
-    ============================================================ */
-    function goCpdDetail(cpdId) {
-      state.view = 'cpd-detail';
-      state.selectedCpdId = cpdId;
-      state.selectedCpd = null;
-      state.cpdAttendances = [];
-
-      if (state.subDetail) { try { state.subDetail(); } catch {} }
-      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} }
-
-      state.subDetail = onSnapshot(doc(db, 'cpds', cpdId),
-        snap => {
-          state.selectedCpd = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-          if (state.view === 'cpd-detail') renderCpdDetail();
-        },
-        err => handleFirestoreError('detail', err)
-      );
-
-      const q = query(collection(db, 'attendance'), where('cpdId', '==', cpdId));
-      state.subDetailAtt = onSnapshot(q,
-        snap => {
-          state.cpdAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          if (state.view === 'cpd-detail') renderCpdDetail();
-        },
-        err => handleFirestoreError('detail-att', err)
-      );
-
-      renderCpdDetail();
-    }
-
-    function renderCpdDetail() {
-      const cpd = state.selectedCpd;
-      if (!cpd) {
-        document.getElementById('app').innerHTML = sceneWrapper(`
-          ${headerHtml()}
-          <main style="max-width:1200px;margin:0 auto;padding:60px 16px;text-align:center">
-            <div class="loader" style="margin:0 auto"></div>
-            <p style="color:#94a3b8;font-size:14px;margin-top:20px">Loading session…</p>
-          </main>`, true);
-        bindHeader();
-        return;
-      }
-
-      const rows = state.cpdAttendances.map(a => {
-        let status;
-        if (!a.endedAt) {
-          status = a.state === 'active'
-            ? `<span style="color:#38bdf8;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px"><span class="pulse-dot"></span> Live</span>`
-            : `<span style="color:#f87171;font-size:12px;font-weight:600">✕ Not ended</span>`;
-        } else if (a.verified) {
-          status = `<span style="color:#34d399;font-size:12px;font-weight:600">✓ Verified</span>`;
-        } else {
-          status = `<span style="color:#fbbf24;font-size:12px;font-weight:600">⚠ Flagged</span>`;
-        }
-        return `
-          <tr>
-            <td>
-              <div style="font-weight:600;color:#f1f5f9;font-size:13px">${escapeHtml(a.teacherName || 'Unknown')}</div>
-              <div style="font-size:11px;color:#94a3b8">${escapeHtml(a.teacherEmail || '')}</div>
-            </td>
-            <td style="color:#cbd5e1;font-size:12px;white-space:nowrap">${fmtTime(a.attendedAt)}</td>
-            <td style="color:#cbd5e1;font-size:12px;white-space:nowrap">${fmtTime(a.endedAt)}</td>
-            <td style="color:#cbd5e1;font-size:12px;white-space:nowrap">
-              ${formatDist(a.attendedDistanceMeters)}
-              ${a.endedDistanceMeters != null ? `<span style="opacity:.5"> → </span>${formatDist(a.endedDistanceMeters)}` : ''}
-            </td>
-            <td>${status}</td>
-          </tr>`;
-      }).join('');
-
-      const total = state.cpdAttendances.length;
-      const verified = state.cpdAttendances.filter(a => a.verified).length;
-      const live = state.cpdAttendances.filter(a => a.state === 'active').length;
-
-      const inner = `
-        ${headerHtml()}
-        <main style="max-width:1300px;margin:0 auto;padding:28px 16px 60px">
-          <div class="fade-in" style="margin-bottom:24px">
-            <button id="btn-back-admin" class="btn btn-ghost" style="padding:8px 14px;font-size:12px;min-height:auto;margin-bottom:16px">← Back to sessions</button>
-            <h1 style="font-size:clamp(20px,4vw,28px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2;color:#f1f5f9">
-              ${escapeHtml(cpd.title)}
-            </h1>
-            <p style="font-size:13px;color:#94a3b8;margin:0">
-              ${escapeHtml(cpd.venueName)} · ${cpd.radiusMeters}m radius · ${fmtDateTime(cpd.startTime)} – ${fmtTime(cpd.endTime)}
-            </p>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-            <div class="stat-card"><div class="stat-label">Attendees</div><div class="stat-value">${total}</div></div>
-            <div class="stat-card"><div class="stat-label">Live now</div><div class="stat-value" style="color:#38bdf8">${live}</div></div>
-            <div class="stat-card"><div class="stat-label">Verified</div><div class="stat-value" style="color:#34d399">${verified}</div></div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr;gap:16px" class="detail-grid">
-            <div class="card" style="padding:20px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-                <h2 style="font-size:14px;font-weight:700;margin:0;color:#f1f5f9;letter-spacing:-0.01em">Attendance Record</h2>
-                <div style="font-size:11px;color:#94a3b8">${total} ${total === 1 ? 'record' : 'records'}</div>
-              </div>
-              <div class="table-wrap">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Teacher</th>
-                      <th>Attended</th>
-                      <th>Ended</th>
-                      <th>Distance</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${rows || `<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">No attendance recorded yet.</td></tr>`}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card" style="padding:16px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-                <h2 style="font-size:14px;font-weight:700;margin:0;color:#f1f5f9;letter-spacing:-0.01em">Live Satellite Map</h2>
-                <div style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                  <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981"></span> Live</span>
-                  <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#0ea5e9"></span> Verified</span>
-                  <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></span> Flagged</span>
-                </div>
-              </div>
-              <div id="live-map" class="map-wrap" style="height:clamp(320px,50vw,480px)"></div>
-              <p style="font-size:11px;color:#94a3b8;margin-top:10px;line-height:1.5">
-                Teacher positions update in real time while the attendance tab remains open. If a teacher closes the tab, the last recorded position is displayed.
-              </p>
-            </div>
-          </div>
-        </main>
-
-        <style>
-          @media (min-width: 900px) {
-            .detail-grid { grid-template-columns: 1fr 1fr !important; }
-          }
-        </style>`;
-
-      document.getElementById('app').innerHTML = sceneWrapper(inner, true);
-      bindHeader();
-      document.getElementById('btn-back-admin').onclick = () => goAdmin();
-      requestAnimationFrame(() => updateLiveMap(cpd));
-    }
-
-    function updateLiveMap(cpd) {
-      const el = document.getElementById('live-map');
-      if (!el) return;
-
-      let center = [cpd.venueLat, cpd.venueLng];
-      let zoom = 18;
-      if (state.liveMap) {
-        try {
-          center = state.liveMap.getCenter();
-          zoom = state.liveMap.getZoom();
-          state.liveMap.remove();
-        } catch {}
-        state.liveMap = null;
-      }
-
-      const map = L.map(el).setView(center, zoom);
-      addSatelliteBase(map);
-
-      L.circle([cpd.venueLat, cpd.venueLng], {
-        radius: cpd.radiusMeters,
-        color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.1,
-        weight: 2, dashArray: '6 4',
-      }).addTo(map);
-
-      const venueIcon = L.divIcon({
-        className: '',
-        html: `<div style="background:linear-gradient(135deg,#0ea5e9,#a855f7);width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:white;font-size:15px">🏫</div>`,
-        iconSize: [32, 32], iconAnchor: [16, 16],
-      });
-      L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(map)
-        .bindPopup(`<b>Venue:</b> ${escapeHtml(cpd.venueName)}`);
-
-      state.cpdAttendances.forEach(a => {
-        let lat, lng, label, color, glow;
-        if (a.state === 'active' && a.liveLat != null) {
-          lat = a.liveLat; lng = a.liveLng;
-          label = `<b>${escapeHtml(a.teacherName)}</b><br/><span style="color:#059669">● Live tracking</span>`;
-          color = '#10b981'; glow = 'rgba(16,185,129,.5)';
-        } else if (a.endedLat != null) {
-          lat = a.endedLat; lng = a.endedLng;
-          label = `<b>${escapeHtml(a.teacherName)}</b><br/>Ended · ${a.verified ? 'Verified' : 'Flagged'}`;
-          color = a.verified ? '#0ea5e9' : '#f59e0b';
-          glow = a.verified ? 'rgba(14,165,233,.4)' : 'rgba(245,158,11,.4)';
-        } else if (a.attendedLat != null) {
-          lat = a.attendedLat; lng = a.attendedLng;
-          label = `<b>${escapeHtml(a.teacherName)}</b><br/>Not ended`;
-          color = '#ef4444'; glow = 'rgba(239,68,68,.4)';
-        } else return;
-
-        const icon = L.divIcon({
-          className: '',
-          html: `<div style="background:${color};width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px ${glow}, 0 2px 8px rgba(0,0,0,.4)"></div>`,
-          iconSize: [20, 20], iconAnchor: [10, 10],
-        });
-        L.marker([lat, lng], { icon }).addTo(map).bindPopup(label);
-      });
-
-      state.liveMap = map;
-    }
-
-    /* ============================================================
        BOOT
     ============================================================ */
-    state.loading = false;
-    goLogin();
+    function boot() {
+      document.getElementById('app').innerHTML = `
+        <div style="position:fixed;inset:0;background:linear-gradient(135deg,#071B33 0%,#0a2540 50%,#075985 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;color:#F8FAFC;font-family:Inter,sans-serif;">
+          <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" style="width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,217,255,.5))" />
+          <div style="font-size:13px;opacity:.7;letter-spacing:.15em;text-transform:uppercase;">Loading iMENA Smart CPD</div>
+          <div style="width:48px;height:48px;border-radius:50%;border:3px solid rgba(0,217,255,0.15);border-top-color:#00D9FF;animation:spin .9s linear infinite"></div>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>`;
+    }
+
+    // Show loading briefly, then landing. If auth resolves first, landing still renders correctly.
+    boot();
+    setTimeout(() => {
+      if (state.view === 'boot') {
+        state.loading = false;
+        goLanding();
+      }
+    }, 800);
   </script>
 </body>
 </html>
