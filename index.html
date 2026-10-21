@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <meta name="theme-color" content="#0ea5e9" />
   <title>iMENA Smart CPD Attendance</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    /* ============ RESET & BASE ============ */
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body {
@@ -26,7 +27,6 @@
     button { font-family: inherit; cursor: pointer; border: none; background: none; }
     input, textarea { font-family: inherit; }
 
-    /* ============ AURORA SCENE ============ */
     .scene {
       position: relative;
       min-height: 100vh;
@@ -65,7 +65,6 @@
       75% { transform: translate(60px, 30px) scale(1.04); }
     }
 
-    /* Grid overlay for depth */
     .scene::before {
       content: '';
       position: absolute;
@@ -87,7 +86,6 @@
 
     .scene-inner { position: relative; z-index: 1; }
 
-    /* ============ GLASS CARDS (3D) ============ */
     .card {
       background: rgba(255, 255, 255, 0.72);
       backdrop-filter: blur(24px) saturate(180%);
@@ -128,7 +126,6 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
-    /* ============ BUTTONS ============ */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -174,7 +171,6 @@
     }
     .admin .btn-ghost:hover:not(:disabled) { background: rgba(139, 92, 246, 0.22); }
 
-    /* ============ BADGES ============ */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -195,7 +191,6 @@
     .badge-ongoing { background: rgba(14, 165, 233, 0.15); color: #0284c7; }
     .admin .badge-ongoing { background: rgba(14, 165, 233, 0.2); color: #38bdf8; }
 
-    /* ============ LIVE PULSE ============ */
     .pulse-dot {
       display: inline-block;
       width: 8px; height: 8px;
@@ -217,7 +212,6 @@
       100% { transform: scale(2.4); opacity: 0; }
     }
 
-    /* ============ ANIMATIONS ============ */
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -227,7 +221,6 @@
     .spin { animation: spin 0.9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ============ HEADER ============ */
     .app-header {
       position: sticky;
       top: 0;
@@ -243,7 +236,6 @@
       border-bottom-color: rgba(139, 92, 246, 0.15);
     }
 
-    /* ============ INPUTS ============ */
     .input {
       width: 100%;
       padding: 12px 14px;
@@ -271,7 +263,6 @@
       background: rgba(30, 27, 75, 0.75);
     }
 
-    /* ============ TOAST ============ */
     .toast {
       padding: 14px 18px;
       border-radius: 14px;
@@ -287,7 +278,6 @@
     .toast.warn { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
     .toast.info { background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; }
 
-    /* ============ DATA CELLS ============ */
     .data-cell {
       padding: 10px 12px;
       border-radius: 10px;
@@ -310,7 +300,6 @@
     .data-cell-value { font-size: 14px; font-weight: 600; color: #1e293b; }
     .admin .data-cell-value { color: #e2e8f0; }
 
-    /* ============ STAT CARD (admin) ============ */
     .stat-card {
       padding: 18px 20px;
       border-radius: 18px;
@@ -349,7 +338,6 @@
     }
     .admin .stat-label { color: #94a3b8; }
 
-    /* ============ TABLE ============ */
     .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .data-table th {
       text-align: left;
@@ -370,12 +358,10 @@
     .admin .data-table td { border-bottom-color: rgba(139, 92, 246, 0.12); }
     .data-table tr:last-child td { border-bottom: none; }
 
-    /* ============ SCROLL TABLE (mobile) ============ */
     .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .table-wrap::-webkit-scrollbar { height: 6px; }
     .table-wrap::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 3px; }
 
-    /* ============ MAP ============ */
     .map-wrap {
       border-radius: 16px;
       overflow: hidden;
@@ -383,7 +369,6 @@
     }
     .admin .map-wrap { border-color: rgba(139, 92, 246, 0.22); }
 
-    /* ============ BANNER ============ */
     .banner {
       display: flex;
       align-items: flex-start;
@@ -424,7 +409,6 @@
       color: #93c5fd;
     }
 
-    /* ============ LOADER ============ */
     .loader {
       width: 44px; height: 44px;
       border-radius: 50%;
@@ -439,9 +423,6 @@
   <div id="toast-root" style="position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none"></div>
 
   <script type="module">
-    /* ============================================================
-       FIREBASE IMPORTS
-    ============================================================ */
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
     import {
@@ -454,9 +435,6 @@
       updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-    /* ============================================================
-       FIREBASE CONFIG
-    ============================================================ */
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
       authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
@@ -472,22 +450,39 @@
     const db = getFirestore(firebaseApp);
     try { getAnalytics(firebaseApp); } catch { /* analytics blocked */ }
 
-    // Persist session across tabs
     setPersistence(auth, browserLocalPersistence).catch(() => {});
 
     const googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-    // Resolve any pending redirect login
     getRedirectResult(auth).catch(err => {
       if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err);
     });
 
     /* ============================================================
+       SATELLITE MAP TILES (Esri World Imagery + Labels)
+    ============================================================ */
+    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    const SATELLITE_LABELS_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+    const SATELLITE_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+
+    function addSatelliteBase(map) {
+      L.tileLayer(SATELLITE_URL, {
+        attribution: SATELLITE_ATTRIBUTION,
+        maxZoom: 19,
+      }).addTo(map);
+      L.tileLayer(SATELLITE_LABELS_URL, {
+        maxZoom: 19,
+        pane: 'overlayPane',
+      }).addTo(map);
+    }
+
+    /* ============================================================
        STATE
     ============================================================ */
-    const DEFAULT_LAT = -1.9441;
-    const DEFAULT_LNG = 30.0619;
+    // Real CPD venue coordinates
+    const DEFAULT_LAT = -2.129565168007717;
+    const DEFAULT_LNG = 29.77740799677921;
 
     const state = {
       user: null, profile: null, view: 'login',
@@ -613,9 +608,6 @@
       };
     }
 
-    /* ============================================================
-       LIVE GPS WATCH
-    ============================================================ */
     function ensureWatchForActive() {
       const active = state.myAttendances.find(a => a.state === 'active');
       if (!active) { clearWatch(); return; }
@@ -680,7 +672,7 @@
     });
 
     /* ============================================================
-       SCENE WRAPPER
+       SCENE WRAPPER + HEADER
     ============================================================ */
     function sceneWrapper(innerHtml, isAdmin = false) {
       return `
@@ -699,8 +691,8 @@
         <header class="app-header">
           <div style="max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div style="display:flex;align-items:center;gap:10px;min-width:0">
-              <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(14,165,233,.35)">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              <div style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;box-shadow:0 4px 12px rgba(14,165,233,.25);background:#fff;padding:3px;display:flex;align-items:center;justify-content:center">
+                <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD Logo" style="width:100%;height:100%;object-fit:contain" />
               </div>
               <div style="min-width:0">
                 <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em;color:${isAdmin ? '#f1f5f9' : '#0f172a'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
@@ -733,15 +725,15 @@
     }
 
     /* ============================================================
-       LOGIN VIEW
+       LOGIN
     ============================================================ */
     function goLogin() {
       state.view = 'login';
       document.getElementById('app').innerHTML = sceneWrapper(`
         <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px">
           <div class="card slide-up" style="max-width:440px;width:100%;padding:40px 32px;text-align:center">
-            <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(14,165,233,.4)">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <div style="width:110px;height:110px;margin:0 auto 24px;border-radius:24px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(14,165,233,.25);padding:10px">
+              <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD Logo" style="width:100%;height:100%;object-fit:contain" />
             </div>
             <h1 style="font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-0.03em;margin:0 0 8px;line-height:1.15">
               iMENA <span style="background:linear-gradient(135deg,#0ea5e9,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Smart CPD</span>
@@ -773,7 +765,6 @@
         try {
           await signInWithPopup(auth, googleProvider);
         } catch (err) {
-          // Fallback to redirect if popup is blocked or closed by COOP
           if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
             try {
               await signInWithRedirect(auth, googleProvider);
@@ -845,7 +836,6 @@
         <main style="max-width:1200px;margin:0 auto;padding:28px 16px 60px">
           ${state.firestoreError ? `<div id="firestore-banner" style="margin-bottom:20px"></div>` : '<div id="firestore-banner"></div>'}
 
-          <!-- Welcome -->
           <div class="fade-in" style="margin-bottom:28px">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#0ea5e9;font-weight:700;margin-bottom:6px">Welcome back</div>
             <h1 style="font-size:clamp(22px,4.5vw,30px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2">
@@ -865,7 +855,6 @@
               </div>
             </div>` : ''}
 
-          <!-- Quick Stats (only when teacher has activity) -->
           ${state.myAttendances.length > 0 ? `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
               <div class="stat-card">
@@ -882,7 +871,6 @@
               </div>
             </div>` : ''}
 
-          <!-- CPDs list -->
           ${state.cpds.length === 0
             ? `<div class="card" style="padding:60px 24px;text-align:center">
                 <div style="font-size:48px;margin-bottom:16px">📚</div>
@@ -1153,7 +1141,6 @@
         <main style="max-width:1200px;margin:0 auto;padding:28px 16px 60px">
           <div id="firestore-banner" style="margin-bottom:20px"></div>
 
-          <!-- Admin hero -->
           <div class="fade-in" style="margin-bottom:28px">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#a855f7;font-weight:700;margin-bottom:6px">Administrator Console</div>
             <h1 style="font-size:clamp(22px,4.5vw,30px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2;color:#f1f5f9">
@@ -1164,7 +1151,6 @@
             </p>
           </div>
 
-          <!-- KPI grid -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px">
             <div class="stat-card">
               <div class="stat-label">Total sessions</div>
@@ -1184,7 +1170,6 @@
             </div>
           </div>
 
-          <!-- Actions -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
             <h2 style="font-size:15px;font-weight:700;margin:0;color:#f1f5f9;letter-spacing:-0.01em">All Sessions</h2>
             <button id="btn-new-cpd" class="btn btn-primary" style="padding:12px 20px;font-size:13px">
@@ -1224,7 +1209,7 @@
     }
 
     /* ============================================================
-       CREATE CPD
+       CREATE CPD (with satellite map)
     ============================================================ */
     function goCreateCpd() {
       state.view = 'create-cpd';
@@ -1293,8 +1278,8 @@
               </div>
 
               <div>
-                <div class="data-cell-label" style="margin-bottom:8px">Pin the venue on the map</div>
-                <div id="venue-map" class="map-wrap" style="height:280px"></div>
+                <div class="data-cell-label" style="margin-bottom:8px">Pin the venue on the map (satellite view)</div>
+                <div id="venue-map" class="map-wrap" style="height:320px"></div>
                 <button type="button" id="btn-use-location" style="margin-top:10px;font-size:12px;color:#a855f7;background:none;padding:6px 0;font-weight:600">
                   📍 Use my current location
                 </button>
@@ -1319,16 +1304,14 @@
       const radiusInput = form.elements.radiusMeters;
 
       const map = L.map('venue-map', { zoomControl: true }).setView(
-        [parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], 16
+        [parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], 18
       );
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
-      }).addTo(map);
+      addSatelliteBase(map);
 
       const marker = L.marker([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG]).addTo(map);
       const circle = L.circle([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], {
         radius: parseFloat(radiusInput.value) || 100,
-        color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.12, weight: 2,
+        color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.15, weight: 2,
       }).addTo(map);
 
       map.on('click', e => {
@@ -1347,7 +1330,7 @@
           lngInput.value = pos.lng.toFixed(6);
           marker.setLatLng([pos.lat, pos.lng]);
           circle.setLatLng([pos.lat, pos.lng]);
-          map.setView([pos.lat, pos.lng], 17);
+          map.setView([pos.lat, pos.lng], 19);
           toast('Venue location set to your current position.', 'success');
         } catch (e) {
           toast(e.message, 'error');
@@ -1393,7 +1376,7 @@
     }
 
     /* ============================================================
-       CPD DETAIL (admin)
+       CPD DETAIL (with satellite map)
     ============================================================ */
     function goCpdDetail(cpdId) {
       state.view = 'cpd-detail';
@@ -1513,7 +1496,7 @@
 
             <div class="card" style="padding:16px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-                <h2 style="font-size:14px;font-weight:700;margin:0;color:#f1f5f9;letter-spacing:-0.01em">Live Map</h2>
+                <h2 style="font-size:14px;font-weight:700;margin:0;color:#f1f5f9;letter-spacing:-0.01em">Live Satellite Map</h2>
                 <div style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                   <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10b981"></span> Live</span>
                   <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#0ea5e9"></span> Verified</span>
@@ -1545,7 +1528,7 @@
       if (!el) return;
 
       let center = [cpd.venueLat, cpd.venueLng];
-      let zoom = 16;
+      let zoom = 18;
       if (state.liveMap) {
         try {
           center = state.liveMap.getCenter();
@@ -1556,13 +1539,11 @@
       }
 
       const map = L.map(el).setView(center, zoom);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
-      }).addTo(map);
+      addSatelliteBase(map);
 
       L.circle([cpd.venueLat, cpd.venueLng], {
         radius: cpd.radiusMeters,
-        color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.08,
+        color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.1,
         weight: 2, dashArray: '6 4',
       }).addTo(map);
 
