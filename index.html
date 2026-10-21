@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <meta name="theme-color" content="#071B33" />
-  <title>iMENA Smart CPD — The Living Ocean</title>
+  <title>iMENA SMART CPD</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
   <link rel="apple-touch-icon" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -29,176 +29,666 @@
       overflow-x: hidden;
     }
     button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    a { color: inherit; }
 
-    /* ============ LIVE OCEAN LANDING ============ */
-    .landing-root { position: relative; width: 100%; background: #071B33; }
-    .landing-canvas-fixed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+    /* ============ OCEAN BACKGROUND ============ */
+    .landing-canvas-fixed {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
     #ocean-canvas { display: block; }
     #droplet-canvas { display: block; z-index: 2; }
-    .landing-scroll { position: relative; z-index: 3; pointer-events: none; }
-    .landing-section {
-      position: relative;
-      height: 100vh;
-      width: 100%;
+
+    /* ============ NAVIGATION BAR ============ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: linear-gradient(to bottom, rgba(7,27,51,0.85) 0%, rgba(7,27,51,0) 100%);
+      border-bottom: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .nav.scrolled {
+      background: rgba(7, 27, 51, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 28px;
+    }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .nav-logo {
+      width: 38px; height: 38px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      opacity: 1;
-      transition: opacity 0.15s linear;
-      pointer-events: auto;
     }
-    .landing-section-inner { max-width: 1100px; width: 100%; text-align: center; color: #F8FAFC; }
-
-    /* Top-right floating dashboard link (only when signed in) */
-    #floating-dashboard {
-      display: none;
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 50;
+    .nav-logo img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0, 217, 255, 0.4));
+    }
+    .nav-brand {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #F8FAFC;
+      white-space: nowrap;
+    }
+    .nav-brand span {
+      background: linear-gradient(135deg, #00D9FF, #10B981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 24px;
+    }
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: rgba(248, 250, 252, 0.75);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .nav-links a:hover {
+      color: #F8FAFC;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-cta {
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 18px;
-      border-radius: 12px;
-      background: rgba(248, 250, 252, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 10px 20px;
+      border-radius: 10px;
+      background: #F8FAFC;
       color: #071B33;
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.01em;
-      text-decoration: none;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 16px rgba(0, 217, 255, 0.25);
       transition: all 0.2s ease;
       cursor: pointer;
+      border: none;
+      white-space: nowrap;
     }
-    #floating-dashboard:hover {
+    .nav-cta:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(0, 217, 255, 0.35);
-      background: #F8FAFC;
+      box-shadow: 0 8px 24px rgba(0, 217, 255, 0.4);
     }
-    #floating-dashboard.visible { display: inline-flex; }
-    @media (max-width: 640px) {
-      #floating-dashboard { top: 12px; right: 12px; padding: 8px 14px; font-size: 12px; }
+    .nav-cta.dashboard-mode {
+      background: linear-gradient(135deg, #00D9FF, #10B981);
+    }
+    .nav-cta svg { flex-shrink: 0; }
+
+    /* Mobile Menu Toggle */
+    .mobile-menu-btn {
+      display: none;
+      color: #F8FAFC;
+      font-size: 24px;
+      padding: 8px;
+      cursor: pointer;
+      line-height: 1;
     }
 
-    /* ============ HERO TYPOGRAPHY ============ */
-    .landing-badge {
-      display: inline-flex;
+    /* Mobile Menu Drawer */
+    .mobile-menu {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 27, 51, 0.98);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .mobile-menu.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-menu a {
+      color: #F8FAFC;
+      font-size: 20px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .mobile-menu a:hover { color: #00D9FF; }
+    .mobile-close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      color: #F8FAFC;
+      font-size: 28px;
+      cursor: pointer;
+    }
+
+    /* ============ RESPONSIVE NAVBAR ============ */
+    @media (max-width: 900px) {
+      .nav { padding: 12px 16px; }
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: block; }
+      .nav-brand { display: none; } /* Hide brand text on very small screens to fit CTA */
+      .nav-cta { padding: 8px 14px; font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+      .nav-cta span { display: none; } /* Show only Google icon on very narrow phones */
+      .nav-cta { padding: 8px; width: 36px; height: 36px; justify-content: center; border-radius: 50%; }
+    }
+
+    /* ============ LANGUAGE SWITCHER ============ */
+    .lang-switcher {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .lang-toggle {
+      display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 16px;
-      border-radius: 999px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(7, 27, 51, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #F8FAFC;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lang-toggle:hover {
+      background: rgba(7, 27, 51, 1);
+      border-color: rgba(0, 217, 255, 0.4);
+    }
+    .lang-menu {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px;
+      border-radius: 12px;
+      background: rgba(7, 27, 51, 0.95);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      min-width: 160px;
+    }
+    .lang-menu.open { display: flex; }
+    .lang-menu button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: rgba(248, 250, 252, 0.8);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .lang-menu button:hover {
       background: rgba(0, 217, 255, 0.12);
-      border: 1px solid rgba(0, 217, 255, 0.35);
-      color: #00D9FF;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      margin-bottom: 24px;
-    }
-    .landing-badge .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #00D9FF;
-      box-shadow: 0 0 12px #00D9FF;
-      animation: pulse-cyan 2s ease-in-out infinite;
-    }
-    @keyframes pulse-cyan {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.5); }
-    }
-    .landing-h1 {
-      font-size: clamp(38px, 7vw, 92px);
-      font-weight: 800;
-      line-height: 1.02;
-      letter-spacing: -0.04em;
-      margin: 0 0 24px;
-      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
-      background: linear-gradient(180deg, #FFFFFF 0%, #B8E8F5 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .landing-h1 .accent {
-      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .landing-h2 {
-      font-size: clamp(28px, 5vw, 60px);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      margin: 0 0 20px;
-      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
       color: #F8FAFC;
     }
-    .landing-h2 .accent {
-      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .lang-menu button.active {
+      background: rgba(0, 217, 255, 0.18);
+      color: #00D9FF;
+      font-weight: 600;
     }
-    .landing-sub {
-      font-size: clamp(15px, 1.6vw, 19px);
-      color: rgba(248, 250, 252, 0.78);
-      line-height: 1.6;
-      max-width: 640px;
-      margin: 0 auto 40px;
-      font-weight: 400;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    .lang-flag { font-size: 16px; line-height: 1; }
+
+    @media (max-width: 640px) {
+      .lang-switcher { bottom: 16px; right: 16px; }
+      .lang-toggle { padding: 8px 12px; font-size: 11px; }
     }
-    .landing-cta-row {
+
+    /* ============ SCROLLING CONTENT ============ */
+    .landing-scroll {
+      position: relative;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .section {
+      position: relative;
+      min-height: 100vh;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
+      padding: 100px 24px;
+      pointer-events: auto;
     }
-    .btn-google {
+    .section-inner {
+      max-width: 1100px;
+      width: 100%;
+      text-align: center;
+      color: #F8FAFC;
+    }
+
+    /* ============ HERO ============ */
+    .hero-logo {
+      width: 110px; height: 110px;
+      margin: 0 auto 28px;
+      filter: drop-shadow(0 12px 40px rgba(0, 217, 255, 0.5));
+    }
+    .hero-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .hero-h1 {
+      font-size: clamp(32px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin: 0 0 24px;
+      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
+      color: #F8FAFC;
+    }
+    .hero-h1 span.accent {
+      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: clamp(15px, 1.6vw, 20px);
+      color: rgba(248, 250, 252, 0.85);
+      line-height: 1.6;
+      max-width: 680px;
+      margin: 0 auto;
+      font-weight: 400;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ============ SECTION HEADINGS ============ */
+    .section-h2 {
+      font-size: clamp(26px, 4vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0 0 18px;
+      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+      color: #F8FAFC;
+    }
+    .section-h2 .accent {
+      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .section-sub {
+      font-size: clamp(14px, 1.4vw, 17px);
+      color: rgba(248, 250, 252, 0.75);
+      line-height: 1.6;
+      max-width: 680px;
+      margin: 0 auto 40px;
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ============ INNOVATION GRID ============ */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .benefit-card {
+      padding: 24px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      text-align: left;
+      color: #F8FAFC;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+    .benefit-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(0, 217, 255, 0.3);
+      transform: translateY(-4px);
+    }
+    .benefit-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: rgba(0, 217, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: #00D9FF;
+    }
+    .benefit-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .benefit-text {
+      font-size: 13px;
+      color: rgba(248, 250, 252, 0.7);
+      line-height: 1.6;
+    }
+
+    /* ============ FOUNDER ============ */
+    .founder-card {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 36px 32px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      text-align: left;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+    .founder-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .founder-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00D9FF, #10B981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      color: #071B33;
+      flex-shrink: 0;
+    }
+    .founder-name {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .founder-role {
+      font-size: 13px;
+      color: #00D9FF;
+      font-weight: 600;
+    }
+    .founder-quote {
+      font-size: 15px;
+      color: rgba(248, 250, 252, 0.85);
+      line-height: 1.7;
+      margin: 0 0 16px;
+      font-style: italic;
+      border-left: 3px solid rgba(0, 217, 255, 0.5);
+      padding-left: 20px;
+    }
+    .founder-body {
+      font-size: 14px;
+      color: rgba(248, 250, 252, 0.75);
+      line-height: 1.7;
+    }
+
+    /* ============ DEVELOPERS ============ */
+    .dev-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .dev-card {
+      padding: 32px 24px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      text-align: center;
+      color: #F8FAFC;
+      transition: all 0.3s ease;
+    }
+    .dev-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(0, 217, 255, 0.3);
+      transform: translateY(-4px);
+    }
+    .dev-photo {
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      overflow: hidden;
+      border: 3px solid rgba(0, 217, 255, 0.4);
+    }
+    .dev-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .dev-name {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .dev-role {
+      font-size: 12px;
+      color: #00D9FF;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .dev-bio {
+      font-size: 13px;
+      color: rgba(248, 250, 252, 0.7);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .dev-link {
       display: inline-flex;
       align-items: center;
-      gap: 14px;
-      padding: 16px 32px;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: rgba(0, 217, 255, 0.15);
+      border: 1px solid rgba(0, 217, 255, 0.3);
+      color: #00D9FF;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .dev-link:hover { background: rgba(0, 217, 255, 0.25); }
+
+    /* ============ CONTACT ============ */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .contact-card {
+      padding: 24px;
       border-radius: 16px;
-      background: #F8FAFC;
-      color: #071B33;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      box-shadow: 0 12px 32px rgba(0, 217, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: pointer;
-      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s ease;
     }
-    .btn-google:hover { transform: translateY(-3px); box-shadow: 0 20px 48px rgba(0, 217, 255, 0.4), 0 8px 20px rgba(0, 0, 0, 0.4); }
-    .btn-google:disabled { opacity: 0.6; cursor: wait; }
-    .btn-google.dashboard-mode {
+    .contact-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(0, 217, 255, 0.3);
+      transform: translateY(-4px);
+    }
+    .contact-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(0, 217, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00D9FF;
+    }
+    .contact-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: #F8FAFC;
+    }
+
+    /* ============ PROFESSIONAL FOOTER ============ */
+    .footer {
+      position: relative;
+      z-index: 4;
+      padding: 60px 24px 30px;
+      background: rgba(7, 27, 51, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #F8FAFC;
+    }
+    .footer-top {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+    }
+    .footer-brand-col {
+      max-width: 320px;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .footer-logo img {
+      width: 40px; height: 40px;
+      object-fit: contain;
+    }
+    .footer-logo-text {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .footer-logo-text span {
       background: linear-gradient(135deg, #00D9FF, #10B981);
-      color: #071B33;
-      box-shadow: 0 12px 32px rgba(0, 217, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .btn-google.dashboard-mode:hover {
-      box-shadow: 0 20px 48px rgba(0, 217, 255, 0.65), 0 8px 20px rgba(0, 0, 0, 0.4);
+    .footer-desc {
+      font-size: 14px;
+      color: rgba(248, 250, 252, 0.6);
+      line-height: 1.6;
     }
-    .spin { animation: spin 0.9s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .footer-heading {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(248, 250, 252, 0.4);
+      margin-bottom: 20px;
+    }
+    .footer-links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .footer-links-list a {
+      font-size: 14px;
+      color: rgba(248, 250, 252, 0.75);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links-list a:hover {
+      color: #00D9FF;
+    }
+    .footer-contact-item {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 16px;
+    }
+    .footer-contact-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: rgba(248, 250, 252, 0.4);
+      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+    }
+    .footer-contact-value {
+      font-size: 14px;
+      color: #F8FAFC;
+    }
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 60px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-copy {
+      font-size: 13px;
+      color: rgba(248, 250, 252, 0.5);
+    }
+    .footer-lab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #F8FAFC;
+      text-decoration: none;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    .footer-lab:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(0, 217, 255, 0.3);
+    }
+    .footer-lab img {
+      width: 20px; height: 20px;
+    }
 
-    .landing-logo-hero {
-      width: 120px; height: 120px;
-      margin: 0 auto 32px;
-      filter: drop-shadow(0 12px 40px rgba(0, 217, 255, 0.4));
-    }
-    .landing-logo-hero img { width: 100%; height: 100%; object-fit: contain; }
-
+    /* ============ SCROLL HINT & TOAST ============ */
     .scroll-hint {
       position: absolute;
       bottom: 32px;
@@ -211,77 +701,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       animation: floatDown 2s ease-in-out infinite;
     }
     @keyframes floatDown {
       0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
       50% { transform: translate(-50%, 8px); opacity: 1; }
     }
-
-    .glass-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      max-width: 1100px;
-      margin: 40px auto 0;
-    }
-    .glass-panel {
-      padding: 32px 24px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(24px) saturate(150%);
-      -webkit-backdrop-filter: blur(24px) saturate(150%);
-      text-align: left;
-      color: #F8FAFC;
-      transition: all 0.35s ease;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-    .glass-panel::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.5), transparent);
-    }
-    .glass-panel:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(0, 217, 255, 0.35);
-      transform: translateY(-6px);
-      box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    }
-    .glass-panel-num {
-      font-size: 11px;
-      font-weight: 800;
-      color: #00D9FF;
-      letter-spacing: 0.15em;
-      margin-bottom: 16px;
-      opacity: 0.9;
-    }
-    .glass-panel-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #F8FAFC; letter-spacing: -0.01em; }
-    .glass-panel-text { font-size: 13px; color: rgba(248, 250, 252, 0.65); line-height: 1.6; }
-
-    .landing-footer {
-      position: absolute;
-      bottom: 24px;
-      left: 0; right: 0;
-      text-align: center;
-      font-size: 11px;
-      letter-spacing: 0.05em;
-      color: rgba(248, 250, 252, 0.4);
-    }
-
-    .landing-fallback {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(180deg, #0a2540 0%, #075985 40%, #0c4a6e 70%, #082f49 100%);
-      z-index: 1;
-    }
-
-    /* Toast */
     .toast {
       padding: 14px 18px;
       border-radius: 14px;
@@ -294,21 +720,35 @@
     @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
     .toast.success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
     .toast.error   { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-    .toast.warn    { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-    .toast.info    { background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; }
+    .spin { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (prefers-reduced-motion: reduce) {
-      .scroll-hint, .landing-badge .dot { animation: none !important; }
-      .landing-section { transition: none; }
+    /* ============ RESPONSIVE FOOTER ============ */
+    @media (max-width: 900px) {
+      .footer-top {
+        grid-template-columns: 1fr 1fr;
+      }
     }
     @media (max-width: 640px) {
-      .landing-section { padding: 16px; }
-      .glass-panel { padding: 22px 18px; }
-      .btn-google { padding: 14px 24px; font-size: 14px; }
+      .section { padding: 80px 16px; }
+      .founder-card { padding: 28px 20px; }
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+        gap: 16px;
+      }
     }
   </style>
 </head>
 <body>
+  <canvas id="ocean-canvas" class="landing-canvas-fixed"></canvas>
+  <canvas id="droplet-canvas" class="landing-canvas-fixed" style="pointer-events:none"></canvas>
+
   <div id="app"></div>
   <div id="toast-root" style="position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none"></div>
 
@@ -325,9 +765,6 @@
       getFirestore, doc, getDoc, setDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-    /* ============================================================
-       FIREBASE CONFIG (same project as userboard.html)
-    ============================================================ */
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
       authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
@@ -347,39 +784,145 @@
     googleProvider.setCustomParameters({ prompt: 'select_account' });
     getRedirectResult(auth).catch(err => { if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err); });
 
-    /* ============================================================
-       ROUTES
-    ============================================================ */
     const DASHBOARD_URL = 'userboard.html';
+    const state = { user: null, view: 'boot', lang: 'en' };
 
     /* ============================================================
-       STATE + UTILS
+       I18N
     ============================================================ */
-    const state = { user: null, view: 'boot' };
+    const I18N = {
+      en: {
+        nav_home: 'Home', nav_innovation: 'Innovation', nav_founder: 'Founder',
+        nav_developers: 'Developers', nav_contact: 'Contact',
+        signin: 'Sign in with Google', dashboard: 'Go to Dashboard',
+        hero_sub: 'A modern CPD attendance and location verification platform for teachers. Simple to use, secure by design, and built for real schools.',
+        scroll: 'Scroll to explore',
+        innovation_label: 'Innovation',
+        innovation_title_1: 'The problem is real.',
+        innovation_title_2: 'The solution is simple.',
+        innovation_sub: 'Paper registers get lost. Manual tracking wastes time. Administrators cannot prove who was really present. iMENA Smart CPD fixes all three.',
+        benefit_1_title: 'Real-time attendance', benefit_1_text: 'Teachers mark attendance from any device in seconds. No paper, no queues, no lost registers.',
+        benefit_2_title: 'GPS verification', benefit_2_text: 'Every attendance record is checked against the venue location. If the teacher is not there, the system flags it.',
+        benefit_3_title: 'Live admin dashboard', benefit_3_text: 'Directors and head teachers see who is attending, where they are, and whether they verified — all in real time.',
+        benefit_4_title: 'Works on any device', benefit_4_text: 'No special hardware. A phone, a tablet, or a school computer with a browser is enough.',
+        benefit_5_title: 'Audit-ready records', benefit_5_text: 'Every session is timestamped and stored securely. Reports are always ready when you need them.',
+        benefit_6_title: 'Built for Schools', benefit_6_text: 'Designed for real schools with real constraints. Lightweight, reliable, and respectful of teachers\' time.',
+        founder_label: 'Founder',
+        founder_title_1: 'A teacher saw the problem.',
+        founder_title_2: 'He built the solution.',
+        founder_name: 'MUGISHA Elyse', founder_role: 'Teacher · GS St Etienne',
+        founder_quote: '"I watched paper registers slow down our CPD sessions. I refused to accept the status quo, and chose to build a smarter, digital solution for teacher development."',
+        founder_body: 'MUGISHA Elyse, a teacher at GS St Etienne, experienced firsthand how difficult attendance management was in a real school. Paper registers were slow, easy to lose, and impossible to verify. Instead of accepting the problem, he envisioned a digital solution that would make attendance faster, fairer, and verifiable. That vision became iMENA Smart CPD.',
+        dev_label: 'Developers',
+        dev_title_1: 'The idea became real.',
+        dev_title_2: 'Built by student teachers.',
+        dev_sub: 'Two student teachers from TTC Muhanga turned the founder\'s idea into a working platform.',
+        dev_1_name: 'TUYISENGE Jean Chrisostom', dev_1_role: 'Lead Developer · Language Education',
+        dev_1_bio: 'A final-year student teacher at TTC Muhanga, Chrisostom is a self-taught developer who builds tools for African classrooms. He leads iMENA Lab and has trained over 44 student teachers in digital skills.',
+        dev_1_link: 'View Portfolio',
+        dev_2_name: 'NKURIKIYINEZA Ghad', dev_2_role: 'Co-Developer · Social Studies Education',
+        dev_2_bio: 'Ghad is a student teacher at TTC Muhanga who believes technology should serve every classroom. He brings a social sciences perspective to the team and helps shape the platform for real school needs.',
+        contact_title: 'Contact Us',
+        contact_sub: 'Get in touch with our team for inquiries, support, or partnerships.',
+        footer_desc: 'A modern attendance and location verification platform for teachers. Simple, secure, and built for real schools.',
+        footer_explore: 'Explore',
+        footer_contact_title: 'Contact',
+        footer_address_label: 'Address',
+        footer_email_label: 'Email',
+        footer_phone_label: 'Phone',
+        footer_lab: 'Developed by iMENA Lab',
+        footer_copy: '© 2026 iMENA Smart CPD. All rights reserved.',
+      },
+      rw: {
+        nav_home: 'Ahabanza', nav_innovation: 'Udushya', nav_founder: 'Uwashinze',
+        nav_developers: 'Abakora', nav_contact: 'Twandikire',
+        signin: 'Injira na Google', dashboard: 'Jya ku Rubuga',
+        hero_sub: 'Urubuga rugezweho rwo kwandika no kwemeza aho abarimu bari mu masomo y\'iterambere ry\'umwuga. Byoroshye gukoresha, bigoye kubeshya, kandi byubakiwe amashuri nyayo.',
+        scroll: 'Manuka urebe',
+        innovation_label: 'Udushya',
+        innovation_title_1: 'Ikibazo ni ukuri.',
+        innovation_title_2: 'Igisubizo ni cyoroshye.',
+        innovation_sub: 'Ibitabo byo kwandikaho abaje biratakara. Gukurikirana n\'intoki bitwara igihe. Abayobozi ntibashobora kwemeza abari bahari nyabo. iMENA Smart CPD ikemura ibyo byose uko ari bitatu.',
+        benefit_1_title: 'Kwitabira mu gihe nyacyo', benefit_1_text: 'Abarimu bandika ko bitabiriye ku gikoresho icyo ari cyo cyose mu masegonda. Nta mpapuro, nta mirongo, nta gitabo gitakara.',
+        benefit_2_title: 'Kwemeza hakoreshejwe GPS', benefit_2_text: 'Buri nyandiko yo kwitabira igenzurwa ugereranyije n\'ahantu habereye. Niba umwarimu atari aho, sisitemu irabimenya.',
+        benefit_3_title: 'Urubuga rw\'abayobozi mu gihe nyacyo', benefit_3_text: 'Abayobozi n\'abarimu bakuru babona uwo abitabiriye, aho ari, niba byemejwe — byose mu gihe nyacyo.',
+        benefit_4_title: 'Bikorana n\'igikoresho icyo ari cyo cyose', benefit_4_text: 'Nta bikoresho byihariye bikenewe. Telefone, tabuleti, cyangwa mudasobwa y\'ishuri ifite mushakisha ni bihagije.',
+        benefit_5_title: 'Inyandiko ziteguriye igenzura', benefit_5_text: 'Buri somo rifite itariki n\'igihe kandi ribikwa mu mutekano. Raporo ziba ziteguye igihe cyose uzikeneye.',
+        benefit_6_title: 'Yubakiwe u Rwanda', benefit_6_text: 'Yakorewe amashuri nyayo afite imbogamizi nyayo. Yoroheje, yizewe, kandi yubaha igihe cy\'abarimu.',
+        founder_label: 'Uwashinze',
+        founder_title_1: 'Umwarimu yabonye ikibazo.',
+        founder_title_2: 'Yubakiye igisubizo.',
+        founder_name: 'MUGISHA Elyse', founder_role: 'Umwarimu · GS St Etienne',
+        founder_quote: '"Nabonye abarimu bamara igihe kinini bandika ibitabo by\'abaje kurusha kwigisha. Nari nzi ko hari inzira nziza kurushaho."',
+        founder_body: 'MUGISHA Elyse, umwarimu wa GS St Etienne, yabonye ku ruhande rwe uko gucunga abaje mu ishuri byari bigoye. Ibitabo byo kwandikaho byari bitinda, byoroshye gutakara, kandi ntibyashoboraga kwemezwa. Aho kwemera ikibazo, yatekereje igisubizo cy\'ikoranabuhanga cyari gutuma kwitabira byihuta, byoroheje, kandi byemezwa. Icyo gitekerezo cyabaye iMENA Smart CPD.',
+        dev_label: 'Abakora Porogaramu',
+        dev_title_1: 'Igitekerezo cyabaye ukuri.',
+        dev_title_2: 'Byubakiwe n\'abarimu b\'umwarimu.',
+        dev_sub: 'Abarimu babiri b\'umwarimu bo muri TTC Muhanga bahinduye igitekerezo cy\'uwashinze urubuga rukora.',
+        dev_1_name: 'TUYISENGE Jean Chrisostom', dev_1_role: 'Umukora Porogaramu Mukuru · Uburezi bw\'Indimi',
+        dev_1_bio: 'Umwarimu w\'umwaka wa nyuma muri TTC Muhanga, Chrisostom ni umukora porogaramu wiyigishije. Ayobora iMENA Lab kandi yahuguye abarimu b\'umwarimu barenga 44 mu bumenyi bw\'ikoranabuhanga.',
+        dev_1_link: 'Reba Umurongo',
+        dev_2_name: 'NKURIKIYINEZA Ghad', dev_2_role: 'Umukora Porogaramu Mugenzi · Uburezi bw\'Ubumenyi bw\'Imibereho',
+        dev_2_bio: 'Ghad ni umwarimu w\'umwarimu muri TTC Muhanga wizera ko ikoranabuhanga rigomba gukorera buri ishuri. Azana ubumenyi bw\'imibereho y\'abantu mu itsinda kandi afasha mu kubaka urubuga rukwiriye amashuri nyayo.',
+        contact_title: 'Twandikire',
+        contact_sub: 'Duhamagare cyangwa utwandikire ku rupapuro rwa imeyili.',
+        footer_desc: 'Urubuga rugezweho rwo kwandika no kwemeza aho abarimu bari mu masomo y\'iterambere ry\'umwuga. Byoroshye, bitekanye, kandi byubakiwe amashuri nyayo.',
+        footer_explore: 'Shakisha',
+        footer_contact_title: 'Twandikire',
+        footer_address_label: 'Aho duherereye',
+        footer_email_label: 'Imeyili',
+        footer_phone_label: 'Telefone',
+        footer_lab: 'Yakorewe na iMENA Lab',
+        footer_copy: '© 2026 iMENA Smart CPD. Uburenganzira bwose burafitwe.',
+      },
+      fr: {
+        nav_home: 'Accueil', nav_innovation: 'Innovation', nav_founder: 'Fondateur',
+        nav_developers: 'Développeurs', nav_contact: 'Contact',
+        signin: 'Se connecter avec Google', dashboard: 'Aller au tableau de bord',
+        hero_sub: 'Une plateforme moderne de présence et de vérification de localisation pour les enseignants. Simple à utiliser, difficile à falsifier, et conçue pour de vraies écoles.',
+        scroll: 'Défiler pour explorer',
+        innovation_label: 'Innovation',
+        innovation_title_1: 'Le problème est réel.',
+        innovation_title_2: 'La solution est simple.',
+        innovation_sub: 'Les registres papier se perdent. Le suivi manuel fait perdre du temps. Les administrateurs ne peuvent pas prouver qui était vraiment présent. iMENA Smart CPD résout ces trois problèmes.',
+        benefit_1_title: 'Présence en temps réel', benefit_1_text: 'Les enseignants marquent leur présence depuis n\'importe quel appareil en quelques secondes. Sans papier, sans file d\'attente, sans registre perdu.',
+        benefit_2_title: 'Vérification GPS', benefit_2_text: 'Chaque enregistrement de présence est vérifié par rapport à l\'emplacement du lieu. Si l\'enseignant n\'est pas là, le système le signale.',
+        benefit_3_title: 'Tableau de bord admin en direct', benefit_3_text: 'Les directeurs et les chefs d\'établissement voient qui est présent, où il se trouve et si sa présence est vérifiée — en temps réel.',
+        benefit_4_title: 'Fonctionne sur tout appareil', benefit_4_text: 'Aucun matériel spécial. Un téléphone, une tablette ou un ordinateur scolaire avec un navigateur suffit.',
+        benefit_5_title: 'Dossiers prêts pour l\'audit', benefit_5_text: 'Chaque session est horodatée et stockée en toute sécurité. Les rapports sont toujours prêts quand vous en avez besoin.',
+        benefit_6_title: 'Conçu pour le Rwanda', benefit_6_text: 'Conçu pour de vraies écoles avec de vraies contraintes. Léger, fiable et respectueux du temps des enseignants.',
+        founder_label: 'Fondateur',
+        founder_title_1: 'Un enseignant a vu le problème.',
+        founder_title_2: 'Il a construit la solution.',
+        founder_name: 'MUGISHA Elyse', founder_role: 'Enseignant · GS St Etienne',
+        founder_quote: '"J\'ai vu des enseignants passer plus de temps à signer des registres qu\'à enseigner. Je savais qu\'il devait y avoir une meilleure façon."',
+        founder_body: 'MUGISHA Elyse, enseignant à GS St Etienne, a vécu personnellement la difficulté de la gestion des présences dans une vraie école. Les registres papier étaient lents, faciles à perdre et impossibles à vérifier. Au lieu d\'accepter le problème, il a imaginé une solution numérique qui rendrait la présence plus rapide, plus juste et vérifiable. Cette vision est devenue iMENA Smart CPD.',
+        dev_label: 'Développeurs',
+        dev_title_1: 'L\'idée est devenue réelle.',
+        dev_title_2: 'Construite par des étudiants enseignants.',
+        dev_sub: 'Deux étudiants enseignants de TTC Muhanga ont transformé l\'idée du fondateur en une plateforme fonctionnelle.',
+        dev_1_name: 'TUYISENGE Jean Chrisostom', dev_1_role: 'Développeur principal · Éducation linguistique',
+        dev_1_bio: 'Étudiant enseignant en dernière année à TTC Muhanga, Chrisostom est un développeur autodidacte qui construit des outils pour les classes africaines. Il dirige iMENA Lab et a formé plus de 44 étudiants enseignants aux compétences numériques.',
+        dev_1_link: 'Voir le portfolio',
+        dev_2_name: 'NKURIKIYINEZA Ghad', dev_2_role: 'Co-développeur · Éducation en sciences sociales',
+        dev_2_bio: 'Ghad est un étudiant enseignant à TTC Muhanga qui croit que la technologie doit servir chaque classe. Il apporte une perspective en sciences sociales à l\'équipe et aide à façonner la plateforme pour les besoins réels des écoles.',
+        contact_title: 'Contactez-nous',
+        contact_sub: 'Contactez notre équipe pour des demandes de renseignements, de l\'aide ou des partenariats.',
+        footer_desc: 'Une plateforme moderne de présence et de vérification de localisation pour les enseignants. Simple, sécurisée et conçue pour de vraies écoles.',
+        footer_explore: 'Explorer',
+        footer_contact_title: 'Contact',
+        footer_address_label: 'Adresse',
+        footer_email_label: 'Email',
+        footer_phone_label: 'Téléphone',
+        footer_lab: 'Développé par iMENA Lab',
+        footer_copy: '© 2026 iMENA Smart CPD. Tous droits réservés.',
+      },
+    };
 
-    function toast(message, type = 'info') {
-      const el = document.createElement('div');
-      el.className = `toast ${type}`;
-      el.textContent = message;
-      el.style.pointerEvents = 'auto';
-      document.getElementById('toast-root').appendChild(el);
-      setTimeout(() => {
-        el.style.transition = 'opacity .3s, transform .3s';
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(40px)';
-        setTimeout(() => el.remove(), 320);
-      }, 4500);
-    }
-
-    function escapeHtml(s) {
-      return String(s ?? '').replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      }[c]));
-    }
+    function t(key) { return (I18N[state.lang] || I18N.en)[key] || I18N.en[key] || key; }
 
     /* ============================================================
-       OCEAN ENGINE (unchanged — copy from your original)
-       Full ocean scene preserved exactly as-is.
+       OCEAN ENGINE (Unchanged)
     ============================================================ */
     const oceanScene = {
       renderer: null, scene: null, camera: null,
@@ -544,7 +1087,7 @@
       },
       buildFallback(container) {
         const fb = document.createElement('div');
-        fb.className = 'landing-fallback';
+        fb.style.cssText = 'position:fixed;inset:0;background:linear-gradient(180deg,#0a2540 0%,#075985 40%,#0c4a6e 70%,#082f49 100%);z-index:1';
         container.insertBefore(fb, container.firstChild);
         this.isActive = false;
       },
@@ -828,153 +1371,379 @@
     };
 
     /* ============================================================
-       LANDING PAGE
+       RENDER LANDING
     ============================================================ */
-    function goLanding() {
+    function renderLanding() {
       state.view = 'landing';
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
 
       const signedIn = !!state.user;
+      const app = document.getElementById('app');
 
-      document.getElementById('app').innerHTML = `
-        <div class="landing-root">
-          <canvas id="ocean-canvas" class="landing-canvas-fixed"></canvas>
-          <canvas id="droplet-canvas" class="landing-canvas-fixed" style="pointer-events:none"></canvas>
-
-          <a id="floating-dashboard" href="${DASHBOARD_URL}" class="${signedIn ? 'visible' : ''}">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
-            Dashboard
-          </a>
-
-          <div class="landing-scroll" id="landing-scroll">
-            <section class="landing-section" data-scene="1">
-              <div class="landing-section-inner">
-                <div class="landing-logo-hero">
-                  <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD" />
-                </div>
-                <div class="landing-badge"><span class="dot"></span>The Living Ocean</div>
-                <h1 class="landing-h1">Smarter CPD.<br/><span class="accent">Verified Presence.</span></h1>
-                <p class="landing-sub">A modern attendance and location verification platform for teacher professional development — where the ocean meets attendance.</p>
-                <div class="landing-cta-row">
-                  <button class="btn-google ${signedIn ? 'dashboard-mode' : ''}" data-cta>
-                    ${signedIn ? dashboardButtonContent() : signinButtonContent()}
-                  </button>
-                </div>
-                <div class="scroll-hint"><span>Scroll to sail</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
-              </div>
-            </section>
-
-            <section class="landing-section" data-scene="2">
-              <div class="landing-section-inner">
-                <h2 class="landing-h2">Every Session.<br/>Every Teacher.<br/><span class="accent">Accounted For.</span></h2>
-                <p class="landing-sub">Attendance is recorded the moment a teacher joins. Verified presence, session trails, and audit-grade records — all flowing naturally from the session.</p>
-              </div>
-            </section>
-
-            <section class="landing-section" data-scene="3">
-              <div class="landing-section-inner">
-                <h2 class="landing-h2">Feel the <span class="accent">Living Water.</span></h2>
-                <p class="landing-sub">As you travel across the ocean, the water responds. Sessions leave ripples. Attendance flows with presence.</p>
-              </div>
-            </section>
-
-            <section class="landing-section" data-scene="4">
-              <div class="landing-section-inner">
-                <h2 class="landing-h2">Built for <span class="accent">Real Schools.</span></h2>
-                <p class="landing-sub">Four core capabilities, engineered to work reliably in the field.</p>
-                <div class="glass-grid">
-                  <div class="glass-panel"><div class="glass-panel-num">01</div><div class="glass-panel-title">GPS Attendance</div><div class="glass-panel-text">Teachers mark attendance from their device. Live GPS ensures they are where they should be.</div></div>
-                  <div class="glass-panel"><div class="glass-panel-num">02</div><div class="glass-panel-title">Live Location Monitoring</div><div class="glass-panel-text">Administrators see attendance in real time on a live satellite map.</div></div>
-                  <div class="glass-panel"><div class="glass-panel-num">03</div><div class="glass-panel-title">Smart CPD Verification</div><div class="glass-panel-text">Attendance is verified only when the teacher attends and ends within the venue geofence.</div></div>
-                  <div class="glass-panel"><div class="glass-panel-num">04</div><div class="glass-panel-title">Real-Time Administration</div><div class="glass-panel-text">Directors and head teachers monitor all sessions, teachers, and verification status live.</div></div>
-                </div>
-              </div>
-            </section>
-
-            <section class="landing-section" data-scene="5">
-              <div class="landing-section-inner">
-                <h2 class="landing-h2">Professional Development,<br/><span class="accent">Beautifully Connected.</span></h2>
-                <p class="landing-sub">${signedIn ? 'You are already signed in. Continue to your dashboard.' : 'Sign in to enter your iMENA Smart CPD dashboard. Your attendance begins now.'}</p>
-                <div class="landing-cta-row">
-                  <button class="btn-google ${signedIn ? 'dashboard-mode' : ''}" data-cta>
-                    ${signedIn ? dashboardButtonContent() : signinButtonContent()}
-                  </button>
-                </div>
-                <div class="landing-footer">© iMENA Smart CPD · GS St Etienne · Powered by Firebase</div>
-              </div>
-            </section>
+      app.innerHTML = `
+        <!-- NAV -->
+        <nav class="nav" id="nav">
+          <div class="nav-left">
+            <div class="nav-logo">
+              <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" />
+            </div>
+            <div class="nav-brand">iMENA <span>Smart CPD</span></div>
           </div>
-        </div>`;
+          <div class="nav-links">
+            <a href="#home" data-i18n="nav_home">${t('nav_home')}</a>
+            <a href="#innovation" data-i18n="nav_innovation">${t('nav_innovation')}</a>
+            <a href="#founder" data-i18n="nav_founder">${t('nav_founder')}</a>
+            <a href="#developers" data-i18n="nav_developers">${t('nav_developers')}</a>
+            <a href="#contact" data-i18n="nav_contact">${t('nav_contact')}</a>
+          </div>
+          <div class="nav-right">
+            <button class="nav-cta ${signedIn ? 'dashboard-mode' : ''}" data-cta>
+              ${signedIn ? dashboardButtonContent() : signinButtonContent()}
+            </button>
+            <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+          </div>
+        </nav>
 
-      document.getElementById('landing-scroll').style.height = '500vh';
+        <!-- MOBILE MENU -->
+        <div class="mobile-menu" id="mobile-menu">
+          <div class="mobile-close-btn" id="mobile-close">✕</div>
+          <a href="#home" data-i18n="nav_home">${t('nav_home')}</a>
+          <a href="#innovation" data-i18n="nav_innovation">${t('nav_innovation')}</a>
+          <a href="#founder" data-i18n="nav_founder">${t('nav_founder')}</a>
+          <a href="#developers" data-i18n="nav_developers">${t('nav_developers')}</a>
+          <a href="#contact" data-i18n="nav_contact">${t('nav_contact')}</a>
+        </div>
 
-      // Attach CTA handlers
+        <!-- LANGUAGE SWITCHER -->
+        <div class="lang-switcher" id="lang-switcher">
+          <div class="lang-menu" id="lang-menu">
+            <button data-lang="en" class="${state.lang === 'en' ? 'active' : ''}"><span class="lang-flag">🇬🇧</span> English</button>
+            <button data-lang="rw" class="${state.lang === 'rw' ? 'active' : ''}"><span class="lang-flag">🇷🇼</span> Kinyarwanda</button>
+            <button data-lang="fr" class="${state.lang === 'fr' ? 'active' : ''}"><span class="lang-flag">🇫🇷</span> Français</button>
+          </div>
+          <button class="lang-toggle" id="lang-toggle">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20 15.3 15.3 0 010-20z"/></svg>
+            <span id="lang-current">${state.lang === 'rw' ? 'Kinyarwanda' : state.lang === 'fr' ? 'Français' : 'English'}</span>
+          </button>
+        </div>
+
+        <!-- SCROLLING CONTENT -->
+        <div class="landing-scroll" id="landing-scroll">
+
+          <!-- HERO -->
+          <section class="section" id="home">
+            <div class="section-inner">
+              <div class="hero-logo">
+                <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD" />
+              </div>
+              <h1 class="hero-h1">
+                <span class="accent">iMENA SMART CPD</span>
+              </h1>
+              <p class="hero-sub" data-i18n="hero_sub">${t('hero_sub')}</p>
+              <div class="scroll-hint">
+                <span data-i18n="scroll">${t('scroll')}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+          </section>
+
+          <!-- INNOVATION -->
+          <section class="section" id="innovation">
+            <div class="section-inner">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="innovation_label">${t('innovation_label')}</div>
+              <h2 class="section-h2">
+                <span data-i18n="innovation_title_1">${t('innovation_title_1')}</span><br/>
+                <span class="accent" data-i18n="innovation_title_2">${t('innovation_title_2')}</span>
+              </h2>
+              <p class="section-sub" data-i18n="innovation_sub">${t('innovation_sub')}</p>
+
+              <div class="benefits-grid">
+                <div class="benefit-card">
+                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                  <div class="benefit-title" data-i18n="benefit_1_title">${t('benefit_1_title')}</div>
+                  <div class="benefit-text" data-i18n="benefit_1_text">${t('benefit_1_text')}</div>
+                </div>
+                <div class="benefit-card">
+                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                  <div class="benefit-title" data-i18n="benefit_2_title">${t('benefit_2_title')}</div>
+                  <div class="benefit-text" data-i18n="benefit_2_text">${t('benefit_2_text')}</div>
+                </div>
+                <div class="benefit-card">
+                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                  <div class="benefit-title" data-i18n="benefit_3_title">${t('benefit_3_title')}</div>
+                  <div class="benefit-text" data-i18n="benefit_3_text">${t('benefit_3_text')}</div>
+                </div>
+                <div class="benefit-card">
+                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+                  <div class="benefit-title" data-i18n="benefit_4_title">${t('benefit_4_title')}</div>
+                  <div class="benefit-text" data-i18n="benefit_4_text">${t('benefit_4_text')}</div>
+                </div>
+                <div class="benefit-card">
+                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
+                  <div class="benefit-title" data-i18n="benefit_5_title">${t('benefit_5_title')}</div>
+                  <div class="benefit-text" data-i18n="benefit_5_text">${t('benefit_5_text')}</div>
+                </div>
+                <div class="benefit-card">
+                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                  <div class="benefit-title" data-i18n="benefit_6_title">${t('benefit_6_title')}</div>
+                  <div class="benefit-text" data-i18n="benefit_6_text">${t('benefit_6_text')}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- FOUNDER -->
+          <section class="section" id="founder">
+            <div class="section-inner">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="founder_label">${t('founder_label')}</div>
+              <h2 class="section-h2">
+                <span data-i18n="founder_title_1">${t('founder_title_1')}</span><br/>
+                <span class="accent" data-i18n="founder_title_2">${t('founder_title_2')}</span>
+              </h2>
+
+              <div class="founder-card">
+                <div class="founder-header">
+                  <div class="founder-avatar">ME</div>
+                  <div>
+                    <div class="founder-name" data-i18n="founder_name">${t('founder_name')}</div>
+                    <div class="founder-role" data-i18n="founder_role">${t('founder_role')}</div>
+                  </div>
+                </div>
+                <p class="founder-quote" data-i18n="founder_quote">${t('founder_quote')}</p>
+                <p class="founder-body" data-i18n="founder_body">${t('founder_body')}</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- DEVELOPERS -->
+          <section class="section" id="developers">
+            <div class="section-inner">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="dev_label">${t('dev_label')}</div>
+              <h2 class="section-h2">
+                <span data-i18n="dev_title_1">${t('dev_title_1')}</span><br/>
+                <span class="accent" data-i18n="dev_title_2">${t('dev_title_2')}</span>
+              </h2>
+              <p class="section-sub" data-i18n="dev_sub">${t('dev_sub')}</p>
+
+              <div class="dev-grid">
+                <div class="dev-card">
+                  <div class="dev-photo">
+                    <img src="https://i.postimg.cc/0NDn0HhJ/chrisostom.png" alt="TUYISENGE Jean Chrisostom" />
+                  </div>
+                  <div class="dev-name" data-i18n="dev_1_name">${t('dev_1_name')}</div>
+                  <div class="dev-role" data-i18n="dev_1_role">${t('dev_1_role')}</div>
+                  <p class="dev-bio" data-i18n="dev_1_bio">${t('dev_1_bio')}</p>
+                  <a href="https://chrisostom.vercel.app/" target="_blank" rel="noopener" class="dev-link">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    <span data-i18n="dev_1_link">${t('dev_1_link')}</span>
+                  </a>
+                </div>
+                <div class="dev-card">
+                  <div class="dev-photo">
+                    <img src="https://i.postimg.cc/rpxjNY7R/gad-founder-2.png" alt="NKURIKIYINEZA Ghad" />
+                  </div>
+                  <div class="dev-name" data-i18n="dev_2_name">${t('dev_2_name')}</div>
+                  <div class="dev-role" data-i18n="dev_2_role">${t('dev_2_role')}</div>
+                  <p class="dev-bio" data-i18n="dev_2_bio">${t('dev_2_bio')}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CONTACT -->
+          <section class="section" id="contact">
+            <div class="section-inner">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="nav_contact">${t('nav_contact')}</div>
+              <h2 class="section-h2 accent" data-i18n="contact_title">${t('contact_title')}</h2>
+              <p class="section-sub" data-i18n="contact_sub">${t('contact_sub')}</p>
+
+              <div class="contact-grid">
+                <div class="contact-card">
+                  <div class="contact-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                  <div class="contact-text">Muhanga, Shyogwe, Rwanda</div>
+                </div>
+                <div class="contact-card">
+                  <div class="contact-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg></div>
+                  <div class="contact-text">elysemugisha58@gmail.com</div>
+                </div>
+                <div class="contact-card">
+                  <div class="contact-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
+                  <div class="contact-text">0796717230</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+          <div class="footer-top">
+            <!-- Col 1: Brand -->
+            <div class="footer-brand-col">
+              <div class="footer-logo">
+                <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" />
+                <div class="footer-logo-text">iMENA <span>Smart CPD</span></div>
+              </div>
+              <p class="footer-desc" data-i18n="footer_desc">${t('footer_desc')}</p>
+            </div>
+
+            <!-- Col 2: Links -->
+            <div class="footer-links-col">
+              <div class="footer-heading" data-i18n="footer_explore">${t('footer_explore')}</div>
+              <div class="footer-links-list">
+                <a href="#home" data-i18n="footer_home">${t('footer_home')}</a>
+                <a href="#innovation" data-i18n="footer_innovation">${t('footer_innovation')}</a>
+                <a href="#founder" data-i18n="footer_founder">${t('footer_founder')}</a>
+                <a href="#developers" data-i18n="footer_developers">${t('footer_developers')}</a>
+              </div>
+            </div>
+
+            <!-- Col 3: Contact Info -->
+            <div class="footer-contact-col">
+              <div class="footer-heading" data-i18n="footer_contact_title">${t('footer_contact_title')}</div>
+              <div class="footer-contact-item">
+                <div class="footer-contact-label" data-i18n="footer_address_label">${t('footer_address_label')}</div>
+                <div class="footer-contact-value">Muhanga, Shyogwe, Rwanda</div>
+              </div>
+              <div class="footer-contact-item">
+                <div class="footer-contact-label" data-i18n="footer_email_label">${t('footer_email_label')}</div>
+                <div class="footer-contact-value">elysemugisha58@gmail.com</div>
+              </div>
+              <div class="footer-contact-item">
+                <div class="footer-contact-label" data-i18n="footer_phone_label">${t('footer_phone_label')}</div>
+                <div class="footer-contact-value">0796717230</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer-bottom">
+            <div class="footer-copy" data-i18n="footer_copy">${t('footer_copy')}</div>
+            <a href="https://imena-lab.vercel.app" target="_blank" rel="noopener" class="footer-lab">
+              <img src="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" alt="iMENA Lab" />
+              <span data-i18n="footer_lab">${t('footer_lab')}</span>
+            </a>
+          </div>
+        </footer>
+      `;
+
+      // CTA handlers
       document.querySelectorAll('[data-cta]').forEach(btn => {
         btn.onclick = signedIn
           ? () => { window.location.href = DASHBOARD_URL; }
           : () => handleGoogleSignIn(btn);
       });
 
-      // Init ocean
+      // Mobile Menu
+      const mobileMenu = document.getElementById('mobile-menu');
+      document.getElementById('mobile-menu-btn').onclick = () => mobileMenu.classList.add('open');
+      document.getElementById('mobile-close').onclick = () => mobileMenu.classList.remove('open');
+      mobileMenu.querySelectorAll('a').forEach(a => {
+        a.onclick = () => mobileMenu.classList.remove('open');
+      });
+
+      // Language Switcher
+      const langToggle = document.getElementById('lang-toggle');
+      const langMenu = document.getElementById('lang-menu');
+      langToggle.onclick = (e) => {
+        e.stopPropagation();
+        langMenu.classList.toggle('open');
+      };
+      document.querySelectorAll('[data-lang]').forEach(btn => {
+        btn.onclick = () => {
+          const lang = btn.dataset.lang;
+          if (lang === state.lang) return;
+          state.lang = lang;
+          langMenu.classList.remove('open');
+          updateLanguage(lang); // Just swap text, DO NOT re-render ocean
+        };
+      });
+      document.addEventListener('click', () => langMenu.classList.remove('open'));
+
+      // Nav scroll effect
+      window.addEventListener('scroll', () => {
+        const nav = document.getElementById('nav');
+        if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+      }, { passive: true });
+
+      // Initialize ocean if not already running
+      if (!oceanScene.isActive) {
+        initOcean();
+      }
+    }
+
+    function initOcean() {
       requestAnimationFrame(() => {
-        try { oceanScene.init(document.querySelector('.landing-root')); }
-        catch (e) { console.warn('[ocean init failed]', e); oceanScene.buildFallback(document.querySelector('.landing-root')); }
-        startLandingFadeLoop();
+        try {
+          const root = document.querySelector('.landing-scroll');
+          if (root) oceanScene.init(root.parentElement || document.body);
+        } catch (e) {
+          console.warn('[ocean init failed]', e);
+        }
+      });
+    }
+
+    /* ============================================================
+       UPDATE LANGUAGE DYNAMICALLY (NO RE-RENDER)
+    ============================================================ */
+    function updateLanguage(lang) {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (I18N[lang][key]) {
+          // If the element is a container for an SVG, find the text span
+          const span = el.querySelector('span:not(.lang-flag)');
+          if (span && el.tagName === 'BUTTON') {
+            span.innerText = I18N[lang][key];
+          } else {
+            el.innerText = I18N[lang][key];
+          }
+        }
+      });
+
+      // Update language toggle text
+      const currentLangText = document.getElementById('lang-current');
+      if (currentLangText) {
+        currentLangText.innerText = lang === 'rw' ? 'Kinyarwanda' : lang === 'fr' ? 'Français' : 'English';
+      }
+
+      // Update active state in menu
+      document.querySelectorAll('[data-lang]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
       });
     }
 
     function signinButtonContent() {
       return `
-        <svg width="20" height="20" viewBox="0 0 48 48">
+        <svg width="16" height="16" viewBox="0 0 48 48">
           <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
           <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
           <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.4-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
           <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2c-.4.4 6.7-4.9 6.7-14.9 0-1.2-.1-2.4-.4-3.5z"/>
         </svg>
-        Continue with Google`;
+        <span data-i18n="signin">${t('signin')}</span>`;
     }
 
     function dashboardButtonContent() {
       return `
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>
         </svg>
-        Go to Dashboard`;
-    }
-
-    let landingFadeRAF = null;
-    function startLandingFadeLoop() {
-      if (landingFadeRAF) cancelAnimationFrame(landingFadeRAF);
-      const sections = document.querySelectorAll('.landing-section');
-      function loop() {
-        if (state.view !== 'landing') { landingFadeRAF = null; return; }
-        const vh = window.innerHeight, center = vh / 2;
-        sections.forEach(s => {
-          const r = s.getBoundingClientRect();
-          const d = Math.abs(r.top + r.height / 2 - center);
-          const o = Math.max(0, 1 - d / (vh * 0.7));
-          s.style.opacity = o.toFixed(3);
-          s.style.pointerEvents = o > 0.6 ? 'auto' : 'none';
-        });
-        landingFadeRAF = requestAnimationFrame(loop);
-      }
-      landingFadeRAF = requestAnimationFrame(loop);
+        <span data-i18n="dashboard">${t('dashboard')}</span>`;
     }
 
     /* ============================================================
-       AUTH: sign in → ensure profile → redirect to dashboard
+       AUTH: sign in → ensure profile → redirect
     ============================================================ */
     async function handleGoogleSignIn(btn) {
       btn.disabled = true;
       const original = btn.innerHTML;
-      btn.innerHTML = '<span class="spin" style="display:inline-block;width:18px;height:18px;border:2px solid rgba(7,27,51,.25);border-top-color:#071B33;border-radius:50%"></span> Signing in…';
+      btn.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,27,51,.25);border-top-color:#071B33;border-radius:50%"></span>';
       try {
         const result = await signInWithPopup(auth, googleProvider);
         if (result?.user) {
           await ensureProfile(result.user);
-          // Small delay so user sees confirmation before nav
-          btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px">✓ Signed in. Redirecting…</span>';
+          btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px">✓</span>';
           window.location.href = DASHBOARD_URL;
           return;
         }
@@ -1007,21 +1776,37 @@
       }
     }
 
+    function toast(message, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      el.style.pointerEvents = 'auto';
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => {
+        el.style.transition = 'opacity .3s, transform .3s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 320);
+      }, 4500);
+    }
+
     /* ============================================================
        AUTH LIFECYCLE
-       - If signed in while on landing → swap CTA to "Go to Dashboard"
-       - If signed out → swap back to "Continue with Google"
     ============================================================ */
     onAuthStateChanged(auth, user => {
       const wasSignedIn = !!state.user;
       state.user = user || null;
       state.loading = false;
 
-      // Only re-render landing if auth state actually changed and we're on it
+      // If auth state changes while on landing, update the CTA buttons
       if (state.view === 'landing' && wasSignedIn !== !!state.user) {
-        // Re-render landing to update CTA text
-        if (oceanScene.isActive) oceanScene.dispose();
-        goLanding();
+        document.querySelectorAll('[data-cta]').forEach(btn => {
+          btn.innerHTML = state.user ? dashboardButtonContent() : signinButtonContent();
+          btn.classList.toggle('dashboard-mode', !!state.user);
+          btn.onclick = state.user
+            ? () => { window.location.href = DASHBOARD_URL; }
+            : () => handleGoogleSignIn(btn);
+        });
       }
     });
 
@@ -1030,22 +1815,21 @@
     ============================================================ */
     function boot() {
       document.getElementById('app').innerHTML = `
-        <div style="position:fixed;inset:0;background:linear-gradient(135deg,#071B33 0%,#0a2540 50%,#075985 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;color:#F8FAFC;font-family:Inter,sans-serif;">
-          <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" style="width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,217,255,.5))" />
-          <div style="font-size:13px;opacity:.7;letter-spacing:.15em;text-transform:uppercase;">Loading iMENA Smart CPD</div>
-          <div style="width:48px;height:48px;border-radius:50%;border:3px solid rgba(0,217,255,0.15);border-top-color:#00D9FF;animation:spin .9s linear infinite"></div>
+        <div style="position:fixed;inset:0;background:linear-gradient(135deg,#071B33 0%,#0a2540 50%,#075985 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;color:#F8FAFC;font-family:Inter,sans-serif;z-index:9999">
+          <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" style="width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,217,255,.5))" />
+          <div style="font-size:12px;opacity:.6;letter-spacing:.15em;text-transform:uppercase;">OPENING iMENA SMART CPD...</div>
+          <div style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(0,217,255,0.15);border-top-color:#00D9FF;animation:spin .9s linear infinite"></div>
         </div>
         <style>@keyframes spin { to { transform: rotate(360deg); } }</style>`;
     }
 
-    // Show loading briefly, then landing. If auth resolves first, landing still renders correctly.
     boot();
     setTimeout(() => {
       if (state.view === 'boot') {
         state.loading = false;
-        goLanding();
+        renderLanding();
       }
-    }, 800);
+    }, 700);
   </script>
 </body>
 </html>
