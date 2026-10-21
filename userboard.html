@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <title>iMENA Smart CPD — Dashboard</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input, textarea { font-family: inherit; }
+    a { color: inherit; }
+
+    .scene { position: relative; min-height: 100vh; background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 45%, #fae8ff 100%); overflow: hidden; isolation: isolate; }
+    .scene.admin { background: linear-gradient(135deg, #0b1220 0%, #1e1b4b 55%, #312e81 100%); color: #e2e8f0; }
+    .aurora-orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; pointer-events: none; animation: floatOrb 24s ease-in-out infinite; will-change: transform; }
+    .aurora-orb.o1 { width: 380px; height: 380px; background: #60a5fa; top: -80px; left: -100px; }
+    .aurora-orb.o2 { width: 460px; height: 460px; background: #c084fc; top: 20%; right: -150px; animation-delay: -6s; }
+    .aurora-orb.o3 { width: 340px; height: 340px; background: #f0abfc; bottom: -120px; left: 20%; animation-delay: -12s; }
+    .aurora-orb.o4 { width: 300px; height: 300px; background: #38bdf8; bottom: 10%; right: 10%; animation-delay: -18s; }
+    .admin .aurora-orb.o1 { background: #6366f1; opacity: 0.4; }
+    .admin .aurora-orb.o2 { background: #a855f7; opacity: 0.35; }
+    .admin .aurora-orb.o3 { background: #0ea5e9; opacity: 0.35; }
+    .admin .aurora-orb.o4 { background: #ec4899; opacity: 0.25; }
+    @keyframes floatOrb { 0%,100% { transform: translate(0,0) scale(1); } 25% { transform: translate(40px,-60px) scale(1.08); } 50% { transform: translate(-30px,50px) scale(0.94); } 75% { transform: translate(60px,30px) scale(1.04); } }
+    .scene::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%); -webkit-mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%); pointer-events: none; z-index: 0; }
+    .scene-inner { position: relative; z-index: 1; }
+
+    .card { background: rgba(255,255,255,0.72); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.6); border-radius: 22px; box-shadow: 0 8px 32px rgba(59,130,246,0.09), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease; }
+    .card.hoverable:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(59,130,246,0.18); }
+    .admin .card { background: rgba(30,27,75,0.55); border: 1px solid rgba(139,92,246,0.22); color: #e2e8f0; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: all 0.2s ease; white-space: nowrap; min-height: 44px; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); color: #fff; box-shadow: 0 6px 20px rgba(14,165,233,0.35); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(14,165,233,0.45); }
+    .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,0.35); }
+    .btn-danger:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(239,68,68,0.45); }
+    .btn-ghost { background: rgba(255,255,255,0.5); border: 1px solid rgba(148,163,184,0.4); color: #334155; }
+    .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.85); }
+    .admin .btn-ghost { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.35); color: #c4b5fd; }
+    .admin .btn-ghost:hover:not(:disabled) { background: rgba(139,92,246,0.22); }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+    .badge-live { background: rgba(16,185,129,0.15); color: #059669; }
+    .admin .badge-live { background: rgba(16,185,129,0.2); color: #34d399; }
+    .badge-ongoing { background: rgba(14,165,233,0.15); color: #0284c7; }
+    .admin .badge-ongoing { background: rgba(14,165,233,0.2); color: #38bdf8; }
+    .badge-upcoming { background: rgba(148,163,184,0.2); color: #475569; }
+    .admin .badge-upcoming { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+    .badge-ended { background: rgba(148,163,184,0.15); color: #64748b; }
+    .admin .badge-ended { background: rgba(148,163,184,0.12); color: #94a3b8; }
+
+    .pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; position: relative; }
+    .pulse-dot::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: #10b981; opacity: 0.6; animation: pulse 1.8s ease-out infinite; }
+    @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(2.4); opacity: 0; } }
+
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-up { animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .spin { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .app-header { position: sticky; top: 0; z-index: 40; padding: 12px 0; background: rgba(255,255,255,0.55); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,0.4); }
+    .admin .app-header { background: rgba(15,23,42,0.55); border-bottom-color: rgba(139,92,246,0.15); }
+
+    .input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.35); background: rgba(255,255,255,0.7); font-size: 14px; transition: all 0.2s; min-height: 44px; }
+    .input:focus { outline: none; border-color: #0ea5e9; box-shadow: 0 0 0 4px rgba(14,165,233,0.12); background: rgba(255,255,255,0.95); }
+    .admin .input { background: rgba(30,27,75,0.5); border-color: rgba(139,92,246,0.28); color: #e2e8f0; }
+
+    .toast { padding: 14px 18px; border-radius: 14px; font-size: 14px; font-weight: 500; max-width: 340px; box-shadow: 0 12px 32px rgba(0,0,0,0.18); animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    .toast.success { background: linear-gradient(135deg,#10b981,#059669); color: #fff; }
+    .toast.error { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
+    .toast.warn { background: linear-gradient(135deg,#f59e0b,#d97706); color: #fff; }
+    .toast.info { background: linear-gradient(135deg,#1e293b,#0f172a); color: #fff; }
+
+    .data-cell { padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.6); }
+    .admin .data-cell { background: rgba(30,27,75,0.4); border-color: rgba(139,92,246,0.18); }
+    .data-cell-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; margin-bottom: 3px; font-weight: 500; }
+    .admin .data-cell-label { color: #94a3b8; }
+    .data-cell-value { font-size: 14px; font-weight: 600; color: #1e293b; }
+    .admin .data-cell-value { color: #e2e8f0; }
+
+    .stat-card { padding: 18px 20px; border-radius: 18px; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.55); position: relative; overflow: hidden; }
+    .admin .stat-card { background: linear-gradient(135deg,rgba(30,27,75,0.7),rgba(49,46,129,0.4)); border: 1px solid rgba(139,92,246,0.28); }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg,#0ea5e9,#6366f1,#a855f7); opacity: 0.8; }
+    .stat-value { font-size: clamp(22px,4vw,32px); font-weight: 800; letter-spacing: -0.02em; color: #0f172a; line-height: 1.1; }
+    .admin .stat-value { color: #f1f5f9; }
+    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; font-weight: 600; margin-bottom: 6px; }
+    .admin .stat-label { color: #94a3b8; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { text-align: left; padding: 10px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; border-bottom: 1px solid rgba(148,163,184,0.25); }
+    .admin .data-table th { color: #94a3b8; border-bottom-color: rgba(139,92,246,0.2); }
+    .data-table td { padding: 12px 8px; border-bottom: 1px solid rgba(148,163,184,0.12); vertical-align: top; }
+    .admin .data-table td { border-bottom-color: rgba(139,92,246,0.12); }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .map-wrap { border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.5); }
+    .admin .map-wrap { border-color: rgba(139,92,246,0.22); }
+
+    .banner { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+    .banner-warn { background: rgba(254,240,199,0.7); border: 1px solid rgba(251,191,36,0.4); color: #78350f; }
+    .banner-error { background: rgba(254,226,226,0.7); border: 1px solid rgba(239,68,68,0.35); color: #7f1d1d; }
+    .admin .banner-warn { background: rgba(120,53,15,0.35); border-color: rgba(251,191,36,0.3); color: #fcd34d; }
+    .admin .banner-error { background: rgba(127,29,29,0.4); border-color: rgba(239,68,68,0.35); color: #fca5a5; }
+
+    .loader { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(14,165,233,0.2); border-top-color: #0ea5e9; animation: spin 0.9s linear infinite; }
+
+    @media (prefers-reduced-motion: reduce) { .aurora-orb, .pulse-dot::after { animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="toast-root" style="position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
+    import {
+      getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect,
+      getRedirectResult, GoogleAuthProvider, signOut, setPersistence,
+      browserLocalPersistence
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, getDoc, setDoc, addDoc,
+      updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
+      authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
+      projectId: "imena-smart-cpd-attendance",
+      storageBucket: "imena-smart-cpd-attendance.firebasestorage.app",
+      messagingSenderId: "515464832241",
+      appId: "1:515464832241:web:9e05a6cc3d4447dfff7550",
+      measurementId: "G-NQGDXWN6G8"
+    };
+
+    const firebaseApp = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+    try { getAnalytics(firebaseApp); } catch {}
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
+    const googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+    getRedirectResult(auth).catch(err => { if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err); });
+
+    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    const SATELLITE_LABELS_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+    const SATELLITE_ATTRIBUTION = 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
+    function addSatelliteBase(map) {
+      L.tileLayer(SATELLITE_URL, { attribution: SATELLITE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+      L.tileLayer(SATELLITE_LABELS_URL, { maxZoom: 19, pane: 'overlayPane' }).addTo(map);
+    }
+
+    const DEFAULT_LAT = -2.129565168007717;
+    const DEFAULT_LNG = 29.77740799677921;
+
+    const state = {
+      user: null, profile: null, view: 'boot',
+      cpds: [], myAttendances: [],
+      selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
+      subCpds: null, subMine: null, subDetail: null, subDetailAtt: null,
+      watchId: null, watchingFor: null, liveMap: null,
+      firestoreError: null, loading: true,
+    };
+
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+    function toDate(ts) { if (!ts) return null; if (ts.toDate) return ts.toDate(); if (ts instanceof Date) return ts; return new Date(ts); }
+    function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function formatDist(m) { if (m == null || isNaN(m)) return '—'; return m >= 1000 ? `${(m/1000).toFixed(2)} km` : `${Math.round(m)} m`; }
+    function distanceMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000, toRad = d => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    function classify(m, r) { return m <= r ? 'near' : 'far'; }
+
+    function getPositionOnce() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation is not supported by this browser.'));
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+          err => reject(new Error(
+            err.code === 1 ? 'Location permission denied. Please enable location access and try again.' :
+            err.code === 2 ? 'Unable to determine your location. Please check your signal.' :
+            'Location request timed out. Please try again.'
+          )),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+      });
+    }
+
+    function toast(message, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      el.style.pointerEvents = 'auto';
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => {
+        el.style.transition = 'opacity .3s, transform .3s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 320);
+      }, 4500);
+    }
+
+    function clearWatch() { if (state.watchId != null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; state.watchingFor = null; } }
+    function clearAllSubs() { ['subCpds','subMine','subDetail','subDetailAtt'].forEach(k => { if (state[k]) { try { state[k](); } catch {} state[k] = null; } }); }
+
+    function handleFirestoreError(scope, err) {
+      console.error(`[firestore/${scope}]`, err);
+      const msg = String(err?.code || err?.message || err);
+      if (msg.includes('unavailable') || msg.includes('transport') || msg.includes('deadline')) state.firestoreError = 'connection';
+      else if (msg.includes('permission')) state.firestoreError = 'permission';
+      else state.firestoreError = 'unknown';
+      if (state.view !== 'login' && state.view !== 'boot') renderErrorBanner();
+    }
+
+    function renderErrorBanner() {
+      const el = document.getElementById('firestore-banner'); if (!el) return;
+      const messages = {
+        connection: 'Connection to Firestore failed. Please verify that the Firestore database has been created in your Firebase Console, then refresh.',
+        permission: 'Firestore rules are blocking access. Please verify that your security rules allow signed-in users.',
+        unknown: 'An unexpected Firestore error occurred. Check the browser console for details.'
+      };
+      el.innerHTML = `<div class="banner banner-error"><span style="font-size:18px;line-height:1">⚠️</span><div><strong>Database connectivity issue.</strong><br/>${escapeHtml(messages[state.firestoreError] || messages.unknown)}<button id="btn-retry" class="btn btn-ghost" style="margin-top:10px;padding:8px 14px;font-size:12px;min-height:auto">Retry</button></div></div>`;
+      document.getElementById('btn-retry').onclick = () => { state.firestoreError = null; clearAllSubs(); location.reload(); };
+    }
+
+    function ensureWatchForActive() {
+      const active = state.myAttendances.find(a => a.state === 'active');
+      if (!active) { clearWatch(); return; }
+      if (state.watchingFor === active.id) return;
+      clearWatch();
+      state.watchingFor = active.id;
+      state.watchId = navigator.geolocation.watchPosition(
+        pos => { updateDoc(doc(db, 'attendance', active.id), { liveLat: pos.coords.latitude, liveLng: pos.coords.longitude, liveAccuracy: pos.coords.accuracy, liveUpdatedAt: serverTimestamp() }).catch(err => console.warn('[live ping]', err)); },
+        err => console.warn('[watch]', err),
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+      );
+    }
+
+    /* ============================================================
+       AUTH LIFECYCLE
+    ============================================================ */
+    onAuthStateChanged(auth, async user => {
+      if (user) {
+        state.user = user;
+        try {
+          const ref = doc(db, 'users', user.uid);
+          const snap = await getDoc(ref);
+          if (snap.exists()) state.profile = snap.data();
+          else {
+            const np = { email: user.email, fullName: user.displayName || user.email, role: 'teacher', createdAt: serverTimestamp() };
+            await setDoc(ref, np); state.profile = np;
+          }
+        } catch (err) {
+          console.error('[profile load]', err);
+          toast('Could not load your profile. Please check your Firestore setup.', 'error');
+          state.loading = false; goLogin(); return;
+        }
+        state.loading = false;
+        if (state.profile.role === 'admin') goAdmin(); else goTeacher();
+      } else {
+        clearAllSubs(); clearWatch();
+        Object.assign(state, { user: null, profile: null, cpds: [], myAttendances: [], cpdAttendances: [], selectedCpd: null, selectedCpdId: null, firestoreError: null, loading: false });
+        goLogin();
+      }
+    });
+
+    /* ============================================================
+       LOGIN
+    ============================================================ */
+    function goLogin() {
+      state.view = 'login';
+      document.getElementById('app').innerHTML = `
+        <div class="scene">
+          <div class="aurora-orb o1"></div>
+          <div class="aurora-orb o2"></div>
+          <div class="aurora-orb o3"></div>
+          <div class="aurora-orb o4"></div>
+          <div class="scene-inner" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px">
+            <div class="card slide-up" style="max-width:440px;width:100%;padding:40px 32px;text-align:center">
+              <div style="width:130px;height:130px;margin:0 auto 24px">
+                <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 32px rgba(14,165,233,.3))" />
+              </div>
+              <h1 style="font-size:clamp(24px,5vw,32px);font-weight:800;letter-spacing:-0.03em;margin:0 0 8px;line-height:1.15">
+                iMENA <span style="background:linear-gradient(135deg,#0ea5e9,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Smart CPD</span>
+              </h1>
+              <p style="font-size:14px;color:#64748b;margin:0 0 32px;line-height:1.6">
+                Sign in to access your dashboard.
+              </p>
+              <button id="btn-login" class="btn btn-primary" style="width:100%;padding:15px;font-size:15px">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
+                  <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                  <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.4-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+                  <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2c-.4.4 6.7-4.9 6.7-14.9 0-1.2-.1-2.4-.4-3.5z"/>
+                </svg>
+                Continue with Google
+              </button>
+              <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(148,163,184,.2);font-size:12px;color:#94a3b8;line-height:1.6">
+                Access is restricted to authorized iMENA staff.
+              </div>
+              <div style="margin-top:16px">
+                <a href="index.html" style="color:#0ea5e9;text-decoration:none;font-weight:600;font-size:13px">← Visit homepage</a>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      document.getElementById('btn-login').onclick = async () => {
+        const btn = document.getElementById('btn-login');
+        btn.disabled = true;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span class="spin" style="display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%"></span> Signing in…';
+        try { await signInWithPopup(auth, googleProvider); }
+        catch (err) {
+          if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
+            try { await signInWithRedirect(auth, googleProvider); return; }
+            catch (e2) { toast('Sign-in failed: ' + e2.message, 'error'); }
+          } else { toast('Sign-in failed: ' + err.message, 'error'); }
+          btn.disabled = false; btn.innerHTML = orig;
+        }
+      };
+    }
+
+    /* ============================================================
+       SHARED SCAFFOLDING
+    ============================================================ */
+    function sceneWrapper(innerHtml, isAdmin = false) {
+      return `<div class="scene ${isAdmin ? 'admin' : ''}"><div class="aurora-orb o1"></div><div class="aurora-orb o2"></div><div class="aurora-orb o3"></div><div class="aurora-orb o4"></div><div class="scene-inner">${innerHtml}</div></div>`;
+    }
+
+    function headerHtml() {
+      const isAdmin = state.profile?.role === 'admin';
+      return `
+        <header class="app-header">
+          <div style="max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              <div style="width:44px;height:44px;flex-shrink:0">
+                <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.15))" />
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:15px;font-weight:700;letter-spacing:-0.02em;color:${isAdmin ? '#f1f5f9' : '#0f172a'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  iMENA <span style="background:linear-gradient(135deg,#0ea5e9,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Smart CPD</span>
+                </div>
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:${isAdmin ? '#94a3b8' : '#64748b'};font-weight:500">
+                  ${isAdmin ? 'Administrator Console' : 'Attendance Portal'}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="text-align:right;display:none" class="sm-show">
+                <div style="font-size:13px;font-weight:600;color:${isAdmin ? '#e2e8f0' : '#1e293b'}">${escapeHtml(state.profile?.fullName || '')}</div>
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:${isAdmin ? '#a855f7' : '#0ea5e9'};font-weight:600">${escapeHtml(state.profile?.role || '')}</div>
+              </div>
+              <a href="index.html" class="btn btn-ghost" style="padding:10px;min-height:auto;width:42px;height:42px;text-decoration:none" title="Homepage" aria-label="Homepage">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+              </a>
+              <button id="btn-logout" class="btn btn-ghost" style="padding:10px;min-height:auto;width:42px;height:42px" title="Sign out" aria-label="Sign out">
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              </button>
+            </div>
+          </div>
+        </header>
+        <style>@media (min-width:640px) { .sm-show { display:block !important; } }</style>`;
+    }
+
+    function bindHeader() {
+      const lo = document.getElementById('btn-logout');
+      if (lo) lo.onclick = () => { if (confirm('Are you sure you want to sign out?')) signOut(auth); };
+    }
+
+    /* ============================================================
+       TEACHER
+    ============================================================ */
+    function cpdStatus(cpd) {
+      const s = toDate(cpd.startTime)?.getTime(), e = toDate(cpd.endTime)?.getTime(), n = Date.now();
+      if (!s || !e) return 'unknown';
+      if (n < s - 15 * 60 * 1000) return 'upcoming';
+      if (n > e) return 'ended';
+      return 'ongoing';
+    }
+
+    function goTeacher() {
+      state.view = 'teacher';
+      if (!state.subCpds) state.subCpds = onSnapshot(collection(db, 'cpds'),
+        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); state.firestoreError = null; if (state.view === 'teacher') renderTeacher(); },
+        err => handleFirestoreError('cpds', err));
+      if (!state.subMine && state.user) {
+        const q = query(collection(db, 'attendance'), where('teacherId', '==', state.user.uid));
+        state.subMine = onSnapshot(q,
+          snap => { state.myAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); ensureWatchForActive(); if (state.view === 'teacher') renderTeacher(); },
+          err => handleFirestoreError('mine', err));
+      }
+      renderTeacher();
+    }
+
+    function renderTeacher() {
+      const activeAtt = state.myAttendances.find(a => a.state === 'active');
+      const ongoing = state.cpds.filter(c => cpdStatus(c) === 'ongoing');
+      const upcoming = state.cpds.filter(c => cpdStatus(c) === 'upcoming');
+      const cards = state.cpds.sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0))
+        .map(cpd => renderTeacherCpdCard(cpd, activeAtt, !!activeAtt)).join('');
+
+      const inner = `
+        ${headerHtml()}
+        <main style="max-width:1200px;margin:0 auto;padding:28px 16px 60px">
+          <div id="firestore-banner"></div>
+          <div class="fade-in" style="margin-bottom:28px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#0ea5e9;font-weight:700;margin-bottom:6px">Welcome back</div>
+            <h1 style="font-size:clamp(22px,4.5vw,30px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;line-height:1.2">${escapeHtml((state.profile?.fullName || '').split(' ')[0] || 'Teacher')}</h1>
+            <p style="font-size:14px;color:#64748b;margin:0">${activeAtt ? `You are currently attending <strong>${escapeHtml(activeAtt.cpdTitle)}</strong>.` : 'View available sessions and record your attendance.'}</p>
+          </div>
+          ${activeAtt ? `<div class="banner banner-warn slide-up" style="margin-bottom:20px"><span style="font-size:20px">🔴</span><div><strong>Live tracking is active.</strong> Please keep this tab open until the session ends.</div></div>` : ''}
+          ${state.myAttendances.length > 0 ? `
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
+              <div class="stat-card"><div class="stat-label">Sessions attended</div><div class="stat-value">${state.myAttendances.filter(a => a.state === 'ended').length}</div></div>
+              <div class="stat-card"><div class="stat-label">Verified</div><div class="stat-value" style="color:#059669">${state.myAttendances.filter(a => a.verified).length}</div></div>
+              <div class="stat-card"><div class="stat-label">In progress</div><div class="stat-value" style="color:#0ea5e9">${state.myAttendances.filter(a => a.state === 'active').length}</div></div>
+            </div>` : ''}
+          ${state.cpds.length === 0
+            ? `<div class="card" style="padding:60px 24px;text-align:center"><div style="font-size:48px;margin-bottom:16px">📚</div><div style="font-size:16px;font-weight:600;margin-bottom:6px">No sessions yet</div><div style="font-size:14px;color:#64748b">Your administrator will publish sessions here.</div></div>`
+            : `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h2 style="font-size:15px;font-weight:700;margin:0">Available Sessions</h2><div style="font-size:12px;color:#64748b">${ongoing.length} ongoing · ${upcoming.length} upcoming</div></div><div style="display:grid;gap:14px">${cards}</div>`}
+        </main>`;
+      document.getElementById('app').innerHTML = sceneWrapper(inner, false);
+      bindHeader(); bindTeacherEvents();
+      if (state.firestoreError) renderErrorBanner();
+    }
+
+    function renderTeacherCpdCard(cpd, activeAtt, hasActiveElsewhere) {
+      const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
+      const status = myAtt?.state === 'active' ? 'live' : myAtt?.state === 'ended' ? 'ended' : cpdStatus(cpd);
+      const badgeMap = { upcoming: '<span class="badge badge-upcoming">Upcoming</span>', ongoing: '<span class="badge badge-ongoing">● Ongoing</span>', ended: '<span class="badge badge-ended">Ended</span>', live: '<span class="badge badge-live">● Live</span>' };
+      const badge = badgeMap[status] || '';
+      let actionHtml = '';
+      if (!myAtt) {
+        if (status === 'upcoming') actionHtml = `<button disabled class="btn btn-ghost" style="padding:12px 18px;font-size:13px">Not started</button>`;
+        else if (status === 'ended') actionHtml = `<button disabled class="btn btn-ghost" style="padding:12px 18px;font-size:13px">Ended</button>`;
+        else if (hasActiveElsewhere) actionHtml = `<button disabled class="btn btn-ghost" style="padding:12px 18px;font-size:13px">Finish current</button>`;
+        else actionHtml = `<button data-attend="${cpd.id}" class="btn btn-primary" style="padding:12px 20px;font-size:13px">▶ Attend</button>`;
+      } else if (myAtt.state === 'active') {
+        actionHtml = `<button data-end="${myAtt.id}" class="btn btn-danger" style="padding:12px 20px;font-size:13px">■ End Session</button>`;
+      } else {
+        actionHtml = myAtt.verified
+          ? `<div style="color:#059669;font-size:13px;font-weight:700;padding:10px 14px;background:rgba(16,185,129,.1);border-radius:12px">✓ Verified</div>`
+          : `<div style="color:#d97706;font-size:13px;font-weight:700;padding:10px 14px;background:rgba(245,158,11,.1);border-radius:12px">⚠ Flagged</div>`;
+      }
+      let liveRow = '';
+      if (myAtt && myAtt.state === 'active' && myAtt.liveLat != null) {
+        const dist = distanceMeters(myAtt.liveLat, myAtt.liveLng, cpd.venueLat, cpd.venueLng);
+        const near = dist <= cpd.radiusMeters;
+        liveRow = `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#475569"><span class="pulse-dot"></span><span style="font-weight:600">Live</span><span>·</span><span>${formatDist(dist)} from venue</span><span>·</span><span style="color:${near ? '#059669' : '#d97706'};font-weight:700">${near ? 'At venue' : 'Away'}</span></div>`;
+      }
+      const detailRow = myAtt ? `
+        <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+          <div class="data-cell"><div class="data-cell-label">Attended</div><div class="data-cell-value">${fmtTime(myAtt.attendedAt)}</div></div>
+          <div class="data-cell"><div class="data-cell-label">Ended</div><div class="data-cell-value">${fmtTime(myAtt.endedAt)}</div></div>
+          <div class="data-cell"><div class="data-cell-label">Start distance</div><div class="data-cell-value">${formatDist(myAtt.attendedDistanceMeters)}</div></div>
+          <div class="data-cell"><div class="data-cell-label">End distance</div><div class="data-cell-value">${formatDist(myAtt.endedDistanceMeters)}</div></div>
+        </div>` : '';
+      return `<div class="card hoverable fade-in" style="padding:20px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h3 style="font-size:15px;font-weight:700;margin:0;letter-spacing:-0.01em">${escapeHtml(cpd.title)}</h3>${badge}</div>
+            ${cpd.theme ? `<p style="font-size:13px;color:#64748b;margin:0 0 6px">${escapeHtml(cpd.theme)}</p>` : ''}
+            <p style="font-size:12px;color:#94a3b8;margin:0">${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)} · ${cpd.radiusMeters}m</p>
+            ${liveRow}
+          </div>
+          <div style="flex-shrink:0">${actionHtml}</div>
+        </div>${detailRow}</div>`;
+    }
+
+    function bindTeacherEvents() {
+      document.querySelectorAll('[data-attend]').forEach(b => { b.onclick = () => handleAttend(b.dataset.attend, b); });
+      document.querySelectorAll('[data-end]').forEach(b => { b.onclick = () => handleEnd(b.dataset.end, b); });
+    }
+
+    async function handleAttend(cpdId, btn) {
+      const cpd = state.cpds.find(c => c.id === cpdId); if (!cpd) return;
+      if (state.myAttendances.some(a => a.state === 'active')) { toast('Please end your current session first.', 'warn'); return; }
+      btn.disabled = true; const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%"></span> Locating…';
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = classify(dist, cpd.radiusMeters);
+        await addDoc(collection(db, 'attendance'), {
+          cpdId, cpdTitle: cpd.title, teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email, teacherEmail: state.user.email,
+          attendedAt: serverTimestamp(), attendedLat: pos.lat, attendedLng: pos.lng,
+          attendedDistanceMeters: dist, attendedStatus: status,
+          liveLat: pos.lat, liveLng: pos.lng, liveAccuracy: pos.accuracy, liveUpdatedAt: serverTimestamp(),
+          state: 'active', verified: false,
+        });
+        toast(status === 'near' ? `Attendance recorded (${formatDist(dist)} from venue). Keep this tab open.` : `Attendance recorded, but ${formatDist(dist)} from venue.`, status === 'near' ? 'success' : 'warn');
+      } catch (err) { toast(err.message || 'Unable to capture your location.', 'error'); btn.disabled = false; btn.innerHTML = orig; }
+    }
+
+    async function handleEnd(attId, btn) {
+      const att = state.myAttendances.find(a => a.id === attId);
+      const cpd = state.cpds.find(c => c.id === att?.cpdId);
+      if (!att || !cpd) return;
+      btn.disabled = true; const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%"></span> Finalizing…';
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = classify(dist, cpd.radiusMeters);
+        const verified = att.attendedStatus === 'near' && status === 'near';
+        await updateDoc(doc(db, 'attendance', att.id), {
+          endedAt: serverTimestamp(), endedLat: pos.lat, endedLng: pos.lng,
+          endedDistanceMeters: dist, endedStatus: status, state: 'ended', verified,
+        });
+        clearWatch();
+        toast(verified ? 'Session completed. Attendance verified.' : `Session ended ${formatDist(dist)} from venue. Admin will review.`, verified ? 'success' : 'warn');
+      } catch (err) { toast(err.message || 'Could not complete the session.', 'error'); btn.disabled = false; btn.innerHTML = orig; }
+    }
+
+    /* ============================================================
+       ADMIN
+    ============================================================ */
+    function goAdmin() {
+      state.view = 'admin'; clearWatch();
+      if (state.subMine) { try { state.subMine(); } catch {} state.subMine = null; }
+      if (state.subDetail) { try { state.subDetail(); } catch {} state.subDetail = null; }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} state.subDetailAtt = null; }
+      if (!state.subCpds) state.subCpds = onSnapshot(collection(db, 'cpds'),
+        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); state.firestoreError = null; if (state.view === 'admin') renderAdmin(); },
+        err => handleFirestoreError('admin-cpds', err));
+      renderAdmin();
+    }
+
+    function renderAdmin() {
+      const list = [...state.cpds].sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0));
+      const ongoing = list.filter(c => cpdStatus(c) === 'ongoing').length;
+      const upcoming = list.filter(c => cpdStatus(c) === 'upcoming').length;
+      const ended = list.filter(c => cpdStatus(c) === 'ended').length;
+      const rows = list.map(cpd => {
+        const st = cpdStatus(cpd);
+        const badge = { upcoming: '<span class="badge badge-upcoming">Upcoming</span>', ongoing: '<span class="badge badge-ongoing">● Ongoing</span>', ended: '<span class="badge badge-ended">Ended</span>' }[st] || '';
+        return `<div class="card hoverable fade-in" style="padding:20px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h3 style="font-size:15px;font-weight:700;margin:0;color:#f1f5f9">${escapeHtml(cpd.title)}</h3>${badge}</div>
+              ${cpd.theme ? `<p style="font-size:13px;color:#94a3b8;margin:0 0 6px">${escapeHtml(cpd.theme)}</p>` : ''}
+              <p style="font-size:12px;color:#94a3b8;margin:0">${fmtDateTime(cpd.startTime)} → ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)} · ${cpd.radiusMeters}m</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <button data-open-cpd="${cpd.id}" class="btn btn-primary" style="padding:10px 16px;font-size:12px">Open</button>
+              <button data-del-cpd="${cpd.id}" class="btn btn-ghost" style="padding:10px;min-height:auto;width:40px;height:40px;color:#f87171" title="Delete">🗑</button>
+            </div>
+          </div></div>`;
+      }).join('');
+
+      const inner = `${headerHtml()}
+        <main style="max-width:1200px;margin:0 auto;padding:28px 16px 60px">
+          <div id="firestore-banner"></div>
+          <div class="fade-in" style="margin-bottom:28px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#a855f7;font-weight:700;margin-bottom:6px">Administrator Console</div>
+            <h1 style="font-size:clamp(22px,4.5vw,30px);font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;color:#f1f5f9">Sessions Overview</h1>
+            <p style="font-size:14px;color:#94a3b8;margin:0">Create sessions, monitor live attendance, review verification.</p>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px">
+            <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${list.length}</div></div>
+            <div class="stat-card"><div class="stat-label">Ongoing</div><div class="stat-value" style="color:#38bdf8">${ongoing}</div></div>
+            <div class="stat-card"><div class="stat-label">Upcoming</div><div class="stat-value" style="color:#c4b5fd">${upcoming}</div></div>
+            <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" style="color:#94a3b8">${ended}</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+            <h2 style="font-size:15px;font-weight:700;margin:0;color:#f1f5f9">All Sessions</h2>
+            <button id="btn-new-cpd" class="btn btn-primary" style="padding:12px 20px;font-size:13px">+ New Session</button>
+          </div>
+          ${list.length === 0 ? `<div class="card" style="padding:60px 24px;text-align:center;color:#94a3b8"><div style="font-size:48px;margin-bottom:16px">📋</div><div style="font-size:16px;font-weight:600;color:#e2e8f0">No sessions yet</div></div>` : `<div style="display:grid;gap:14px">${rows}</div>`}
+        </main>`;
+
+      document.getElementById('app').innerHTML = sceneWrapper(inner, true);
+      bindHeader();
+      if (state.firestoreError) renderErrorBanner();
+      document.getElementById('btn-new-cpd').onclick = () => goCreateCpd();
+      document.querySelectorAll('[data-open-cpd]').forEach(el => { el.onclick = () => goCpdDetail(el.dataset.openCpd); });
+      document.querySelectorAll('[data-del-cpd]').forEach(el => {
+        el.onclick = async () => {
+          if (!confirm('Delete this CPD?')) return;
+          try { await deleteDoc(doc(db, 'cpds', el.dataset.delCpd)); toast('Deleted.', 'success'); }
+          catch (err) { toast('Delete failed: ' + err.message, 'error'); }
+        };
+      });
+    }
+
+    function goCreateCpd() {
+      state.view = 'create-cpd';
+      if (state.subDetail) { try { state.subDetail(); } catch {} state.subDetail = null; }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} state.subDetailAtt = null; }
+      const inner = `${headerHtml()}
+        <main style="max-width:820px;margin:0 auto;padding:28px 16px 60px">
+          <div class="fade-in" style="margin-bottom:24px">
+            <button id="btn-back" class="btn btn-ghost" style="padding:8px 14px;font-size:12px;min-height:auto;margin-bottom:16px">← Back</button>
+            <h1 style="font-size:clamp(22px,4.5vw,28px);font-weight:800;margin:0 0 6px;color:#f1f5f9">Create Session</h1>
+            <p style="font-size:14px;color:#94a3b8;margin:0">Configure venue & geofence.</p>
+          </div>
+          <form id="cpd-form" class="card slide-up" style="padding:24px">
+            <div id="form-error" style="display:none;margin-bottom:16px" class="banner banner-error"></div>
+            <div style="display:grid;gap:16px">
+              <label><div class="data-cell-label" style="margin-bottom:6px">Title *</div><input name="title" required class="input" placeholder="Teaching Methodologies 2025" /></label>
+              <label><div class="data-cell-label" style="margin-bottom:6px">Theme</div><input name="theme" class="input" placeholder="Modern classroom practices" /></label>
+              <label><div class="data-cell-label" style="margin-bottom:6px">Description</div><textarea name="description" rows="3" class="input"></textarea></label>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
+                <label><div class="data-cell-label" style="margin-bottom:6px">Start *</div><input type="datetime-local" name="startTime" required class="input" /></label>
+                <label><div class="data-cell-label" style="margin-bottom:6px">End *</div><input type="datetime-local" name="endTime" required class="input" /></label>
+              </div>
+              <label><div class="data-cell-label" style="margin-bottom:6px">Venue</div><input name="venueName" value="GS St Etienne" class="input" /></label>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <label><div class="data-cell-label" style="margin-bottom:6px">Lat</div><input name="venueLat" value="${DEFAULT_LAT}" class="input" /></label>
+                <label><div class="data-cell-label" style="margin-bottom:6px">Lng</div><input name="venueLng" value="${DEFAULT_LNG}" class="input" /></label>
+                <label><div class="data-cell-label" style="margin-bottom:6px">Radius (m)</div><input name="radiusMeters" type="number" value="100" min="10" class="input" /></label>
+              </div>
+              <div>
+                <div class="data-cell-label" style="margin-bottom:8px">Pin venue (satellite)</div>
+                <div id="venue-map" class="map-wrap" style="height:320px"></div>
+                <button type="button" id="btn-use-location" style="margin-top:10px;font-size:12px;color:#a855f7;background:none;padding:6px 0;font-weight:600">📍 Use my current location</button>
+              </div>
+              <div style="display:flex;gap:10px;padding-top:8px;flex-wrap:wrap">
+                <button type="submit" id="btn-save-cpd" class="btn btn-primary" style="flex:1;min-width:150px">Create Session</button>
+                <button type="button" id="btn-cancel" class="btn btn-ghost" style="flex:1;min-width:150px">Cancel</button>
+              </div>
+            </div>
+          </form></main>`;
+      document.getElementById('app').innerHTML = sceneWrapper(inner, true);
+      bindHeader();
+      document.getElementById('btn-back').onclick = () => goAdmin();
+      document.getElementById('btn-cancel').onclick = () => goAdmin();
+      const form = document.getElementById('cpd-form');
+      const latInput = form.elements.venueLat, lngInput = form.elements.venueLng, radiusInput = form.elements.radiusMeters;
+      const map = L.map('venue-map', { zoomControl: true }).setView([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], 18);
+      addSatelliteBase(map);
+      const marker = L.marker([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG]).addTo(map);
+      const circle = L.circle([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], { radius: parseFloat(radiusInput.value) || 100, color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.15, weight: 2 }).addTo(map);
+      map.on('click', e => { const { lat, lng } = e.latlng; latInput.value = lat.toFixed(6); lngInput.value = lng.toFixed(6); marker.setLatLng([lat, lng]); circle.setLatLng([lat, lng]); });
+      radiusInput.oninput = () => circle.setRadius(parseFloat(radiusInput.value) || 100);
+      document.getElementById('btn-use-location').onclick = async () => {
+        try { const pos = await getPositionOnce(); latInput.value = pos.lat.toFixed(6); lngInput.value = pos.lng.toFixed(6); marker.setLatLng([pos.lat, pos.lng]); circle.setLatLng([pos.lat, pos.lng]); map.setView([pos.lat, pos.lng], 19); toast('Venue updated.', 'success'); }
+        catch (e) { toast(e.message, 'error'); }
+      };
+      form.onsubmit = async ev => {
+        ev.preventDefault();
+        const btn = document.getElementById('btn-save-cpd');
+        const errEl = document.getElementById('form-error');
+        errEl.style.display = 'none'; btn.disabled = true; btn.textContent = 'Creating…';
+        try {
+          const fd = new FormData(form);
+          const data = {
+            title: String(fd.get('title')).trim(),
+            theme: String(fd.get('theme') || '').trim(),
+            description: String(fd.get('description') || '').trim(),
+            startTime: new Date(fd.get('startTime')),
+            endTime: new Date(fd.get('endTime')),
+            venueName: String(fd.get('venueName') || 'Venue').trim(),
+            venueLat: Number(fd.get('venueLat')),
+            venueLng: Number(fd.get('venueLng')),
+            radiusMeters: Number(fd.get('radiusMeters')) || 100,
+            createdBy: state.user.uid, createdAt: serverTimestamp(),
+          };
+          if (!data.title) throw new Error('Title is required.');
+          if (isNaN(data.venueLat) || isNaN(data.venueLng)) throw new Error('Invalid coordinates.');
+          if (data.endTime <= data.startTime) throw new Error('End must be after start.');
+          await addDoc(collection(db, 'cpds'), data);
+          toast('Session created.', 'success'); goAdmin();
+        } catch (err) {
+          errEl.className = 'banner banner-error'; errEl.innerHTML = `<span>⚠️</span><div>${escapeHtml(err.message)}</div>`; errEl.style.display = 'flex';
+          btn.disabled = false; btn.textContent = 'Create Session';
+        }
+      };
+    }
+
+    function goCpdDetail(cpdId) {
+      state.view = 'cpd-detail'; state.selectedCpdId = cpdId;
+      state.selectedCpd = null; state.cpdAttendances = [];
+      if (state.subDetail) { try { state.subDetail(); } catch {} }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} }
+      state.subDetail = onSnapshot(doc(db, 'cpds', cpdId), snap => { state.selectedCpd = snap.exists() ? { id: snap.id, ...snap.data() } : null; if (state.view === 'cpd-detail') renderCpdDetail(); }, err => handleFirestoreError('detail', err));
+      const q = query(collection(db, 'attendance'), where('cpdId', '==', cpdId));
+      state.subDetailAtt = onSnapshot(q, snap => { state.cpdAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (state.view === 'cpd-detail') renderCpdDetail(); }, err => handleFirestoreError('detail-att', err));
+      renderCpdDetail();
+    }
+
+    function renderCpdDetail() {
+      const cpd = state.selectedCpd;
+      if (!cpd) { document.getElementById('app').innerHTML = sceneWrapper(`${headerHtml()}<main style="max-width:1200px;margin:0 auto;padding:60px 16px;text-align:center"><div class="loader" style="margin:0 auto"></div></main>`, true); bindHeader(); return; }
+      const rows = state.cpdAttendances.map(a => {
+        let status;
+        if (!a.endedAt) status = a.state === 'active' ? `<span style="color:#38bdf8;font-size:12px;font-weight:600"><span class="pulse-dot"></span> Live</span>` : `<span style="color:#f87171;font-size:12px;font-weight:600">✕ Not ended</span>`;
+        else if (a.verified) status = `<span style="color:#34d399;font-size:12px;font-weight:600">✓ Verified</span>`;
+        else status = `<span style="color:#fbbf24;font-size:12px;font-weight:600">⚠ Flagged</span>`;
+        return `<tr><td><div style="font-weight:600;color:#f1f5f9;font-size:13px">${escapeHtml(a.teacherName || 'Unknown')}</div><div style="font-size:11px;color:#94a3b8">${escapeHtml(a.teacherEmail || '')}</div></td><td style="color:#cbd5e1;font-size:12px">${fmtTime(a.attendedAt)}</td><td style="color:#cbd5e1;font-size:12px">${fmtTime(a.endedAt)}</td><td style="color:#cbd5e1;font-size:12px">${formatDist(a.attendedDistanceMeters)}${a.endedDistanceMeters != null ? ` → ${formatDist(a.endedDistanceMeters)}` : ''}</td><td>${status}</td></tr>`;
+      }).join('');
+      const total = state.cpdAttendances.length;
+      const verified = state.cpdAttendances.filter(a => a.verified).length;
+      const live = state.cpdAttendances.filter(a => a.state === 'active').length;
+      const inner = `${headerHtml()}
+        <main style="max-width:1300px;margin:0 auto;padding:28px 16px 60px">
+          <div class="fade-in" style="margin-bottom:24px">
+            <button id="btn-back-admin" class="btn btn-ghost" style="padding:8px 14px;font-size:12px;min-height:auto;margin-bottom:16px">← Back</button>
+            <h1 style="font-size:clamp(20px,4vw,28px);font-weight:800;margin:0 0 6px;color:#f1f5f9">${escapeHtml(cpd.title)}</h1>
+            <p style="font-size:13px;color:#94a3b8;margin:0">${escapeHtml(cpd.venueName)} · ${cpd.radiusMeters}m · ${fmtDateTime(cpd.startTime)} – ${fmtTime(cpd.endTime)}</p>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+            <div class="stat-card"><div class="stat-label">Attendees</div><div class="stat-value">${total}</div></div>
+            <div class="stat-card"><div class="stat-label">Live</div><div class="stat-value" style="color:#38bdf8">${live}</div></div>
+            <div class="stat-card"><div class="stat-label">Verified</div><div class="stat-value" style="color:#34d399">${verified}</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:16px" class="detail-grid">
+            <div class="card" style="padding:20px">
+              <h2 style="font-size:14px;font-weight:700;margin:0 0 14px;color:#f1f5f9">Attendance Record</h2>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>Teacher</th><th>Attended</th><th>Ended</th><th>Distance</th><th>Status</th></tr></thead><tbody>${rows || `<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8">No attendance yet.</td></tr>`}</tbody></table></div>
+            </div>
+            <div class="card" style="padding:16px">
+              <h2 style="font-size:14px;font-weight:700;margin:0 0 10px;color:#f1f5f9">Live Satellite Map</h2>
+              <div id="live-map" class="map-wrap" style="height:clamp(320px,50vw,480px)"></div>
+            </div>
+          </div>
+        </main>
+        <style>@media (min-width: 900px) { .detail-grid { grid-template-columns: 1fr 1fr !important; } }</style>`;
+      document.getElementById('app').innerHTML = sceneWrapper(inner, true);
+      bindHeader();
+      document.getElementById('btn-back-admin').onclick = () => goAdmin();
+      requestAnimationFrame(() => updateLiveMap(cpd));
+    }
+
+    function updateLiveMap(cpd) {
+      const el = document.getElementById('live-map'); if (!el) return;
+      let center = [cpd.venueLat, cpd.venueLng], zoom = 18;
+      if (state.liveMap) { try { center = state.liveMap.getCenter(); zoom = state.liveMap.getZoom(); state.liveMap.remove(); } catch {} state.liveMap = null; }
+      const map = L.map(el).setView(center, zoom);
+      addSatelliteBase(map);
+      L.circle([cpd.venueLat, cpd.venueLng], { radius: cpd.radiusMeters, color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.1, weight: 2, dashArray: '6 4' }).addTo(map);
+      const venueIcon = L.divIcon({ className: '', html: `<div style="background:linear-gradient(135deg,#0ea5e9,#a855f7);width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:white;font-size:15px">🏫</div>`, iconSize: [32,32], iconAnchor: [16,16] });
+      L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(map).bindPopup(`<b>${escapeHtml(cpd.venueName)}</b>`);
+      state.cpdAttendances.forEach(a => {
+        let lat, lng, color, label;
+        if (a.state === 'active' && a.liveLat != null) { lat = a.liveLat; lng = a.liveLng; color = '#10b981'; label = `<b>${escapeHtml(a.teacherName)}</b><br/>Live`; }
+        else if (a.endedLat != null) { lat = a.endedLat; lng = a.endedLng; color = a.verified ? '#0ea5e9' : '#f59e0b'; label = `<b>${escapeHtml(a.teacherName)}</b><br/>${a.verified ? 'Verified' : 'Flagged'}`; }
+        else if (a.attendedLat != null) { lat = a.attendedLat; lng = a.attendedLng; color = '#ef4444'; label = `<b>${escapeHtml(a.teacherName)}</b><br/>Not ended`; }
+        else return;
+        const icon = L.divIcon({ className: '', html: `<div style="background:${color};width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>`, iconSize: [20,20], iconAnchor: [10,10] });
+        L.marker([lat, lng], { icon }).addTo(map).bindPopup(label);
+      });
+      state.liveMap = map;
+    }
+
+    /* ============================================================
+       BOOT
+    ============================================================ */
+    function boot() {
+      document.getElementById('app').innerHTML = `
+        <div style="position:fixed;inset:0;background:linear-gradient(135deg,#071B33 0%,#0a2540 50%,#075985 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;color:#F8FAFC;font-family:Inter,sans-serif;">
+          <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" style="width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,217,255,.5))" />
+          <div style="font-size:13px;opacity:.7;letter-spacing:.15em;text-transform:uppercase;">Loading iMENA Smart CPD</div>
+          <div style="width:48px;height:48px;border-radius:50%;border:3px solid rgba(0,217,255,0.15);border-top-color:#00D9FF;animation:spin .9s linear infinite"></div>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>`;
+    }
+    boot();
+    setTimeout(() => { if (state.view === 'boot') { state.loading = false; goLogin(); } }, 1200);
+  </script>
+</body>
+</html>
