@@ -125,13 +125,14 @@
       padding-bottom: env(safe-area-inset-bottom);
     }
     .tab-btn {
-      flex: 1; padding: 10px 4px;
-      color: #64748b; font-size: 10px; font-weight: 700;
+      flex: 1; padding: 10px 2px;
+      color: #64748b; font-size: 9.5px; font-weight: 700;
       text-align: center; transition: color 0.2s;
-      text-transform: uppercase; letter-spacing: 0.04em;
+      text-transform: uppercase; letter-spacing: 0.03em;
       display: flex; flex-direction: column; align-items: center; gap: 3px;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis;
     }
-    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
     .tab-btn.active { color: #00ffcc; }
     .teacher-mode .tab-btn.active { color: #fff; }
     .teacher-mode .tab-btn.active svg {
@@ -209,10 +210,21 @@
     .cal-day.empty { background: transparent; cursor: default; }
     .cal-day.has-cpd { background: rgba(139, 92, 246, 0.18); border: 1px solid rgba(139, 92, 246, 0.4); color: #fff; }
     .cal-day.has-cpd::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: #8b5cf6; }
+    .cal-day.has-cpd.past-only { background: rgba(56, 189, 248, 0.14); border-color: rgba(56, 189, 248, 0.42); }
+    .cal-day.has-cpd.past-only::after { background: #38bdf8; }
+    .cal-day.has-cpd.live-day { background: rgba(16, 185, 129, 0.18); border-color: rgba(16, 185, 129, 0.45); }
+    .cal-day.has-cpd.live-day::after { background: #10b981; }
     .cal-day.today { border: 2px solid #06b6d4; }
     .cal-day.selected { background: linear-gradient(135deg, #ec4899, #8b5cf6); color: #fff; border-color: transparent; }
     .cal-day.selected::after { background: #fff; }
     .cal-day:active:not(.empty) { transform: scale(0.94); }
+
+    .cal-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .cal-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .cal-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .cal-legend .dot-ended { background: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.5); }
+    .cal-legend .dot-live { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+    .cal-legend .dot-upcoming { background: #8b5cf6; box-shadow: 0 0 8px rgba(139, 92, 246, 0.5); }
 
     /* ---- Stats ---- */
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
@@ -308,7 +320,29 @@
     .empty { text-align: center; padding: 40px 20px; color: #64748b; font-size: 14px; background: rgba(15, 23, 42, 0.55); border-radius: 16px; border: 1px dashed rgba(255, 255, 255, 0.08); }
     .empty strong { display: block; color: #94a3b8; font-size: 15px; margin-bottom: 6px; }
 
-    /* ---- Teacher-mode 3D decorative overlays (iMENA Lab style) ---- */
+    /* ---- Professional empty state (teacher) ---- */
+    .pro-empty {
+      text-align: center; padding: 32px 22px; margin: 16px 0;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(139, 92, 246, 0.18);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      position: relative; overflow: hidden;
+    }
+    .pro-empty::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.12), transparent 60%);
+    }
+    .pro-empty-icon {
+      font-size: 40px; line-height: 1; margin-bottom: 14px;
+      display: inline-block; position: relative;
+      filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.35));
+    }
+    .pro-empty strong { display: block; color: #fff; font-size: 16px; font-weight: 800; margin-bottom: 8px; position: relative; }
+    .pro-empty p { font-size: 13px; color: #94a3b8; margin: 0 auto; line-height: 1.6; max-width: 340px; position: relative; }
+
+    /* ---- Teacher-mode 3D decorative overlays ---- */
     .teacher-aurora, .teacher-stars {
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
       opacity: 0; transition: opacity 0.8s ease;
@@ -356,46 +390,6 @@
     .greet-text h2 { font-size: 18px; font-weight: 900; margin: 0 0 4px; color: #fff; letter-spacing: -0.02em; line-height: 1.25; }
     .greet-text p { font-size: 12.5px; color: #94a3b8; margin: 0; line-height: 1.5; }
 
-    /* ---- Silly goat empty state ---- */
-    .goat-empty {
-      text-align: center; padding: 24px 20px 20px; margin: 16px 0;
-      border-radius: 20px;
-      background: rgba(15, 23, 42, 0.55);
-      border: 1px dashed rgba(139, 92, 246, 0.35);
-      position: relative; overflow: hidden;
-    }
-    .goat-stage {
-      display: flex; align-items: flex-end; justify-content: center; gap: 2px;
-      height: 72px; margin-bottom: 6px;
-      position: relative;
-    }
-    .goat-stage::after {
-      content: ''; position: absolute; left: 22%; right: 22%; bottom: 4px; height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.55), transparent);
-      border-radius: 2px;
-    }
-    .goat-emoji {
-      font-size: 50px; line-height: 1;
-      display: inline-block; transform-origin: 50% 90%;
-      animation: goatBob 2.2s ease-in-out infinite;
-    }
-    @keyframes goatBob {
-      0%, 100% { transform: translateY(0) rotate(-5deg); }
-      50% { transform: translateY(-4px) rotate(5deg); }
-    }
-    .goat-grass {
-      font-size: 24px; line-height: 1; display: inline-block;
-      transform-origin: 50% 100%; margin-bottom: 4px;
-      animation: grassSway 1.8s ease-in-out infinite;
-    }
-    .goat-grass:last-child { animation-delay: 0.6s; }
-    @keyframes grassSway {
-      0%, 100% { transform: rotate(-7deg); }
-      50% { transform: rotate(9deg); }
-    }
-    .goat-empty p { font-size: 12.5px; color: #94a3b8; margin: 0; line-height: 1.6; }
-    .goat-empty strong { display: block; color: #c4b5fd; font-size: 14px; margin-bottom: 3px; }
-
     /* ---- Past session stats chips ---- */
     .past-stats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .past-stat {
@@ -439,6 +433,7 @@
       .avatar-btn { width: 42px; height: 42px; }
       .a-stat-grid, .stat-grid { grid-template-columns: repeat(4, 1fr); }
       .t-hero h1 { font-size: 26px; }
+      .tab-btn { font-size: 11px; }
     }
   </style>
 </head>
@@ -546,8 +541,10 @@
         today: 'Today', no_sessions_day: 'No sessions on this day',
         past_sessions: 'Recent Sessions',
         ready: "You're all caught up.",
-        no_cpd_yet_title: 'Your goat is just chilling.',
-        no_cpd_yet_sub: 'No CPD sessions on the calendar yet — when one appears, you can check in here.',
+        empty_cpd_title: "You're all caught up",
+        empty_cpd_sub: 'There are no CPD sessions scheduled at the moment. New professional development opportunities will appear on this page as they are added.',
+        empty_cpd_new_title: 'Welcome to your CPD dashboard',
+        empty_cpd_new_sub: "Your professional development journey begins here. Scheduled sessions will appear on this page — you'll be able to check in from the venue when a session is live.",
         thanks_generic: 'Your CPD attendance has been recorded.',
         continue_btn: 'Continue'
       },
@@ -555,8 +552,10 @@
         login_title: 'Murakaza Neza', login_sub: 'Injira ubone urubuga rwawe.', login_google: 'Komeza na Google', home: 'Ahabanza', calendar: 'Ikalendari', stats: 'Imibare', history: 'Amateka', overview: 'Incamake', sessions: 'Amasomo', new_cpd: 'Gishya', logout: 'Sohoka', teacher: 'Umwarimu', admin: 'Ubuyobozi', help_title: 'Ukeneye ubufasha?', help_1: 'Kanda ITABIRA mugihe isomo ritangiye.', help_2: 'Komeza ufunguye iyi paji.', help_3: 'Kanda RANGIZA mugihe rirangiye.', not_attending: 'Ntabwo uri mu isomo ubu.', currently_attending: 'Uri kwitabira:', attend: 'ITABIRA', end: 'RANGIZA', locating: 'Turabona aho uri...', finalizing: 'Turarangiza...', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', not_started: 'Ntiratangire', finish_current: 'Rangiza iri mbere', admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye', stat_live_now: 'Kuri ubu', stat_checked_in: 'Abitabiriye uyu munsi', stat_needs_review: 'Bikeneye kwemezwa', stat_next_session: 'Isomo rikurikira', open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza', create_title: 'Tegura Isomo', create_sub: 'Uzuza umutwe gusa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Isomo', btn_creating: 'Turifungura...', attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Isomo ryafunguwe!', duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', sessions_attended: 'Amasomo', total_hours: 'Amasaha mu CPD', verified_rate: 'Byemejwe %', this_month: 'Uku kwezi', no_sessions_today: 'Nta masomo uyu munsi', next_session: 'Isomo rikurikira', sessions_this_month: 'Amasomo ku kwezi', attendance_history: 'Amateka y\'Kwitabira', no_history: 'Nta masomo yarangiye', all_sessions: 'Amasomo yose', today: 'Uyu munsi', no_sessions_day: 'Nta masomo kuri uyu munsi',
         past_sessions: 'Amasomo yaheruka',
         ready: 'Nta kintu gisigaye.',
-        no_cpd_yet_title: 'Ihene yawe iri kurisha.',
-        no_cpd_yet_sub: 'Nta masomo ya CPD ari mu ikalendari — nigihe azaza, uzayitabira hano.',
+        empty_cpd_title: 'Nta kintu gisigaye',
+        empty_cpd_sub: 'Nta masomo ya CPD ateguwe ubu. Amahirwe mashya y\'iterambere ry\'umwuga azagaragara kuri iyi paji iyo yongeweho.',
+        empty_cpd_new_title: 'Murakaza neza ku rubuga rwawe rwa CPD',
+        empty_cpd_new_sub: 'Urugendo rwawe rw\'iterambere ry\'umwuga rutangira hano. Amasomo ateguwe azagaragara kuri iyi paji — uzashobora kwitabira uhereye aho isomo ribera iyo riratangiye.',
         thanks_generic: 'Kwitabira kwawe CPD kwanditswe.',
         continue_btn: 'Komeza'
       },
@@ -564,8 +563,10 @@
         login_title: 'Bon Retour', login_sub: 'Connectez-vous.', login_google: 'Continuer avec Google', home: 'Accueil', calendar: 'Calendrier', stats: 'Stats', history: 'Historique', overview: 'Aperçu', sessions: 'Sessions', new_cpd: 'Nouveau', logout: 'Déconnexion', teacher: 'Enseignant', admin: 'Admin', help_title: 'Besoin d\'aide ?', help_1: 'Appuyez sur PARTICIPER au démarrage.', help_2: 'Gardez l\'app ouverte.', help_3: 'Appuyez sur TERMINER à la fin.', not_attending: 'Vous n\'êtes pas dans une session.', currently_attending: 'Vous participez à :', attend: 'PARTICIPER', end: 'TERMINER', locating: 'Localisation...', finalizing: 'Finalisation...', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', not_started: 'Pas commencé', finish_current: 'Terminer l\'actuel', admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées', stat_live_now: 'En direct', stat_checked_in: 'Arrivées aujourd\'hui', stat_needs_review: 'À vérifier', stat_next_session: 'Prochaine session', open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver', create_title: 'Créer un CPD', create_sub: 'Remplissez le titre.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...', attendees: 'Participants', record: 'Registre', map: 'Carte', t_teacher: 'Enseignant', t_attended: 'Arrivée', t_ended: 'Départ', t_status: 'Statut', no_att: 'Aucune présence.', msg_sign_out: 'Déconnexion ?', msg_delete: 'Supprimer ?', msg_create: 'Session créée !', duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', sessions_attended: 'Sessions', total_hours: 'Heures CPD', verified_rate: 'Taux vérifié', this_month: 'Ce mois', no_sessions_today: 'Aucune session aujourd\'hui', next_session: 'Prochaine session', sessions_this_month: 'Sessions par mois', attendance_history: 'Historique', no_history: 'Aucune session terminée', all_sessions: 'Toutes les sessions', today: 'Aujourd\'hui', no_sessions_day: 'Aucune session ce jour',
         past_sessions: 'Sessions récentes',
         ready: 'Vous êtes à jour.',
-        no_cpd_yet_title: 'Votre chèvre broute tranquillement.',
-        no_cpd_yet_sub: "Aucune session CPD au calendrier pour l'instant — dès qu'une apparaît, vous pourrez pointer ici.",
+        empty_cpd_title: 'Vous êtes à jour',
+        empty_cpd_sub: 'Aucune session CPD n\'est programmée pour le moment. De nouvelles opportunités de développement professionnel apparaîtront sur cette page dès qu\'elles seront ajoutées.',
+        empty_cpd_new_title: 'Bienvenue sur votre tableau de bord CPD',
+        empty_cpd_new_sub: 'Votre parcours de développement professionnel commence ici. Les sessions programmées apparaîtront sur cette page — vous pourrez pointer depuis le lieu lorsqu\'une session est en cours.',
         thanks_generic: 'Votre participation au CPD a été enregistrée.',
         continue_btn: 'Continuer'
       }
@@ -609,7 +610,6 @@
         }
       },
 
-      /* ---- TEACHER: crossing colors ---- */
       buildTeacherScene() {
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -679,7 +679,6 @@
         return { scene, camera, uniforms, material };
       },
 
-      /* ---- ADMIN: flowing tech sky ---- */
       buildAdminScene() {
         const scene = new THREE.Scene();
         scene.fog = new THREE.Fog(0x0a1a3a, 100, 550);
@@ -913,7 +912,7 @@
       return 'ongoing';
     }
 
-    /* ==================== GREETINGS, THANKS & GOAT ==================== */
+    /* ==================== GREETINGS, THANKS & EMPTY STATES ==================== */
     const GREET_SUBLINES = {
       morning: ['Ready to make today count?', 'Fresh day, fresh ideas.', 'A bright start makes a bright day.'],
       lunch: ['Take a real break — you earned it.', 'Fuel up and keep going.', 'A little pause goes a long way.'],
@@ -982,19 +981,16 @@
         </div>`;
     }
 
-    function goatEmptyHtml() {
+    /* ----- Professional empty state (replaces the goat) ----- */
+    function proEmptyHtml() {
       const isNew = state.myAttendances.length === 0;
+      const title = isNew ? t('empty_cpd_new_title') : t('empty_cpd_title');
+      const sub = isNew ? t('empty_cpd_new_sub') : t('empty_cpd_sub');
       return `
-        <div class="goat-empty">
-          <div class="goat-stage">
-            <span class="goat-grass">🌿</span>
-            <span class="goat-emoji">🐐</span>
-            <span class="goat-grass">🌾</span>
-          </div>
-          <p>
-            <strong>${isNew ? t('no_cpd_yet_title') : t('no_sessions_today')}</strong>
-            ${isNew ? t('no_cpd_yet_sub') : t('ready')}
-          </p>
+        <div class="pro-empty">
+          <div class="pro-empty-icon">📅</div>
+          <strong>${escapeHtml(title)}</strong>
+          <p>${escapeHtml(sub)}</p>
         </div>`;
     }
 
@@ -1199,7 +1195,7 @@
       document.querySelectorAll('[data-ttab]').forEach(b => b.onclick = () => { state.teacherTab = b.dataset.ttab; renderTeacher(); });
       document.querySelectorAll('[data-attend]').forEach(b => { b.onclick = () => handleAttend(b.dataset.attend, b); });
       document.querySelectorAll('[data-end]').forEach(b => { b.onclick = () => handleEnd(b.dataset.end, b); });
-      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = b.dataset.calday; renderTeacher(); });
+      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = parseInt(b.dataset.calday); renderTeacher(); });
       document.querySelectorAll('[data-calnav]').forEach(b => b.onclick = () => {
         const delta = parseInt(b.dataset.calnav);
         let m = state.calMonth + delta, y = state.calYear;
@@ -1280,8 +1276,9 @@
         ? `<div class="section-title">${t('upcoming')}</div>${upcomingNonToday.map(c => teacherSessionCard(c, active)).join('')}`
         : '';
 
+      // Show professional empty state only when there are no cards to show
       let emptyBlock = '';
-      if (!todayCards && !upcomingCards) emptyBlock = goatEmptyHtml();
+      if (!todayCards && !upcomingCards) emptyBlock = proEmptyHtml();
 
       return `${greetingCardHtml()}${hero}${todayCards}${upcomingCards}${emptyBlock}`;
     }
@@ -1569,6 +1566,7 @@
       const tabs = [
         { id: 'overview', icon: '<path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>' },
         { id: 'sessions', icon: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>' },
+        { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
         { id: 'new_cpd', icon: '<path d="M12 5v14M5 12h14"/>' }
       ];
       return `<nav class="tab-bar">${tabs.map(tb => `<button class="tab-btn ${state.adminTab === tb.id ? 'active' : ''}" data-atab="${tb.id}"><svg viewBox="0 0 24 24">${tb.icon}</svg>${t(tb.id)}</button>`).join('')}</nav>`;
@@ -1577,12 +1575,19 @@
     function renderAdmin() {
       let body = '';
       if (state.adminTab === 'sessions') body = renderAdminSessions();
+      else if (state.adminTab === 'calendar') body = renderAdminCalendar();
       else if (state.adminTab === 'new_cpd') body = renderAdminNew();
       else body = renderAdminOverview();
 
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">${body}</main>${state.adminTab === 'new_cpd' ? '' : adminTabBar()}`;
       bindHeaderEvents();
-      document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => { state.adminTab = b.dataset.atab; renderAdmin(); });
+
+      document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => { state.adminTab = b.dataset.atab; state.calSelectedDay = null; renderAdmin(); });
+
+      // FIX: bind the + NEW CPD button
+      const btnTopNew = document.getElementById('btn-top-new');
+      if (btnTopNew) btnTopNew.onclick = () => { state.adminTab = 'new_cpd'; renderAdmin(); };
+
       document.querySelectorAll('[data-open-cpd]').forEach(el => { el.onclick = () => goCpdDetail(el.dataset.openCpd); });
       document.querySelectorAll('[data-del-cpd]').forEach(el => {
         el.onclick = async () => {
@@ -1594,6 +1599,17 @@
       document.querySelectorAll('[data-filter]').forEach(b => {
         b.onclick = () => { state.adminSessionFilter = b.dataset.filter; renderAdmin(); };
       });
+
+      // Calendar bindings for admin
+      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = parseInt(b.dataset.calday); renderAdmin(); });
+      document.querySelectorAll('[data-calnav]').forEach(b => b.onclick = () => {
+        const delta = parseInt(b.dataset.calnav);
+        let m = state.calMonth + delta, y = state.calYear;
+        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+        state.calMonth = m; state.calYear = y; state.calSelectedDay = null;
+        renderAdmin();
+      });
+
       if (state.adminTab === 'new_cpd') bindAdminNewEvents();
     }
 
@@ -1692,6 +1708,109 @@
         ${endedList.length > 0 ? `<div class="section-title">${t('past_sessions')}</div>${endedCards}` : ''}
         ${list.length === 0 ? `<div class="empty" style="margin-top:20px"><strong>${t('all_sessions')}</strong><span>${t('create_sub')}</span></div>` : ''}
       `;
+    }
+
+    /* ---- ADMIN CALENDAR ---- */
+    function renderAdminCalendar() {
+      const year = state.calYear, month = state.calMonth;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekday = (firstDay.getDay() + 6) % 7;
+      const daysInMonth = lastDay.getDate();
+
+      const sessionsByDay = {};
+      state.cpds.forEach(c => {
+        const d = toDate(c.startTime);
+        if (!d) return;
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const key = d.getDate();
+          if (!sessionsByDay[key]) sessionsByDay[key] = [];
+          sessionsByDay[key].push(c);
+        }
+      });
+
+      const today = new Date();
+      const isToday = (day) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+
+      let grid = '';
+      for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const sessions = sessionsByDay[day] || [];
+        const classes = ['cal-day'];
+        if (sessions.length > 0) {
+          classes.push('has-cpd');
+          const statuses = sessions.map(c => cpdStatus(c));
+          if (statuses.some(s => s === 'ongoing')) classes.push('live-day');
+          else if (statuses.every(s => s === 'ended')) classes.push('past-only');
+        }
+        if (isToday(day)) classes.push('today');
+        if (state.calSelectedDay === day) classes.push('selected');
+        grid += `<div class="${classes.join(' ')}" data-calday="${day}">${day}</div>`;
+      }
+
+      const monthName = firstDay.toLocaleString('en', { month: 'long', year: 'numeric' });
+
+      let dayDetail = '';
+      if (state.calSelectedDay) {
+        const list = sessionsByDay[state.calSelectedDay] || [];
+        const dayDate = new Date(year, month, state.calSelectedDay).toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
+        dayDetail = `<div class="section-title">${dayDate}</div>`;
+        if (list.length === 0) {
+          dayDetail += `<div class="empty"><strong>${t('no_sessions_day')}</strong></div>`;
+        } else {
+          dayDetail += list.map(c => adminSessionDayCard(c)).join('');
+        }
+      }
+
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('calendar')}</h1>
+        <div class="cal-wrap">
+          <div class="cal-header">
+            <div class="cal-title">${monthName}</div>
+            <div class="cal-nav">
+              <button data-calnav="-1">‹</button>
+              <button data-calnav="1">›</button>
+            </div>
+          </div>
+          <div class="cal-grid">
+            ${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow">${d}</div>`).join('')}
+            ${grid}
+          </div>
+          <div class="cal-legend">
+            <span><i class="dot-ended"></i> ${t('ended')}</span>
+            <span><i class="dot-live"></i> ${t('live')}</span>
+            <span><i class="dot-upcoming"></i> ${t('upcoming')}</span>
+          </div>
+        </div>
+        ${dayDetail}`;
+    }
+
+    function adminSessionDayCard(cpd) {
+      const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
+      const total = atts.length;
+      const verified = atts.filter(a => a.verified).length;
+      const st = cpdStatus(cpd);
+      let badge = '';
+      if (st === 'ongoing') badge = `<span class="badge badge-live">● ${t('live')}</span>`;
+      else if (st === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
+      else badge = `<span class="badge badge-ended">${t('ended')}</span>`;
+
+      return `<div class="a-session-card">
+        <div class="row">
+          <div style="flex:1;min-width:0">
+            <div>${badge}</div>
+            <h3>${escapeHtml(cpd.title)}</h3>
+            <p>${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)}</p>
+            <div class="past-stats">
+              <span class="past-stat">👥 ${total} ${t('attendees')}</span>
+              <span class="past-stat ok">✓ ${verified} ${t('verified')}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button data-open-cpd="${cpd.id}" class="btn btn-primary">${t('open')}</button>
+          </div>
+        </div>
+      </div>`;
     }
 
     function renderAdminSessions() {
