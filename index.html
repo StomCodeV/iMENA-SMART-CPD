@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iMENA Smart CPD Attendance</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body { font-family: system-ui, -apple-system, sans-serif; }
+    .leaflet-container { font-family: inherit; }
+    .fade { animation: fade .2s ease-in; }
+    @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <div id="app"></div>
+  <div id="toast-root" class="fixed bottom-4 right-4 z-[9999] space-y-2"></div>
+
+  <script type="module">
+    /* ============================================================
+       1. FIREBASE IMPORTS
+    ============================================================ */
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
+    import {
+      getAuth, onAuthStateChanged, signInWithPopup,
+      GoogleAuthProvider, signOut
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, getDoc, setDoc, addDoc,
+      updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    /* ============================================================
+       2. FIREBASE CONFIG (your real project)
+    ============================================================ */
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
+      authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
+      projectId: "imena-smart-cpd-attendance",
+      storageBucket: "imena-smart-cpd-attendance.firebasestorage.app",
+      messagingSenderId: "515464832241",
+      appId: "1:515464832241:web:9e05a6cc3d4447dfff7550",
+      measurementId: "G-NQGDXWN6G8"
+    };
+
+    const firebaseApp = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+
+    // Analytics — safe to init, will simply skip if the browser blocks it
+    try { getAnalytics(firebaseApp); } catch (e) { console.warn('[analytics]', e); }
+
+    const googleProvider = new GoogleAuthProvider();
+
+    /* ============================================================
+       3. STATE
+    ============================================================ */
+    const DEFAULT_LAT = -1.9441;   // GS St Etienne approx — set precisely in the form
+    const DEFAULT_LNG = 30.0619;
+
+    const state = {
+      user: null,
+      profile: null,
+      view: 'login',
+      cpds: [],
+      myAttendances: [],
+      selectedCpdId: null,
+      selectedCpd: null,
+      cpdAttendances: [],
+      subCpds: null,
+      subMine: null,
+      subDetail: null,
+      subDetailAtt: null,
+      watchId: null,
+      watchingFor: null,
+      liveMap: null,
+    };
+
+    /* ============================================================
+       4. HELPERS
+    ============================================================ */
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function toDate(ts) {
+      if (!ts) return null;
+      if (ts.toDate) return ts.toDate();
+      if (ts instanceof Date) return ts;
+      return new Date(ts);
+    }
+
+    function fmtTime(ts) {
+      const d = toDate(ts);
+      if (!d) return '—';
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function fmtDateTime(ts) {
+      const d = toDate(ts);
+      if (!d) return '—';
+      return d.toLocaleString([], {
+        day: '2-digit', month: 'short',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function formatDist(m) {
+      if (m == null || isNaN(m)) return '—';
+      return m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`;
+    }
+
+    function distanceMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = d => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function classify(m, radius) { return m <= radius ? 'near' : 'far'; }
+
+    function getPositionOnce() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          }),
+          err => reject(new Error(err.message || 'Location denied')),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+      });
+    }
+
+    function toast(message, type = 'info') {
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-red-600 text-white',
+        warn: 'bg-amber-500 text-white',
+        info: 'bg-slate-800 text-white',
+      };
+      const el = document.createElement('div');
+      el.className = `fade px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-xs ${colors[type] || colors.info}`;
+      el.textContent = message;
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity .3s';
+        setTimeout(() => el.remove(), 300);
+      }, 4500);
+    }
+
+    function clearWatch() {
+      if (state.watchId != null) {
+        navigator.geolocation.clearWatch(state.watchId);
+        state.watchId = null;
+        state.watchingFor = null;
+      }
+    }
+
+    function clearAllSubs() {
+      ['subCpds', 'subMine', 'subDetail', 'subDetailAtt'].forEach(k => {
+        if (state[k]) { try { state[k](); } catch {} state[k] = null; }
+      });
+    }
+
+    /* ============================================================
+       5. LIVE GPS WATCH (while teacher has active attendance)
+    ============================================================ */
+    function ensureWatchForActive() {
+      const active = state.myAttendances.find(a => a.state === 'active');
+      if (!active) { clearWatch(); return; }
+      if (state.watchingFor === active.id) return;
+
+      clearWatch();
+      state.watchingFor = active.id;
+
+      state.watchId = navigator.geolocation.watchPosition(
+        pos => {
+          updateDoc(doc(db, 'attendance', active.id), {
+            liveLat: pos.coords.latitude,
+            liveLng: pos.coords.longitude,
+            liveAccuracy: pos.coords.accuracy,
+            liveUpdatedAt: serverTimestamp(),
+          }).catch(err => console.warn('[live ping]', err));
+        },
+        err => console.warn('[watch error]', err),
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+      );
+    }
+
+    /* ============================================================
+       6. AUTH LIFECYCLE
+    ============================================================ */
+    onAuthStateChanged(auth, async user => {
+      if (user) {
+        state.user = user;
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          state.profile = snap.data();
+        } else {
+          const newProfile = {
+            email: user.email,
+            fullName: user.displayName || user.email,
+            role: 'teacher',
+            createdAt: serverTimestamp(),
+          };
+          await setDoc(ref, newProfile);
+          state.profile = newProfile;
+        }
+        if (state.profile.role === 'admin') goAdmin();
+        else goTeacher();
+      } else {
+        clearAllSubs();
+        clearWatch();
+        state.user = null;
+        state.profile = null;
+        state.cpds = [];
+        state.myAttendances = [];
+        state.cpdAttendances = [];
+        state.selectedCpd = null;
+        state.selectedCpdId = null;
+        goLogin();
+      }
+    });
+
+    /* ============================================================
+       7. LAYOUT
+    ============================================================ */
+    function layoutHtml({ title, subtitle = '', actions = '', content = '', back = null }) {
+      const backBtn = back
+        ? `<button data-back class="flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900">← Back</button>`
+        : '';
+      return `
+        <div class="min-h-screen">
+          <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+              <div>
+                <h1 class="text-lg font-semibold">iMENA <span class="text-sky-600">Smart CPD</span></h1>
+                <p class="text-[11px] text-slate-500">Attendance & Live Tracking</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                  <p class="text-sm font-medium">${escapeHtml(state.profile?.fullName || '')}</p>
+                  <p class="text-xs text-slate-500 capitalize">${escapeHtml(state.profile?.role || '')}</p>
+                </div>
+                <button id="btn-logout" class="p-2 rounded-lg hover:bg-slate-100" title="Sign out">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                </button>
+              </div>
+            </div>
+          </header>
+          <main class="max-w-6xl mx-auto px-4 py-6">
+            <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
+              <div>
+                ${backBtn}
+                <h2 class="text-xl font-semibold">${escapeHtml(title)}</h2>
+                ${subtitle ? `<p class="text-sm text-slate-500 mt-1">${escapeHtml(subtitle)}</p>` : ''}
+              </div>
+              <div>${actions}</div>
+            </div>
+            <div id="content">${content}</div>
+          </main>
+        </div>
+      `;
+    }
+
+    function bindLayoutEvents() {
+      const lo = document.getElementById('btn-logout');
+      if (lo) lo.onclick = () => { if (confirm('Sign out?')) signOut(auth); };
+      const bk = document.querySelector('[data-back]');
+      if (bk) bk.onclick = () => history.back();
+    }
+
+    /* ============================================================
+       8. LOGIN VIEW
+    ============================================================ */
+    function goLogin() {
+      state.view = 'login';
+      document.getElementById('app').innerHTML = `
+        <div class="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-sky-50 to-slate-100">
+          <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full fade">
+            <div class="text-center mb-6">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-sky-100 flex items-center justify-center text-2xl">📘</div>
+              <h1 class="text-2xl font-bold">iMENA <span class="text-sky-600">Smart CPD</span></h1>
+              <p class="text-sm text-slate-500 mt-2">Attendance & Live Tracking Platform</p>
+            </div>
+            <button id="btn-login" class="w-full flex items-center justify-center gap-3 border border-slate-300 rounded-lg py-3 hover:bg-slate-50 transition font-medium">
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.4-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2c-.4.4 6.7-4.9 6.7-14.9 0-1.2-.1-2.4-.4-3.5z"/>
+              </svg>
+              Continue with Google
+            </button>
+            <p class="text-xs text-slate-400 text-center mt-6">
+              Only registered iMENA staff can access this platform.<br/>
+              Admins: promote your account in Firestore after first login.
+            </p>
+          </div>
+        </div>
+      `;
+      document.getElementById('btn-login').onclick = async () => {
+        try { await signInWithPopup(auth, googleProvider); }
+        catch (err) { toast('Login failed: ' + err.message, 'error'); }
+      };
+    }
+
+    /* ============================================================
+       9. TEACHER VIEW
+    ============================================================ */
+    function cpdStatus(cpd) {
+      const start = toDate(cpd.startTime)?.getTime();
+      const end = toDate(cpd.endTime)?.getTime();
+      const now = Date.now();
+      if (!start || !end) return 'unknown';
+      if (now < start - 15 * 60 * 1000) return 'upcoming';
+      if (now > end) return 'ended';
+      return 'ongoing';
+    }
+
+    function goTeacher() {
+      state.view = 'teacher';
+      if (!state.subCpds) {
+        state.subCpds = onSnapshot(collection(db, 'cpds'),
+          snap => {
+            state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (state.view === 'teacher') renderTeacher();
+          },
+          err => console.error('[cpds]', err)
+        );
+      }
+      if (!state.subMine && state.user) {
+        const q = query(collection(db, 'attendance'), where('teacherId', '==', state.user.uid));
+        state.subMine = onSnapshot(q,
+          snap => {
+            state.myAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            ensureWatchForActive();
+            if (state.view === 'teacher') renderTeacher();
+          },
+          err => console.error('[mine]', err)
+        );
+      }
+      renderTeacher();
+    }
+
+    function renderTeacher() {
+      const activeAtt = state.myAttendances.find(a => a.state === 'active');
+      const cards = state.cpds.map(cpd => renderTeacherCpdCard(cpd, activeAtt, !!activeAtt)).join('');
+
+      const content = `
+        ${activeAtt ? `
+          <div class="mb-4 flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-lg text-sm">
+            <span class="text-lg">⚠️</span>
+            <div>
+              <b>Keep this tab open.</b> Your location is being tracked while you attend.
+              If you close or lock your phone, tracking pauses — admin will see your last known position.
+            </div>
+          </div>` : ''}
+
+        ${state.cpds.length === 0
+          ? `<div class="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500 text-sm">
+               No CPDs yet. Your admin will create them.
+             </div>`
+          : `<div class="space-y-4">${cards}</div>`}
+      `;
+
+      document.getElementById('app').innerHTML = layoutHtml({
+        title: 'My CPDs',
+        subtitle: activeAtt
+          ? `Currently attending: ${activeAtt.cpdTitle}`
+          : 'Attend an ongoing CPD and keep the tab open to be tracked.',
+        content,
+      });
+      bindLayoutEvents();
+      bindTeacherEvents();
+    }
+
+    function renderTeacherCpdCard(cpd, activeAtt, hasActiveElsewhere) {
+      const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
+      const status = myAtt?.state === 'active' ? 'live'
+        : myAtt?.state === 'ended' ? 'ended'
+        : cpdStatus(cpd);
+
+      const badge = {
+        upcoming: `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Upcoming</span>`,
+        ongoing: `<span class="text-xs bg-sky-100 text-sky-700 px-2 py-0.5 rounded">Ongoing</span>`,
+        ended: `<span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Ended</span>`,
+        live: `<span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Live</span>`,
+        unknown: '',
+      }[status] || '';
+
+      let actionHtml = '';
+      if (!myAtt) {
+        if (status === 'upcoming') {
+          actionHtml = `<button disabled class="px-4 py-2 rounded-lg bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed">Not started</button>`;
+        } else if (status === 'ended') {
+          actionHtml = `<button disabled class="px-4 py-2 rounded-lg bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed">Ended</button>`;
+        } else if (hasActiveElsewhere) {
+          actionHtml = `<button disabled class="px-4 py-2 rounded-lg bg-slate-100 text-slate-400 text-sm font-medium cursor-not-allowed">Finish current first</button>`;
+        } else {
+          actionHtml = `<button data-attend="${cpd.id}" class="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Attend
+          </button>`;
+        }
+      } else if (myAtt.state === 'active') {
+        actionHtml = `<button data-end="${myAtt.id}" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg> End CPD
+        </button>`;
+      } else {
+        actionHtml = myAtt.verified
+          ? `<span class="flex items-center gap-1 text-emerald-600 text-sm font-semibold">✓ Verified</span>`
+          : `<span class="flex items-center gap-1 text-amber-600 text-sm font-semibold">⚠ Ended (flagged)</span>`;
+      }
+
+      let liveRow = '';
+      if (myAtt && myAtt.state === 'active' && myAtt.liveLat != null) {
+        const dist = distanceMeters(myAtt.liveLat, myAtt.liveLng, cpd.venueLat, cpd.venueLng);
+        const near = dist <= cpd.radiusMeters;
+        liveRow = `
+          <div class="mt-2 text-xs text-slate-600 flex items-center gap-2 flex-wrap">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Live · ${formatDist(dist)} from venue ·
+            <b class="${near ? 'text-emerald-600' : 'text-amber-600'}">${near ? 'Near ✓' : 'Far ⚠'}</b>
+          </div>`;
+      }
+
+      const detailRow = myAtt ? `
+        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div class="bg-slate-50 rounded p-2">
+            <p class="text-[10px] uppercase text-slate-400">Attended</p>
+            <p class="font-medium">${fmtTime(myAtt.attendedAt)}</p>
+          </div>
+          <div class="bg-slate-50 rounded p-2">
+            <p class="text-[10px] uppercase text-slate-400">Ended</p>
+            <p class="font-medium">${fmtTime(myAtt.endedAt)}</p>
+          </div>
+          <div class="bg-slate-50 rounded p-2">
+            <p class="text-[10px] uppercase text-slate-400">Start dist</p>
+            <p class="font-medium">${formatDist(myAtt.attendedDistanceMeters)} (${myAtt.attendedStatus || '—'})</p>
+          </div>
+          <div class="bg-slate-50 rounded p-2">
+            <p class="text-[10px] uppercase text-slate-400">End dist</p>
+            <p class="font-medium">${formatDist(myAtt.endedDistanceMeters)} (${myAtt.endedStatus || '—'})</p>
+          </div>
+        </div>` : '';
+
+      return `
+        <div class="bg-white rounded-xl border border-slate-200 p-4 fade">
+          <div class="flex items-start justify-between gap-3 flex-wrap">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold text-slate-900">${escapeHtml(cpd.title)}</h3>
+                ${badge}
+              </div>
+              <p class="text-sm text-slate-500 mt-0.5">${escapeHtml(cpd.theme || '')}</p>
+              <p class="text-xs text-slate-400 mt-1">
+                ${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)} · radius ${cpd.radiusMeters}m
+              </p>
+              ${liveRow}
+            </div>
+            <div class="shrink-0">${actionHtml}</div>
+          </div>
+          ${detailRow}
+        </div>
+      `;
+    }
+
+    function bindTeacherEvents() {
+      document.querySelectorAll('[data-attend]').forEach(btn => {
+        btn.onclick = () => handleAttend(btn.dataset.attend, btn);
+      });
+      document.querySelectorAll('[data-end]').forEach(btn => {
+        btn.onclick = () => handleEnd(btn.dataset.end, btn);
+      });
+    }
+
+    async function handleAttend(cpdId, btn) {
+      const cpd = state.cpds.find(c => c.id === cpdId);
+      if (!cpd) return;
+      if (state.myAttendances.some(a => a.state === 'active')) {
+        toast('Finish your current CPD first.', 'warn');
+        return;
+      }
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = 'Getting GPS…';
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = classify(dist, cpd.radiusMeters);
+        await addDoc(collection(db, 'attendance'), {
+          cpdId,
+          cpdTitle: cpd.title,
+          teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email,
+          teacherEmail: state.user.email,
+          attendedAt: serverTimestamp(),
+          attendedLat: pos.lat,
+          attendedLng: pos.lng,
+          attendedDistanceMeters: dist,
+          attendedStatus: status,
+          liveLat: pos.lat,
+          liveLng: pos.lng,
+          liveAccuracy: pos.accuracy,
+          liveUpdatedAt: serverTimestamp(),
+          state: 'active',
+          verified: false,
+        });
+        toast(status === 'near'
+          ? `✅ Attendance marked (${formatDist(dist)} from venue). Keep tab open.`
+          : `⚠️ Attendance marked, but you are ${formatDist(dist)} from venue.`,
+          status === 'near' ? 'success' : 'warn');
+      } catch (err) {
+        toast('Location failed: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    }
+
+    async function handleEnd(attId, btn) {
+      const att = state.myAttendances.find(a => a.id === attId);
+      const cpd = state.cpds.find(c => c.id === att?.cpdId);
+      if (!att || !cpd) return;
+      btn.disabled = true;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = 'Getting GPS…';
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = classify(dist, cpd.radiusMeters);
+        const verified = att.attendedStatus === 'near' && status === 'near';
+        await updateDoc(doc(db, 'attendance', att.id), {
+          endedAt: serverTimestamp(),
+          endedLat: pos.lat,
+          endedLng: pos.lng,
+          endedDistanceMeters: dist,
+          endedStatus: status,
+          state: 'ended',
+          verified,
+        });
+        clearWatch();
+        toast(verified
+          ? '✅ CPD ended. You are verified.'
+          : `⚠️ CPD ended, but you are ${formatDist(dist)} from venue. Admin will review.`,
+          verified ? 'success' : 'warn');
+      } catch (err) {
+        toast('Could not end: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    }
+
+    /* ============================================================
+       10. ADMIN VIEW
+    ============================================================ */
+    function goAdmin() {
+      state.view = 'admin';
+      clearWatch();
+      if (state.subMine) { try { state.subMine(); } catch {} state.subMine = null; }
+      if (state.subDetail) { try { state.subDetail(); } catch {} state.subDetail = null; }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} state.subDetailAtt = null; }
+      if (!state.subCpds) {
+        state.subCpds = onSnapshot(collection(db, 'cpds'),
+          snap => {
+            state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (state.view === 'admin') renderAdmin();
+          },
+          err => console.error('[admin cpds]', err)
+        );
+      }
+      renderAdmin();
+    }
+
+    function renderAdmin() {
+      const list = [...state.cpds].sort((a, b) => {
+        const ta = toDate(a.startTime)?.getTime() || 0;
+        const tb = toDate(b.startTime)?.getTime() || 0;
+        return tb - ta;
+      });
+
+      const rows = list.map(cpd => {
+        const st = cpdStatus(cpd);
+        const badge = {
+          upcoming: `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Upcoming</span>`,
+          ongoing: `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Ongoing</span>`,
+          ended: `<span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Ended</span>`,
+          unknown: '',
+        }[st] || '';
+        return `
+          <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3 fade">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold">${escapeHtml(cpd.title)}</h3>
+                ${badge}
+              </div>
+              <p class="text-sm text-slate-500 truncate">${escapeHtml(cpd.theme || '')}</p>
+              <p class="text-xs text-slate-400 mt-1">
+                ${fmtDateTime(cpd.startTime)} → ${fmtTime(cpd.endTime)} ·
+                ${escapeHtml(cpd.venueName)} · radius ${cpd.radiusMeters}m
+              </p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button data-open-cpd="${cpd.id}" class="text-sky-600 hover:bg-sky-50 text-sm font-medium px-3 py-2 rounded-lg">
+                Open →
+              </button>
+              <button data-del-cpd="${cpd.id}" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const content = list.length === 0
+        ? `<div class="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-500 text-sm">
+             No CPDs yet. Click "Create CPD" to start.
+           </div>`
+        : `<div class="space-y-3">${rows}</div>`;
+
+      document.getElementById('app').innerHTML = layoutHtml({
+        title: 'CPDs',
+        subtitle: 'Create and monitor CPD sessions',
+        actions: `<button id="btn-new-cpd" class="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+          <span>+</span> Create CPD
+        </button>`,
+        content,
+      });
+      bindLayoutEvents();
+
+      document.getElementById('btn-new-cpd').onclick = () => goCreateCpd();
+      document.querySelectorAll('[data-open-cpd]').forEach(el => {
+        el.onclick = () => goCpdDetail(el.dataset.openCpd);
+      });
+      document.querySelectorAll('[data-del-cpd]').forEach(el => {
+        el.onclick = async () => {
+          if (!confirm('Delete this CPD? Attendance records will remain but become orphaned.')) return;
+          try { await deleteDoc(doc(db, 'cpds', el.dataset.delCpd)); toast('CPD deleted', 'success'); }
+          catch (err) { toast('Delete failed: ' + err.message, 'error'); }
+        };
+      });
+    }
+
+    /* ============================================================
+       11. CREATE CPD VIEW
+    ============================================================ */
+    function goCreateCpd() {
+      state.view = 'create-cpd';
+      if (state.subDetail) { try { state.subDetail(); } catch {} state.subDetail = null; }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} state.subDetailAtt = null; }
+
+      const content = `
+        <form id="cpd-form" class="bg-white rounded-xl border border-slate-200 p-5 space-y-4 max-w-2xl">
+          <div id="form-error" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3"></div>
+
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600 block mb-1">Title *</span>
+            <input name="title" required placeholder="Teaching Methodologies 2025"
+              class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          </label>
+
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600 block mb-1">Theme</span>
+            <input name="theme" placeholder="Modern classroom practices"
+              class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+          </label>
+
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600 block mb-1">Description</span>
+            <textarea name="description" rows="3"
+              class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+          </label>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-xs font-medium text-slate-600 block mb-1">Start time *</span>
+              <input type="datetime-local" name="startTime" required
+                class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+            </label>
+            <label class="block">
+              <span class="text-xs font-medium text-slate-600 block mb-1">End time *</span>
+              <input type="datetime-local" name="endTime" required
+                class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+            </label>
+          </div>
+
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600 block mb-1">Venue name</span>
+            <input name="venueName" value="GS St Etienne"
+              class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+          </label>
+
+          <div class="grid grid-cols-3 gap-3">
+            <label class="block">
+              <span class="text-xs font-medium text-slate-600 block mb-1">Venue lat</span>
+              <input name="venueLat" value="${DEFAULT_LAT}"
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            </label>
+            <label class="block">
+              <span class="text-xs font-medium text-slate-600 block mb-1">Venue lng</span>
+              <input name="venueLng" value="${DEFAULT_LNG}"
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            </label>
+            <label class="block">
+              <span class="text-xs font-medium text-slate-600 block mb-1">Radius (m)</span>
+              <input name="radiusMeters" type="number" value="100" min="10"
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            </label>
+          </div>
+
+          <div>
+            <p class="text-xs text-slate-500 mb-2">📍 Click the map to set the venue location (blue circle = radius)</p>
+            <div id="venue-map" class="rounded-lg overflow-hidden border border-slate-200" style="height:280px"></div>
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button type="submit" id="btn-save-cpd"
+              class="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-lg font-medium disabled:opacity-50">
+              Create CPD
+            </button>
+            <button type="button" id="btn-cancel"
+              class="px-5 py-2.5 rounded-lg border border-slate-300 hover:bg-slate-50 font-medium">
+              Cancel
+            </button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('app').innerHTML = layoutHtml({
+        title: 'Create CPD',
+        subtitle: 'Distance will be measured from this venue — click the map to place it.',
+        content,
+      });
+      bindLayoutEvents();
+      document.getElementById('btn-cancel').onclick = () => goAdmin();
+
+      const form = document.getElementById('cpd-form');
+      const latInput = form.elements.venueLat;
+      const lngInput = form.elements.venueLng;
+      const radiusInput = form.elements.radiusMeters;
+
+      const map = L.map('venue-map').setView(
+        [parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], 16
+      );
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap', maxZoom: 19,
+      }).addTo(map);
+      let marker = L.marker([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG]).addTo(map);
+      let circle = L.circle([parseFloat(latInput.value) || DEFAULT_LAT, parseFloat(lngInput.value) || DEFAULT_LNG], {
+        radius: parseFloat(radiusInput.value) || 100,
+        color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.1,
+      }).addTo(map);
+
+      map.on('click', e => {
+        const { lat, lng } = e.latlng;
+        latInput.value = lat.toFixed(6);
+        lngInput.value = lng.toFixed(6);
+        marker.setLatLng([lat, lng]);
+        circle.setLatLng([lat, lng]);
+      });
+      radiusInput.oninput = () => circle.setRadius(parseFloat(radiusInput.value) || 100);
+
+      const locateBtn = document.createElement('button');
+      locateBtn.type = 'button';
+      locateBtn.textContent = '📍 Use my location';
+      locateBtn.className = 'mt-2 text-xs text-sky-600 hover:underline';
+      locateBtn.onclick = async () => {
+        try {
+          const pos = await getPositionOnce();
+          latInput.value = pos.lat.toFixed(6);
+          lngInput.value = pos.lng.toFixed(6);
+          marker.setLatLng([pos.lat, pos.lng]);
+          circle.setLatLng([pos.lat, pos.lng]);
+          map.setView([pos.lat, pos.lng], 17);
+          toast('Venue set to your current location', 'success');
+        } catch (e) { toast('GPS failed: ' + e.message, 'error'); }
+      };
+      document.getElementById('venue-map').after(locateBtn);
+
+      form.onsubmit = async ev => {
+        ev.preventDefault();
+        const btn = document.getElementById('btn-save-cpd');
+        const errEl = document.getElementById('form-error');
+        errEl.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        try {
+          const fd = new FormData(form);
+          const data = {
+            title: String(fd.get('title')).trim(),
+            theme: String(fd.get('theme') || '').trim(),
+            description: String(fd.get('description') || '').trim(),
+            startTime: new Date(fd.get('startTime')),
+            endTime: new Date(fd.get('endTime')),
+            venueName: String(fd.get('venueName') || 'Venue').trim(),
+            venueLat: Number(fd.get('venueLat')),
+            venueLng: Number(fd.get('venueLng')),
+            radiusMeters: Number(fd.get('radiusMeters')) || 100,
+            createdBy: state.user.uid,
+            createdAt: serverTimestamp(),
+          };
+          if (!data.title) throw new Error('Title is required');
+          if (isNaN(data.venueLat) || isNaN(data.venueLng)) throw new Error('Venue coordinates invalid');
+          if (data.endTime <= data.startTime) throw new Error('End time must be after start time');
+          await addDoc(collection(db, 'cpds'), data);
+          toast('CPD created', 'success');
+          goAdmin();
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Create CPD';
+        }
+      };
+    }
+
+    /* ============================================================
+       12. CPD DETAIL (admin) — live map + table
+    ============================================================ */
+    function goCpdDetail(cpdId) {
+      state.view = 'cpd-detail';
+      state.selectedCpdId = cpdId;
+      state.selectedCpd = null;
+      state.cpdAttendances = [];
+
+      if (state.subDetail) { try { state.subDetail(); } catch {} }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} }
+
+      state.subDetail = onSnapshot(doc(db, 'cpds', cpdId),
+        snap => {
+          state.selectedCpd = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+          if (state.view === 'cpd-detail') renderCpdDetail();
+        },
+        err => console.error('[detail]', err)
+      );
+
+      const q = query(collection(db, 'attendance'), where('cpdId', '==', cpdId));
+      state.subDetailAtt = onSnapshot(q,
+        snap => {
+          state.cpdAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          if (state.view === 'cpd-detail') renderCpdDetail();
+        },
+        err => console.error('[detail att]', err)
+      );
+
+      renderCpdDetail();
+    }
+
+    function renderCpdDetail() {
+      const cpd = state.selectedCpd;
+      if (!cpd) {
+        document.getElementById('app').innerHTML = layoutHtml({
+          title: 'Loading CPD…',
+          content: `<div class="text-center text-slate-500 text-sm py-12">Fetching CPD details…</div>`,
+        });
+        bindLayoutEvents();
+        return;
+      }
+
+      const rows = state.cpdAttendances.map(a => {
+        let status;
+        if (!a.endedAt) {
+          status = a.state === 'active'
+            ? `<span class="text-sky-600 flex items-center gap-1 text-xs font-medium">📍 Live</span>`
+            : `<span class="text-red-600 flex items-center gap-1 text-xs font-medium">✕ Not ended</span>`;
+        } else if (a.verified) {
+          status = `<span class="text-emerald-600 flex items-center gap-1 text-xs font-medium">✓ Verified</span>`;
+        } else {
+          status = `<span class="text-amber-600 flex items-center gap-1 text-xs font-medium">⚠ Far at end</span>`;
+        }
+        return `
+          <tr class="border-b border-slate-100 last:border-0">
+            <td class="py-2 pr-3">
+              <p class="font-medium text-slate-800">${escapeHtml(a.teacherName || 'Unknown')}</p>
+              <p class="text-[11px] text-slate-400">${escapeHtml(a.teacherEmail || '')}</p>
+            </td>
+            <td class="py-2 pr-3 text-sm">${fmtTime(a.attendedAt)}</td>
+            <td class="py-2 pr-3 text-sm">${fmtTime(a.endedAt)}</td>
+            <td class="py-2 pr-3 text-sm">
+              ${formatDist(a.attendedDistanceMeters)}
+              ${a.endedDistanceMeters != null
+                ? `<span class="text-slate-400"> → ${formatDist(a.endedDistanceMeters)}</span>` : ''}
+            </td>
+            <td class="py-2 pr-3">${status}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const total = state.cpdAttendances.length;
+      const verified = state.cpdAttendances.filter(a => a.verified).length;
+      const live = state.cpdAttendances.filter(a => a.state === 'active').length;
+
+      const content = `
+        <div class="grid lg:grid-cols-5 gap-4">
+          <div class="lg:col-span-3 space-y-3">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="bg-white rounded-xl border border-slate-200 p-3">
+                <p class="text-[10px] uppercase text-slate-400">Attendees</p>
+                <p class="text-2xl font-bold">${total}</p>
+              </div>
+              <div class="bg-white rounded-xl border border-slate-200 p-3">
+                <p class="text-[10px] uppercase text-slate-400">Live</p>
+                <p class="text-2xl font-bold text-sky-600">${live}</p>
+              </div>
+              <div class="bg-white rounded-xl border border-slate-200 p-3">
+                <p class="text-[10px] uppercase text-slate-400">Verified</p>
+                <p class="text-2xl font-bold text-emerald-600">${verified}</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 p-4 overflow-x-auto">
+              <table class="min-w-full text-sm">
+                <thead>
+                  <tr class="text-left text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                    <th class="py-2 pr-3">Teacher</th>
+                    <th class="py-2 pr-3">Attended</th>
+                    <th class="py-2 pr-3">Ended</th>
+                    <th class="py-2 pr-3">Distance</th>
+                    <th class="py-2 pr-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows || `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-sm">No teacher has attended yet.</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl border border-slate-200 p-3">
+              <p class="text-xs font-medium text-slate-500 mb-2">🗺️ Live map</p>
+              <div id="live-map" class="rounded-lg overflow-hidden" style="height:420px"></div>
+              <p class="text-[11px] text-slate-400 mt-2">
+                Updates live. Teacher tracking pauses when they close the tab — you'll see their last known position.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('app').innerHTML = layoutHtml({
+        title: cpd.title,
+        subtitle: `${cpd.venueName} · radius ${cpd.radiusMeters}m · ${fmtDateTime(cpd.startTime)} → ${fmtTime(cpd.endTime)}`,
+        actions: `<button id="btn-back-admin" class="text-sm text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100">← Back to list</button>`,
+        content,
+      });
+      bindLayoutEvents();
+      document.getElementById('btn-back-admin').onclick = () => goAdmin();
+
+      requestAnimationFrame(() => updateLiveMap(cpd));
+    }
+
+    function updateLiveMap(cpd) {
+      const el = document.getElementById('live-map');
+      if (!el) return;
+
+      let center = [cpd.venueLat, cpd.venueLng];
+      let zoom = 16;
+      if (state.liveMap) {
+        try {
+          center = state.liveMap.getCenter();
+          zoom = state.liveMap.getZoom();
+          state.liveMap.remove();
+        } catch {}
+        state.liveMap = null;
+      }
+
+      const map = L.map(el).setView(center, zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap', maxZoom: 19,
+      }).addTo(map);
+
+      L.circle([cpd.venueLat, cpd.venueLng], {
+        radius: cpd.radiusMeters, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.08,
+        weight: 2, dashArray: '4',
+      }).addTo(map);
+
+      const venueIcon = L.divIcon({
+        className: '',
+        html: `<div style="background:#0ea5e9;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:white;font-size:14px">🏫</div>`,
+        iconSize: [28, 28], iconAnchor: [14, 14],
+      });
+      L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(map)
+        .bindPopup(`<b>Venue:</b> ${escapeHtml(cpd.venueName)}`);
+
+      state.cpdAttendances.forEach(a => {
+        let lat, lng, label, color;
+        if (a.state === 'active' && a.liveLat != null) {
+          lat = a.liveLat; lng = a.liveLng;
+          label = `${a.teacherName} · LIVE`; color = '#10b981';
+        } else if (a.endedLat != null) {
+          lat = a.endedLat; lng = a.endedLng;
+          label = `${a.teacherName} · ended`; color = a.verified ? '#10b981' : '#f59e0b';
+        } else if (a.attendedLat != null) {
+          lat = a.attendedLat; lng = a.attendedLng;
+          label = `${a.teacherName} · attended`; color = '#ef4444';
+        } else return;
+        const icon = L.divIcon({
+          className: '',
+          html: `<div style="background:${color};width:18px;height:18px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+          iconSize: [18, 18], iconAnchor: [9, 9],
+        });
+        L.marker([lat, lng], { icon }).addTo(map).bindPopup(label);
+      });
+
+      state.liveMap = map;
+    }
+
+    /* ============================================================
+       13. BOOT
+    ============================================================ */
+    goLogin();
+  </script>
+</body>
+</html>
