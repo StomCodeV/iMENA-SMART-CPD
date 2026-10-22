@@ -423,7 +423,6 @@
       margin-bottom: 24px;
       flex-wrap: wrap;
     }
-    /* Passport photo shown as-is: no circle, no gradient, no crop */
     .founder-avatar {
       width: 110px;
       height: 140px;
@@ -792,8 +791,14 @@
     googleProvider.setCustomParameters({ prompt: 'select_account' });
     getRedirectResult(auth).catch(err => { if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err); });
 
-    const DASHBOARD_URL = 'userboard.html';
-    const state = { user: null, view: 'boot', lang: 'en' };
+    /* ============================================================
+       ROLE-BASED DASHBOARD ROUTING
+    ============================================================ */
+    function dashboardUrlFor(role) {
+      return role === 'admin' ? 'admin.html' : 'teacher.html';
+    }
+
+    const state = { user: null, view: 'boot', lang: 'en', userRole: null };
 
     /* ============================================================
        I18N
@@ -1641,7 +1646,7 @@
       // CTA handlers
       document.querySelectorAll('[data-cta]').forEach(btn => {
         btn.onclick = signedIn
-          ? () => { window.location.href = DASHBOARD_URL; }
+          ? () => { goToDashboard(); }
           : () => handleGoogleSignIn(btn);
       });
 
@@ -1666,7 +1671,7 @@
           if (lang === state.lang) return;
           state.lang = lang;
           langMenu.classList.remove('open');
-          updateLanguage(lang); // Just swap text, DO NOT re-render ocean
+          updateLanguage(lang);
         };
       });
       document.addEventListener('click', () => langMenu.classList.remove('open'));
@@ -1695,13 +1700,12 @@
     }
 
     /* ============================================================
-       UPDATE LANGUAGE DYNAMICALLY (NO RE-RENDER)
+       UPDATE LANGUAGE DYNAMICALLY
     ============================================================ */
     function updateLanguage(lang) {
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.dataset.i18n;
         if (I18N[lang][key]) {
-          // If the element is a container for an SVG, find the text span
           const span = el.querySelector('span:not(.lang-flag)');
           if (span && el.tagName === 'BUTTON') {
             span.innerText = I18N[lang][key];
@@ -1711,13 +1715,11 @@
         }
       });
 
-      // Update language toggle text
       const currentLangText = document.getElementById('lang-current');
       if (currentLangText) {
         currentLangText.innerText = lang === 'rw' ? 'Kinyarwanda' : lang === 'fr' ? 'Français' : 'English';
       }
 
-      // Update active state in menu
       document.querySelectorAll('[data-lang]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lang === lang);
       });
@@ -1743,7 +1745,22 @@
     }
 
     /* ============================================================
-       AUTH: sign in → ensure profile → redirect
+       ROLE-AWARE DASHBOARD ROUTING
+    ============================================================ */
+    async function goToDashboard() {
+      let role = state.userRole;
+      if (!role && state.user) {
+        try {
+          const snap = await getDoc(doc(db, 'users', state.user.uid));
+          role = snap.exists() ? (snap.data().role || 'teacher') : 'teacher';
+          state.userRole = role;
+        } catch { role = 'teacher'; }
+      }
+      window.location.href = dashboardUrlFor(role || 'teacher');
+    }
+
+    /* ============================================================
+       AUTH: sign in → ensure profile → redirect by role
     ============================================================ */
     async function handleGoogleSignIn(btn) {
       btn.disabled = true;
@@ -1752,9 +1769,10 @@
       try {
         const result = await signInWithPopup(auth, googleProvider);
         if (result?.user) {
-          await ensureProfile(result.user);
+          const role = await ensureProfile(result.user);
+          state.userRole = role;
           btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px">✓</span>';
-          window.location.href = DASHBOARD_URL;
+          window.location.href = dashboardUrlFor(role);
           return;
         }
       } catch (err) {
@@ -1783,7 +1801,9 @@
           role: 'teacher',
           createdAt: serverTimestamp(),
         });
+        return 'teacher';
       }
+      return snap.data().role || 'teacher';
     }
 
     function toast(message, type = 'info') {
@@ -1801,20 +1821,29 @@
     }
 
     /* ============================================================
-       AUTH LIFECYCLE
+       AUTH LIFECYCLE — track role, update CTA
     ============================================================ */
     onAuthStateChanged(auth, user => {
       const wasSignedIn = !!state.user;
       state.user = user || null;
       state.loading = false;
 
-      // If auth state changes while on landing, update the CTA buttons
+      if (state.user) {
+        getDoc(doc(db, 'users', state.user.uid))
+          .then(snap => {
+            state.userRole = snap.exists() ? (snap.data().role || 'teacher') : 'teacher';
+          })
+          .catch(() => { state.userRole = 'teacher'; });
+      } else {
+        state.userRole = null;
+      }
+
       if (state.view === 'landing' && wasSignedIn !== !!state.user) {
         document.querySelectorAll('[data-cta]').forEach(btn => {
           btn.innerHTML = state.user ? dashboardButtonContent() : signinButtonContent();
           btn.classList.toggle('dashboard-mode', !!state.user);
           btn.onclick = state.user
-            ? () => { window.location.href = DASHBOARD_URL; }
+            ? () => { goToDashboard(); }
             : () => handleGoogleSignIn(btn);
         });
       }
