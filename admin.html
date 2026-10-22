@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#071B33" />
-  <title>iMENA Smart CPD — Admin</title>
-  <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
+  <title>iMENA Smart Attendance — Admin</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -14,7 +14,7 @@
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: #e2e8f0; -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; background: #0a0f1e; }
-    button, input { font-family: inherit; }
+    button, input, select { font-family: inherit; }
     button { cursor: pointer; border: none; background: none; color: inherit; }
     a { color: inherit; text-decoration: none; }
 
@@ -55,13 +55,14 @@
     .btn-danger { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,0.35); }
     .btn-ghost { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
 
-    .input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.6); font-size: 15px; margin-bottom: 12px; color: #e2e8f0; }
-    .input:focus { outline: none; border-color: #00ffcc; box-shadow: 0 0 0 4px rgba(0,255,204,0.15); }
+    .input, select { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.6); font-size: 15px; margin-bottom: 12px; color: #e2e8f0; appearance: none; }
+    .input:focus, select:focus { outline: none; border-color: #00ffcc; box-shadow: 0 0 0 4px rgba(0,255,204,0.15); }
 
     .main { flex: 1; padding: 18px 14px calc(80px + env(safe-area-inset-bottom)); max-width: 800px; margin: 0 auto; width: 100%; }
     .main.main-wide { max-width: 1400px; }
+
     .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; z-index: 90; background: rgba(10,15,30,0.85); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-top: 1px solid rgba(255,255,255,0.08); padding-bottom: env(safe-area-inset-bottom); }
-    .tab-btn { flex: 1; padding: 10px 2px; color: #64748b; font-size: 9px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.02em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .tab-btn { flex: 1; padding: 10px 0; color: #64748b; font-size: 8.5px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.02em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
     .tab-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
     .tab-btn.active { color: #00ffcc; filter: drop-shadow(0 0 8px rgba(0,255,204,0.5)); }
 
@@ -91,14 +92,10 @@
     .badge-ended { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.15); }
     .badge-verified { background: rgba(14,165,233,0.18); color: #38bdf8; border: 1px solid rgba(14,165,233,0.35); }
     .badge-flagged { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
-
-    .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-    .status-dot.in-cpd { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.22), 0 0 12px rgba(16,185,129,0.7); animation: pulseDot 2s ease-in-out infinite; }
-    .status-dot.not-in-cpd { background: transparent; border: 2px solid #64748b; }
-    @keyframes pulseDot {
-      0%,100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.22), 0 0 12px rgba(16,185,129,0.7); }
-      50% { box-shadow: 0 0 0 6px rgba(16,185,129,0.05), 0 0 20px rgba(16,185,129,0.9); }
-    }
+    .badge-absent { background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.35); }
+    .badge-out { background: rgba(56,189,248,0.18); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); }
+    .badge-late { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+    .badge-missing { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
 
     .past-stats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .past-stat { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.08); }
@@ -180,7 +177,6 @@
     .loader { position: fixed; inset: 0; background: #0a0f1e; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
     .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,217,255,0.2); border-top-color: #00D9FF; animation: spin 1s linear infinite; }
 
-    /* Teachers tab */
     .t-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .t-stat { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; text-align: center; position: relative; overflow: hidden; }
     .t-stat.live { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
@@ -209,62 +205,49 @@
     .ongoing-banner h4 { font-size: 13px; color: #fff; margin: 0 0 2px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ongoing-banner p { font-size: 11px; color: #94a3b8; margin: 0; }
 
-    /* 3-COLUMN LAYOUT */
-    .teacher-columns {
-      display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px;
-    }
-    @media (min-width: 900px) {
-      .teacher-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    }
-    .teacher-column {
-      background: rgba(15,23,42,0.55);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 12px;
-      min-width: 0;
-    }
-    .tc-head {
-      display: flex; justify-content: space-between; align-items: center;
-      padding-bottom: 10px; margin-bottom: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      gap: 6px;
-    }
+    .teacher-columns { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+    @media (min-width: 900px) { .teacher-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .teacher-column { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px; min-width: 0; }
+    .tc-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); gap: 6px; }
     .tc-head h3 { font-size: 12px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tc-head .cnt { font-size: 10px; color: #94a3b8; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
 
     .teacher-row {
       display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px; border-radius: 10px;
+      padding: 10px; border-radius: 10px;
       background: rgba(15,23,42,0.5);
       border: 1px solid rgba(255,255,255,0.06);
-      margin-bottom: 5px; transition: all 0.15s ease;
-      cursor: pointer;
+      margin-bottom: 6px; transition: all 0.15s ease;
+      cursor: pointer; position: relative;
     }
     .teacher-row:hover { border-color: rgba(0,255,204,0.25); background: rgba(0,255,204,0.04); }
     .teacher-row:active { transform: scale(0.98); }
     .teacher-row.live { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
+    .teacher-row.absent-row { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04); }
+
     .teacher-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
+      width: 32px; height: 32px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 800; color: #0a0f1e;
+      font-size: 11px; font-weight: 800; color: #0a0f1e;
       background: #475569; flex-shrink: 0;
     }
     .teacher-row.live .teacher-avatar { background: linear-gradient(135deg,#10b981,#06b6d4); color: #fff; }
     .teacher-info { flex: 1; min-width: 0; }
-    .teacher-name { font-size: 11.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.25; }
-    .teacher-stats-line { font-size: 9px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .teacher-stats-line strong { color: #94a3b8; font-weight: 700; }
+    .teacher-name { font-size: 12px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.25; margin-bottom: 2px; }
+    .teacher-sub-line { font-size: 10px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
 
-    .cat-empty { font-size: 11px; color: #64748b; padding: 8px 10px; font-style: italic; text-align: center; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .status-dot.in-cpd { background: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.22); }
+    .status-dot.in-school { background: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.22); }
+    .status-dot.signed-out { background: #38bdf8; box-shadow: 0 0 0 2px rgba(56,189,248,0.22); }
+    .status-dot.absent { background: transparent; border: 2px solid #ef4444; }
 
-    /* History (teacher detail) */
     .hist-month { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin: 18px 0 8px; padding-left: 4px; }
     .hist-item { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     .hist-item .hist-info { flex: 1; min-width: 0; }
     .hist-item h4 { font-size: 13px; font-weight: 700; color: #fff; margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .hist-item p { font-size: 11px; color: #94a3b8; margin: 0; }
 
-    /* CPD detail split */
     .cpd-split { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 16px; }
     @media (min-width: 768px) { .cpd-split { grid-template-columns: 1fr 1fr; } }
     .cpd-col { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border-radius: 20px; padding: 14px; border: 2px solid transparent; }
@@ -295,11 +278,48 @@
     .person-chip .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e2e8f0; font-weight: 500; font-size: 11.5px; }
     .person-chip .meta { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
 
-    /* Teacher detail stats */
     .td-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .td-stat { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; text-align: center; }
     .td-stat .val { font-size: 24px; font-weight: 900; line-height: 1; color: #fff; }
     .td-stat .lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.05em; }
+
+    .daily-date-nav { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+    .daily-date-nav .nav-btn { width: 40px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .daily-date-nav .nav-btn:active { transform: scale(0.95); }
+    .daily-date-nav .date-input { flex: 1; margin: 0; padding: 12px 14px; text-align: center; }
+    .daily-date-nav .today-btn { padding: 0 14px; height: 44px; border-radius: 12px; background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.3); color: #00ffcc; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .daily-date-label { font-size: 13px; color: #fff; text-align: center; margin-bottom: 20px; font-weight: 600; letter-spacing: 0.02em; }
+
+    .chart-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+    .chart-title { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; display: flex; justify-content: space-between; }
+    .chart-bars { display: flex; align-items: flex-end; justify-content: space-between; height: 120px; gap: 8px; padding-bottom: 24px; position: relative; }
+    .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative; }
+    .chart-bar { width: 100%; max-width: 30px; background: rgba(0,255,204,0.2); border-radius: 4px 4px 0 0; transition: height 0.3s; position: relative; min-height: 4px; }
+    .chart-bar.active { background: linear-gradient(180deg, #00ffcc, #0088ff); box-shadow: 0 0 10px rgba(0,255,204,0.4); }
+    .chart-bar:hover { background: rgba(0,255,204,0.5); }
+    .chart-label { position: absolute; bottom: -24px; font-size: 10px; font-weight: 700; color: #64748b; }
+    .chart-val { position: absolute; top: -20px; font-size: 10px; font-weight: 800; color: #00ffcc; opacity: 0; transition: opacity 0.2s; }
+    .chart-col:hover .chart-val { opacity: 1; }
+
+    .daily-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 6px; }
+    .daily-row:last-child { margin-bottom: 0; }
+    .daily-row.in-school { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06); }
+    .daily-row.signed-out { border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.04); }
+    .daily-row.absent { border-color: rgba(239,68,68,0.28); background: rgba(239,68,68,0.04); }
+    .daily-row.missing-out { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.04); }
+    .daily-row .daily-info { flex: 1; min-width: 0; }
+    .daily-row .daily-name { font-size: 12.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+    .daily-row .daily-times { font-size: 10.5px; color: #94a3b8; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; gap: 8px;}
+    .daily-row .daily-times strong { color: #cbd5e1; font-weight: 700; }
+    .daily-row .daily-badges { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+    /* ✅ NEW: touch-friendly per-teacher action buttons (Edit + Delete) */
+    .teacher-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: auto; padding-left: 4px; }
+    .teacher-action-btn { background: rgba(0,255,204,0.12); color: #00ffcc; border: 1px solid rgba(0,255,204,0.3); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; opacity: 0.75; transition: opacity 0.2s, background 0.2s, transform 0.1s; flex-shrink: 0; }
+    .teacher-action-btn:hover, .teacher-action-btn:active { opacity: 1; transform: scale(0.95); }
+    .teacher-action-btn.danger { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.35); }
+    .teacher-action-btn.danger:hover, .teacher-action-btn.danger:active { background: rgba(239,68,68,0.3); }
+    @media (hover: none) { .teacher-action-btn { opacity: 1; } }
 
     @media (min-width: 768px) {
       .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
@@ -309,7 +329,7 @@
       .avatar-btn { width: 42px; height: 42px; }
       .a-stat-grid { grid-template-columns: repeat(4, 1fr); }
       .t-stats, .td-stats { grid-template-columns: repeat(4, 1fr); }
-      .tab-btn { font-size: 10px; }
+      .tab-btn { font-size: 10px; padding: 12px 0; }
       .tab-btn svg { width: 22px; height: 22px; }
     }
   </style>
@@ -324,7 +344,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
     import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, onSnapshot, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
@@ -349,8 +369,9 @@
     }
     const DEFAULT_LAT = -2.129565168007717;
     const DEFAULT_LNG = 29.77740799677921;
+    const LOGO_URL = 'https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png';
 
-    const SCHOOL_TEACHERS = [
+    const DEFAULT_TEACHERS = [
       { name: 'BAMURANGE CHRISTINE', gender: 'FEMALE', category: 'Nursery' },
       { name: 'MUKARUTESI LIBERATHE', gender: 'FEMALE', category: 'Nursery' },
       { name: 'NAMUBIRU DIANE', gender: 'FEMALE', category: 'Nursery' },
@@ -412,18 +433,26 @@
       { name: 'TUGIRIMANA JEAN AIME', gender: 'MALE', category: 'Secondary' },
       { name: 'TUYISENGE MARIE CLAIRE', gender: 'FEMALE', category: 'Secondary' },
       { name: 'RUKUNDO IRENE', gender: 'MALE', category: 'Secondary' },
-      { name: 'UWIBAMBE MARIE ROSE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'UWIBAMBE MARIE ROSE', gender: 'FEMALE', category: 'Secondary' }
     ];
     const CATEGORIES = ['Nursery', 'Primary', 'Secondary'];
     const CAT_COLOR = { Nursery: '#f472b6', Primary: '#c4b5fd', Secondary: '#67e8f9' };
+
+    const todayKeyInit = (() => {
+      const d = new Date();
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    })();
 
     const state = {
       user: null, profile: null, view: 'boot', lang: 'en',
       adminTab: 'overview', adminSessionFilter: 'all',
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
-      cpds: [], allAttendances: [],
+      cpds: [], allAttendances: [], teachers: [],
+      dailyDate: todayKeyInit, dailyRecords: [],
+      subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null, subTeachers: null,
+      subDaily: null, subDailyDate: null,
       selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
-      subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null,
       liveMap: null, liveMapCpdId: null,
       teacherSearch: '', teacherCatFilter: 'all',
       teacherDetailName: null,
@@ -442,7 +471,7 @@
     const I18N = {
       en: {
         home: 'Home', logout: 'Sign Out', admin: 'Admin',
-        overview: 'Overview', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New CPD', teachers: 'Teachers',
+        overview: 'Overview', daily: 'Daily', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New CPD', teachers: 'Teachers',
         admin_title: 'Admin Dashboard', stat_total: 'Total', stat_ongoing: 'Ongoing', stat_upcoming: 'Upcoming', stat_ended: 'Ended',
         stat_live_now: 'Live Now', stat_next_session: 'Next Session',
         open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
@@ -473,10 +502,24 @@
         teacher_report: 'Teacher Report', total_cpds: 'CPDs', total_hours: 'Hours',
         verified_pct: 'Verified %', this_month: 'This Month',
         sessions_history: 'Sessions History', no_sessions_yet: 'No sessions attended yet',
-        back_to_teachers: 'Back to Teachers'
+        back_to_teachers: 'Back to Teachers',
+        daily_title: 'Daily Attendance',
+        daily_sub: 'Track teacher sign-in and sign-out for each school day',
+        daily_today: 'Today',
+        daily_prev: 'Previous day', daily_next: 'Next day',
+        daily_in_school: 'In School', daily_signed_out: 'Signed Out', daily_not_arrived: 'Not Arrived', daily_late: 'Late',
+        daily_present: 'Present', daily_missing_out: 'Missing Sign-Out', daily_absent: 'Absent',
+        daily_sign_in: 'Sign In', daily_sign_out: 'Sign Out',
+        daily_download: 'Download Day CSV',
+        daily_no_records: 'No records for this day.',
+        daily_late_badge: 'Late', daily_ontime_badge: 'On Time',
+        daily_stat_present: 'Present', daily_stat_absent: 'Absent',
+        weekly_trend: '7-Day Attendance Trend',
+        today_status: 'Today',
+        total_staff: 'staff'
       },
       rw: {
-        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
+        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', daily: 'Buri Munsi', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
         admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
         stat_live_now: 'Kuri ubu', stat_next_session: 'Isomo rikurikira',
         open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
@@ -495,10 +538,24 @@
         teacher_report: 'Raporo y\'Umwarimu', total_cpds: 'CPD', total_hours: 'Amasaha',
         verified_pct: 'Byemejwe %', this_month: 'Uku kwezi',
         sessions_history: 'Amateka y\'Amasomo', no_sessions_yet: 'Nta masomo yitabiriye',
-        back_to_teachers: 'Subira ku Barimu'
+        back_to_teachers: 'Subira ku Barimu',
+        daily_title: 'Kujya ku Ishuri Buri Munsi',
+        daily_sub: 'Kurikirana uko abarimu binjira bakava ku ishuri',
+        daily_today: 'Uyu munsi',
+        daily_prev: 'Umunsi ushize', daily_next: 'Umunsi utaha',
+        daily_in_school: 'Muri ishuri', daily_signed_out: 'Basohotse', daily_not_arrived: 'Bataraje', daily_late: 'Bateye',
+        daily_present: 'Baje', daily_missing_out: 'Ntibasohotse', daily_absent: 'Ntabwo baje',
+        daily_sign_in: 'Kwinjira', daily_sign_out: 'Gusohoka',
+        daily_download: 'Kuramo CSV y\'umunsi',
+        daily_no_records: 'Nta byanditswe kuri uyu munsi.',
+        daily_late_badge: 'Yateye', daily_ontime_badge: 'Yageze ku gihe',
+        daily_stat_present: 'Baje', daily_stat_absent: 'Bataje',
+        weekly_trend: 'Iminsi 7 y\'ishuri',
+        today_status: 'Uyu munsi',
+        total_staff: 'abarimu'
       },
       fr: {
-        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau', teachers: 'Enseignants',
+        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', daily: 'Quotidien', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau', teachers: 'Enseignants',
         admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées',
         stat_live_now: 'En direct', stat_next_session: 'Prochaine session',
         open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver',
@@ -517,7 +574,21 @@
         teacher_report: 'Rapport enseignant', total_cpds: 'CPD', total_hours: 'Heures',
         verified_pct: 'Vérifié %', this_month: 'Ce mois',
         sessions_history: 'Historique des sessions', no_sessions_yet: 'Aucune session suivie',
-        back_to_teachers: 'Retour aux enseignants'
+        back_to_teachers: 'Retour aux enseignants',
+        daily_title: 'Présence Quotidienne',
+        daily_sub: 'Suivi des arrivées et départs des enseignants',
+        daily_today: 'Aujourd\'hui',
+        daily_prev: 'Jour précédent', daily_next: 'Jour suivant',
+        daily_in_school: 'À l\'école', daily_signed_out: 'Partis', daily_not_arrived: 'Non arrivés', daily_late: 'En retard',
+        daily_present: 'Présents', daily_missing_out: 'Départ manquant', daily_absent: 'Absents',
+        daily_sign_in: 'Arrivée', daily_sign_out: 'Départ',
+        daily_download: 'Télécharger CSV du jour',
+        daily_no_records: 'Aucun enregistrement pour ce jour.',
+        daily_late_badge: 'Retard', daily_ontime_badge: 'À l\'heure',
+        daily_stat_present: 'Présents', daily_stat_absent: 'Absents',
+        weekly_trend: 'Tendance sur 7 jours',
+        today_status: 'Aujourd\'hui',
+        total_staff: 'enseignants'
       }
     };
     function t(k) { return (I18N[state.lang])[k] || I18N.en[k] || k; }
@@ -689,6 +760,17 @@
     function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
     function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
     function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function todayLocalDateKey() {
+      const d = new Date();
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    }
+    function shiftDateKey(dateKey, deltaDays) {
+      const d = new Date(dateKey + 'T00:00:00');
+      d.setDate(d.getDate() + deltaDays);
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    }
     function avatarUrlFor(photoURL, name, size = 64) {
       if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
       const q = encodeURIComponent((name || 'User').trim());
@@ -740,13 +822,13 @@
     }
     function findSchoolTeacher(name) {
       const key = normalizeName(name);
-      return SCHOOL_TEACHERS.find(t => normalizeName(t.name) === key);
+      return (state.teachers || []).find(tc => normalizeName(tc.name) === key);
     }
 
     function buildTeacherStatusMap() {
       const map = new Map();
-      SCHOOL_TEACHERS.forEach(t => {
-        map.set(normalizeName(t.name), { active: null, totalRecords: 0, lastAttended: null, teacher: t });
+      (state.teachers || []).forEach(tc => {
+        map.set(normalizeName(tc.name), { active: null, totalRecords: 0, lastAttended: null, teacher: tc });
       });
       state.allAttendances.forEach(a => {
         const key = normalizeName(a.teacherName);
@@ -761,6 +843,15 @@
           const curTime = entry.active ? (toDate(entry.active.attendedAt)?.getTime() || 0) : 0;
           if (!entry.active || attTime > curTime) entry.active = a;
         }
+      });
+      return map;
+    }
+
+    function buildTodayDailyMap() {
+      const today = todayLocalDateKey();
+      const map = new Map();
+      state.dailyRecords.forEach(r => {
+        if (r.date === today) map.set(normalizeName(r.teacherName), r);
       });
       return map;
     }
@@ -782,12 +873,12 @@
       const statusMap = buildTeacherStatusMap();
       const rows = [['#', 'Teacher', 'Gender', 'Category', 'CPD Title', 'Attended At', 'Distance (m)', 'Verified']];
       let n = 0;
-      SCHOOL_TEACHERS.forEach(t => {
-        const entry = statusMap.get(normalizeName(t.name));
+      (state.teachers || []).forEach(tc => {
+        const entry = statusMap.get(normalizeName(tc.name));
         if (entry?.active) {
           n++;
           const a = entry.active;
-          rows.push([n, t.name, t.gender, t.category, a.cpdTitle || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
+          rows.push([n, tc.name, tc.gender, tc.category, a.cpdTitle || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
         }
       });
       if (n === 0) { toast('No teachers currently in CPD.', 'warn'); return; }
@@ -812,7 +903,6 @@
     function downloadSessionCSV(cpd) {
       const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
 
-      // Map attendance by normalized teacher name (prefer active)
       const attByKey = new Map();
       atts.forEach(a => {
         const key = normalizeName(a.teacherName);
@@ -822,17 +912,16 @@
 
       const rows = [['#', 'Teacher', 'Email', 'Category', 'Status', 'Color', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Verified']];
 
-      // Attendees first (green)
       let n = 0;
-      SCHOOL_TEACHERS.forEach(t => {
-        const a = attByKey.get(normalizeName(t.name));
+      (state.teachers || []).forEach(tc => {
+        const a = attByKey.get(normalizeName(tc.name));
         if (!a) return;
         n++;
         const start = toDate(a.attendedAt);
         const end = toDate(a.endedAt);
         const dur = (start && end) ? Math.round((end - start) / 60000) : '';
         rows.push([
-          n, t.name, a.teacherEmail || '', t.category,
+          n, tc.name, a.teacherEmail || '', tc.category,
           'Attended', 'Green',
           start?.toLocaleString() || '', end?.toLocaleString() || '', dur,
           a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '',
@@ -840,14 +929,13 @@
         ]);
       });
 
-      // Non-attendees after (red)
       let absentCount = 0;
-      SCHOOL_TEACHERS.forEach(t => {
-        if (attByKey.has(normalizeName(t.name))) return;
+      (state.teachers || []).forEach(tc => {
+        if (attByKey.has(normalizeName(tc.name))) return;
         absentCount++;
         n++;
         rows.push([
-          n, t.name, '', t.category,
+          n, tc.name, '', tc.category,
           'Did Not Attend', 'Red',
           '', '', '', '', ''
         ]);
@@ -860,6 +948,55 @@
       const date = (toDate(cpd.startTime) || new Date()).toISOString().slice(0, 10);
       downloadCSV(`CPD-${safeTitle}-${date}.csv`, rows);
       toast(`Downloaded ${attendedCount} attended, ${absentCount} absent`, 'success');
+    }
+    function downloadDailyCSV() {
+      const date = state.dailyDate;
+      const dayRecords = state.dailyRecords.filter(r => r.date === date);
+      const recByKey = new Map();
+      dayRecords.forEach(r => recByKey.set(normalizeName(r.teacherName), r));
+
+      const rows = [['#', 'Teacher', 'Category', 'Date', 'Sign In', 'Sign Out', 'Status', 'Color', 'Late (m)', 'Early Leave (m)', 'In Dist (m)', 'Out Dist (m)', 'Verified']];
+
+      let n = 0;
+      (state.teachers || []).forEach(tc => {
+        const r = recByKey.get(normalizeName(tc.name));
+        if (!r || !r.signInAt) return;
+        n++;
+        const signIn = toDate(r.signInAt);
+        const signOut = toDate(r.signOutAt);
+
+        let status;
+        if (r.state === 'in') status = r.lateMinutes > 0 ? 'In School (Late)' : 'In School';
+        else status = r.lateMinutes > 0 ? 'Signed Out (Late)' : 'Signed Out';
+
+        rows.push([
+          n, tc.name, tc.category, date,
+          signIn?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '',
+          signOut?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '',
+          status, 'Green',
+          r.lateMinutes > 0 ? r.lateMinutes : '0',
+          r.earlyLeaveMinutes > 0 ? r.earlyLeaveMinutes : '0',
+          r.signInDistanceMeters != null ? r.signInDistanceMeters.toFixed(0) : '',
+          r.signOutDistanceMeters != null ? r.signOutDistanceMeters.toFixed(0) : '',
+          r.verified ? 'Yes' : 'No'
+        ]);
+      });
+
+      let absent = 0;
+      (state.teachers || []).forEach(tc => {
+        if (recByKey.has(normalizeName(tc.name))) return;
+        absent++;
+        n++;
+        rows.push([
+          n, tc.name, tc.category, date,
+          '', '', 'Absent', 'Red', '', '', '', '', ''
+        ]);
+      });
+
+      const present = n - absent;
+      if (n === 0) { toast('No teachers to export.', 'warn'); return; }
+      downloadCSV(`Daily-Attendance-${date}.csv`, rows);
+      toast(`Downloaded ${present} present, ${absent} absent`, 'success');
     }
 
     /* ==================== GREETINGS ==================== */
@@ -937,8 +1074,8 @@
       return `
         <header class="header">
           <div class="header-left">
-            <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" class="header-logo" alt="Logo" />
-            <div class="header-title">iMENA SMART CPD<span>${t('admin')} Portal</span></div>
+            <img src="${LOGO_URL}" class="header-logo" alt="Logo" />
+            <div class="header-title">iMENA SMART ATTENDANCE<span>${t('admin')} Portal</span></div>
           </div>
           <div class="header-right">
             <button class="avatar-btn" id="btn-profile" aria-label="Profile">
@@ -990,12 +1127,16 @@
       if (!state.subAllAtt) state.subAllAtt = onSnapshot(collection(db, 'attendance'),
         snap => { state.allAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); handleDataUpdate(); },
         err => console.error(err));
+      if (!state.subTeachers) state.subTeachers = onSnapshot(collection(db, 'teachers'),
+        snap => { state.teachers = snap.docs.map(d => ({ id: d.id, ...d.data() })); handleDataUpdate(); },
+        err => console.error(err));
       renderAdmin();
     }
 
     function adminTabBar() {
       const tabs = [
         { id: 'overview', icon: '<path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>' },
+        { id: 'daily', icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
         { id: 'teachers', icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>' },
         { id: 'sessions', icon: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>' },
         { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
@@ -1010,11 +1151,17 @@
       else if (state.adminTab === 'calendar') body = renderAdminCalendar();
       else if (state.adminTab === 'new_cpd') body = renderAdminNew();
       else if (state.adminTab === 'teachers') body = renderAdminTeachers();
+      else if (state.adminTab === 'daily') body = renderAdminDaily();
       else body = renderAdminOverview();
-      const mainClass = state.adminTab === 'teachers' ? 'main main-wide' : 'main';
+      const mainClass = state.adminTab === 'teachers' || state.adminTab === 'daily' ? 'main main-wide' : 'main';
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="${mainClass}">${body}</main>${state.adminTab === 'new_cpd' ? '' : adminTabBar()}`;
       bindHeaderEvents();
-      document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => { state.adminTab = b.dataset.atab; state.calSelectedDay = null; renderAdmin(); });
+      document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => {
+        state.adminTab = b.dataset.atab;
+        state.calSelectedDay = null;
+        if (state.adminTab === 'daily' || state.adminTab === 'teachers') ensureDailySub();
+        renderAdmin();
+      });
       const btnTopNew = document.getElementById('btn-top-new');
       if (btnTopNew) btnTopNew.onclick = () => { state.adminTab = 'new_cpd'; renderAdmin(); };
       document.querySelectorAll('[data-open-cpd]').forEach(el => { el.onclick = () => goCpdDetail(el.dataset.openCpd); });
@@ -1036,6 +1183,7 @@
       });
       if (state.adminTab === 'teachers') bindTeachersEvents();
       if (state.adminTab === 'new_cpd') bindAdminNewEvents();
+      if (state.adminTab === 'daily') bindDailyEvents();
     }
 
     function renderAdminOverview() {
@@ -1097,18 +1245,215 @@
       `;
     }
 
-    /* ==================== TEACHERS TAB — 3-COLUMN BY LEVEL ==================== */
+    /* ==================== DAILY ATTENDANCE TAB ==================== */
+    function ensureDailySub() {
+      if (state.subDaily) return;
+      const q = query(collection(db, 'daily_attendance'));
+      state.subDaily = onSnapshot(q,
+        snap => {
+          state.dailyRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          if (state.adminTab === 'daily' || state.adminTab === 'teachers') renderAdmin();
+        },
+        err => { console.error('[daily]', err); toast('Could not load daily records.', 'error'); }
+      );
+    }
+
+    function renderAdminDaily() {
+      ensureDailySub();
+      const date = state.dailyDate;
+      const todayKey = todayLocalDateKey();
+      const isPast = date < todayKey;
+      const isFuture = date > todayKey;
+
+      const dayRecords = state.dailyRecords.filter(r => r.date === date);
+      const recByKey = new Map();
+      dayRecords.forEach(r => recByKey.set(normalizeName(r.teacherName), r));
+
+      let presentCount = 0, inCount = 0, outCount = 0, absentCount = 0, lateCount = 0, missingOutCount = 0, earlyLeaveCount = 0;
+      (state.teachers || []).forEach(tc => {
+        const r = recByKey.get(normalizeName(tc.name));
+        if (!r || !r.signInAt) { absentCount++; return; }
+        presentCount++;
+        if (r.state === 'in') inCount++; else outCount++;
+        if (r.lateMinutes > 0) lateCount++;
+        if (r.earlyLeaveMinutes > 0) earlyLeaveCount++;
+        if (isPast && r.state === 'in') missingOutCount++;
+      });
+
+      const last7Days = Array.from({length: 7}, (_, i) => shiftDateKey(todayKey, i - 6));
+      const chartData = last7Days.map(d => {
+        const dayRecs = state.dailyRecords.filter(r => r.date === d && r.signInAt);
+        return {
+          date: d,
+          label: new Date(d + 'T00:00:00').toLocaleDateString([], { weekday: 'short' }),
+          count: dayRecs.length
+        };
+      });
+      const maxChartVal = Math.max(...chartData.map(d => d.count), 1);
+
+      const chartHtml = `
+        <div class="chart-card">
+          <div class="chart-title">
+            <span>${t('weekly_trend')}</span>
+            <span style="color:#00ffcc">${(state.teachers||[]).length} ${t('total_staff')}</span>
+          </div>
+          <div class="chart-bars">
+            ${chartData.map(d => {
+              const heightPct = (d.count / maxChartVal) * 100;
+              const isActive = d.date === date;
+              return `
+                <div class="chart-col">
+                  <div class="chart-val">${d.count}</div>
+                  <div class="chart-bar ${isActive ? 'active' : ''}" style="height: ${Math.max(heightPct, 4)}%"></div>
+                  <div class="chart-label" style="${isActive ? 'color:#00ffcc' : ''}">${d.label}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+      const statCards = isPast ? `
+        <div class="a-stat"><div class="val" style="color:#34d399">${presentCount}</div><div class="lbl">${t('daily_present')}</div></div>
+        <div class="a-stat"><div class="val" style="color:#fbbf24">${lateCount}</div><div class="lbl">${t('daily_late')}</div></div>
+        <div class="a-stat"><div class="val" style="color:#f87171">${earlyLeaveCount}</div><div class="lbl">Early Leave</div></div>
+        <div class="a-stat"><div class="val" style="color:#f87171">${absentCount}</div><div class="lbl">${t('daily_absent')}</div></div>
+      ` : `
+        <div class="a-stat"><div class="val" style="color:#34d399">${inCount}</div><div class="lbl">${t('daily_in_school')}</div></div>
+        <div class="a-stat"><div class="val" style="color:#38bdf8">${outCount}</div><div class="lbl">${t('daily_signed_out')}</div></div>
+        <div class="a-stat"><div class="val" style="color:#fbbf24">${lateCount}</div><div class="lbl">${t('daily_late')}</div></div>
+        <div class="a-stat"><div class="val" style="color:#f87171">${absentCount}</div><div class="lbl">${t('daily_not_arrived')}</div></div>
+      `;
+
+      const dateObj = new Date(date + 'T00:00:00');
+      const dateLabel = dateObj.toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+      const groups = { Nursery: [], Primary: [], Secondary: [] };
+      (state.teachers || []).forEach(tc => {
+        const r = recByKey.get(normalizeName(tc.name));
+        if (groups[tc.category]) groups[tc.category].push({ teacher: tc, record: r });
+      });
+
+      const renderRow = (item) => {
+        const { teacher, record } = item;
+        let statusClass = 'absent';
+        let badgeHtml = `<span class="badge badge-absent">${t('daily_absent')}</span>`;
+        let timesLine = '';
+
+        if (record && record.signInAt) {
+          const signIn = toDate(record.signInAt);
+          const signOut = toDate(record.signOutAt);
+          const isLate = record.lateMinutes > 0;
+          const isEarly = record.earlyLeaveMinutes > 0;
+
+          timesLine = `<span><strong>In:</strong> ${signIn ? signIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</span>`;
+          if (signOut) {
+            timesLine += `<span><strong>Out:</strong> ${signOut.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+          }
+
+          if (record.state === 'in') {
+            if (isPast) {
+              statusClass = 'missing-out';
+              badgeHtml = `<span class="badge badge-missing">${t('daily_missing_out')}</span>`;
+            } else {
+              statusClass = 'in-school';
+              badgeHtml = `<span class="badge badge-live">● ${t('daily_in_school')}</span>`;
+            }
+          } else {
+            statusClass = 'signed-out';
+            badgeHtml = `<span class="badge badge-out">${t('daily_signed_out')}</span>`;
+          }
+          if (isLate) badgeHtml += `<span class="badge badge-late">Late ${record.lateMinutes}m</span>`;
+          if (isEarly) badgeHtml += `<span class="badge badge-absent">Early ${record.earlyLeaveMinutes}m</span>`;
+        }
+
+        return `<div class="daily-row ${statusClass}">
+          <span class="status-dot ${statusClass}"></span>
+          <div class="daily-info">
+            <div class="daily-name">${escapeHtml(teacher.name)}</div>
+            <div class="daily-times">${timesLine || 'No check-in'}</div>
+          </div>
+          <div class="daily-badges">${badgeHtml}</div>
+        </div>`;
+      };
+
+      const groupsHtml = CATEGORIES.map(cat => {
+        const items = groups[cat] || [];
+        const presentInCat = items.filter(x => x.record && x.record.signInAt).length;
+        return `<div class="teacher-column">
+          <div class="tc-head">
+            <h3 style="color:${CAT_COLOR[cat]}">${t(cat.toLowerCase())}</h3>
+            <span class="cnt">${presentInCat}/${items.length}</span>
+          </div>
+          ${items.length === 0 ? `<div class="empty" style="border:none;background:transparent;padding:10px;">No teachers</div>` : items.map(renderRow).join('')}
+        </div>`;
+      }).join('');
+
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('daily_title')}</h1>
+        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${t('daily_sub')}</p>
+
+        ${chartHtml}
+
+        <div class="daily-date-nav">
+          <button class="nav-btn" id="daily-prev" aria-label="${t('daily_prev')}">‹</button>
+          <input type="date" class="input date-input" id="daily-date" value="${date}" max="${todayKey}" />
+          <button class="nav-btn" id="daily-next" aria-label="${t('daily_next')}" ${date >= todayKey ? 'disabled style="opacity:0.4"' : ''}>›</button>
+          <button class="today-btn" id="daily-today">${t('daily_today')}</button>
+        </div>
+        <div class="daily-date-label">${dateLabel}</div>
+
+        <div class="a-stat-grid">${statCards}</div>
+
+        <div class="csv-btn-row">
+          <button class="csv-btn" id="btn-daily-csv">📥 ${t('daily_download')}</button>
+        </div>
+
+        ${dayRecords.length === 0 && !isFuture ? `<div class="empty" style="margin-bottom:14px"><strong>${t('daily_no_records')}</strong></div>` : ''}
+
+        <div class="teacher-columns">
+          ${groupsHtml}
+        </div>
+      `;
+    }
+
+    function bindDailyEvents() {
+      const prev = document.getElementById('daily-prev');
+      const next = document.getElementById('daily-next');
+      const today = document.getElementById('daily-today');
+      const dateInput = document.getElementById('daily-date');
+      const btnCsv = document.getElementById('btn-daily-csv');
+
+      if (prev) prev.onclick = () => { state.dailyDate = shiftDateKey(state.dailyDate, -1); renderAdminDaily(); };
+      if (next) next.onclick = () => {
+        const newDate = shiftDateKey(state.dailyDate, 1);
+        if (newDate > todayLocalDateKey()) return;
+        state.dailyDate = newDate; renderAdminDaily();
+      };
+      if (today) today.onclick = () => { state.dailyDate = todayLocalDateKey(); renderAdminDaily(); };
+      if (dateInput) dateInput.onchange = (e) => {
+        const v = e.target.value;
+        if (!v) return;
+        state.dailyDate = v > todayLocalDateKey() ? todayLocalDateKey() : v;
+        renderAdminDaily();
+      };
+      if (btnCsv) btnCsv.onclick = () => downloadDailyCSV();
+    }
+
+    /* ==================== TEACHERS TAB ==================== */
     function renderAdminTeachers() {
+      ensureDailySub();
       const statusMap = buildTeacherStatusMap();
+      const todayMap = buildTodayDailyMap();
       const ongoingSessions = state.cpds.filter(c => cpdStatus(c) === 'ongoing');
 
       let globalInCpd = 0, globalInSchool = 0;
       const byCatInCpd = { Nursery: 0, Primary: 0, Secondary: 0 };
       const byCatTotal = { Nursery: 0, Primary: 0, Secondary: 0 };
-      SCHOOL_TEACHERS.forEach(t => {
-        byCatTotal[t.category]++;
-        const entry = statusMap.get(normalizeName(t.name));
-        if (entry?.active) { globalInCpd++; byCatInCpd[t.category]++; }
+      (state.teachers || []).forEach(tc => {
+        byCatTotal[tc.category] = (byCatTotal[tc.category] || 0) + 1;
+        const entry = statusMap.get(normalizeName(tc.name));
+        if (entry?.active) { globalInCpd++; byCatInCpd[tc.category]++; }
         else globalInSchool++;
       });
 
@@ -1123,16 +1468,21 @@
         </div>` : '';
 
       return `
-        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('teachers_title')}</h1>
-        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${SCHOOL_TEACHERS.length} · ${byCatTotal.Nursery} ${t('nursery')} · ${byCatTotal.Primary} ${t('primary')} · ${byCatTotal.Secondary} ${t('secondary')}</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('teachers_title')}</h1>
+            <p style="font-size:12px;color:#94a3b8;margin:0">${(state.teachers || []).length} Teachers · ${byCatTotal.Nursery || 0} ${t('nursery')} · ${byCatTotal.Primary || 0} ${t('primary')} · ${byCatTotal.Secondary || 0} ${t('secondary')}</p>
+          </div>
+          <button id="btn-add-teacher" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">+ Add Teacher</button>
+        </div>
 
         ${ongoingBanner}
 
         <div class="t-stats">
           <div class="t-stat live"><div class="val">${globalInCpd}</div><div class="lbl">${t('stat_in_cpd')}</div></div>
           <div class="t-stat"><div class="val">${globalInSchool}</div><div class="lbl">${t('stat_in_school')}</div></div>
-          <div class="t-stat"><div class="val" style="color:#f472b6">${byCatInCpd.Nursery}/${byCatTotal.Nursery}</div><div class="lbl">${t('nursery')}</div></div>
-          <div class="t-stat"><div class="val" style="color:#c4b5fd">${byCatInCpd.Primary}/${byCatTotal.Primary}</div><div class="lbl">${t('primary')}</div></div>
+          <div class="t-stat"><div class="val" style="color:#f472b6">${byCatInCpd.Nursery}/${byCatTotal.Nursery || 0}</div><div class="lbl">${t('nursery')}</div></div>
+          <div class="t-stat"><div class="val" style="color:#c4b5fd">${byCatInCpd.Primary}/${byCatTotal.Primary || 0}</div><div class="lbl">${t('primary')}</div></div>
         </div>
 
         <div class="csv-btn-row">
@@ -1141,29 +1491,38 @@
         </div>
 
         <div class="cat-filter-row">
-          <button class="cat-filter ${state.teacherCatFilter === 'all' ? 'active' : ''}" data-catfilter="all">${t('all_categories')} · ${SCHOOL_TEACHERS.length}</button>
-          <button class="cat-filter ${state.teacherCatFilter === 'nursery' ? 'active' : ''}" data-catfilter="nursery">${t('nursery')} · ${byCatTotal.Nursery}</button>
-          <button class="cat-filter ${state.teacherCatFilter === 'primary' ? 'active' : ''}" data-catfilter="primary">${t('primary')} · ${byCatTotal.Primary}</button>
-          <button class="cat-filter ${state.teacherCatFilter === 'secondary' ? 'active' : ''}" data-catfilter="secondary">${t('secondary')} · ${byCatTotal.Secondary}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'all' ? 'active' : ''}" data-catfilter="all">${t('all_categories')} · ${(state.teachers || []).length}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'nursery' ? 'active' : ''}" data-catfilter="nursery">${t('nursery')} · ${byCatTotal.Nursery || 0}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'primary' ? 'active' : ''}" data-catfilter="primary">${t('primary')} · ${byCatTotal.Primary || 0}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'secondary' ? 'active' : ''}" data-catfilter="secondary">${t('secondary')} · ${byCatTotal.Secondary || 0}</button>
         </div>
 
         <input type="search" class="teacher-search" id="teacher-search" placeholder="${escapeHtml(t('search_teacher_placeholder'))}" value="${escapeHtml(state.teacherSearch)}" />
 
+        ${(!state.teachers || state.teachers.length === 0) ? `
+          <div class="empty" style="margin-bottom:16px">
+            <strong>No teachers found</strong>
+            <p style="margin-bottom:12px">Your database is empty. Click below to add the default 63 teachers.</p>
+            <button class="btn btn-primary" id="btn-seed-teachers" style="width:auto;margin:0 auto;">Seed Default Teachers</button>
+          </div>
+        ` : ''}
+
         <div class="teacher-columns" id="teacher-lists">
-          ${renderTeacherColumns(statusMap)}
+          ${renderTeacherColumns(statusMap, todayMap)}
         </div>
       `;
     }
 
-    function renderTeacherColumns(statusMap) {
+    function renderTeacherColumns(statusMap, todayMap) {
       const catFilter = state.teacherCatFilter;
       const search = state.teacherSearch.toLowerCase().trim();
       const byCat = { Nursery: [], Primary: [], Secondary: [] };
-      SCHOOL_TEACHERS.forEach(t => {
-        if (catFilter !== 'all' && t.category.toLowerCase() !== catFilter) return;
-        if (search && !t.name.toLowerCase().includes(search)) return;
-        const entry = statusMap.get(normalizeName(t.name)) || { active: null, totalRecords: 0, lastAttended: null };
-        byCat[t.category].push({ teacher: t, entry });
+      (state.teachers || []).forEach(tc => {
+        if (catFilter !== 'all' && tc.category.toLowerCase() !== catFilter) return;
+        if (search && !tc.name.toLowerCase().includes(search)) return;
+        const entry = statusMap.get(normalizeName(tc.name)) || { active: null, totalRecords: 0, lastAttended: null };
+        const daily = todayMap.get(normalizeName(tc.name));
+        if (byCat[tc.category]) byCat[tc.category].push({ teacher: tc, entry, daily });
       });
 
       return CATEGORIES.map(cat => {
@@ -1177,36 +1536,136 @@
               <span class="cnt">${inCpdCount}/${items.length}</span>
             </div>
             ${items.length === 0
-              ? `<div class="cat-empty">${t('no_teachers_match')}</div>`
+              ? `<div class="cat-empty" style="padding:10px;text-align:center;font-size:11px;color:#64748b;">${t('no_teachers_match')}</div>`
               : items.map(x => teacherRowHtml(x, !!x.entry?.active)).join('')}
           </div>`;
       }).join('');
     }
 
-    function teacherRowHtml(item, isLive) {
-      const { teacher, entry } = item;
+    /* ✅ UPDATED: teacher row now shows Edit + Delete buttons (touch-friendly) */
+    function teacherRowHtml(item, isLiveCpd) {
+      const { teacher, entry, daily } = item;
       const initials = initialsOf(teacher.name);
       const genderStr = teacher.gender === 'MALE' ? t('male') : t('female');
-      const total = entry?.totalRecords || 0;
-      let statsLine = '';
-      if (total > 0) statsLine = `${total} ${t('cpds_label')} · ${t('last_label')}: ${timeAgo(entry.lastAttended)}`;
-      else statsLine = t('never_label');
+
+      let dailyBadge = '';
+      let rowClass = '';
+      if (daily) {
+        if (daily.state === 'in') {
+          dailyBadge = `<span class="status-dot in-school" title="In School"></span>`;
+          rowClass = 'live';
+        } else {
+          dailyBadge = `<span class="status-dot signed-out" title="Signed Out"></span>`;
+        }
+      } else {
+        dailyBadge = `<span class="status-dot absent" title="Absent Today"></span>`;
+      }
+
+      const cpdStatusDot = isLiveCpd ? `<span class="status-dot in-cpd" title="In CPD"></span>` : '';
+
       return `
-        <div class="teacher-row ${isLive ? 'live' : ''}" data-teacher="${escapeHtml(teacher.name)}">
-          <span class="status-dot ${isLive ? 'in-cpd' : 'not-in-cpd'}" title="${isLive ? t('in_cpd_label') : t('not_in_cpd_label')}"></span>
+        <div class="teacher-row ${rowClass}" data-teacher="${escapeHtml(teacher.name)}">
+          <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
+            ${cpdStatusDot}
+            ${dailyBadge}
+          </div>
           <div class="teacher-avatar">${initials}</div>
           <div class="teacher-info">
             <div class="teacher-name">${escapeHtml(teacher.name)}</div>
-            <div class="teacher-stats-line">${genderStr} · ${statsLine}</div>
+            <div class="teacher-sub-line">${genderStr} · ${daily ? (daily.state === 'in' ? 'In School' : 'Signed Out') : 'Absent Today'}</div>
+          </div>
+          <div class="teacher-actions">
+            <button class="teacher-action-btn" data-edit-teacher="${teacher.id}" title="Edit Teacher" aria-label="Edit ${escapeHtml(teacher.name)}">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+            <button class="teacher-action-btn danger" data-del-teacher="${teacher.id}" title="Remove Teacher" aria-label="Remove ${escapeHtml(teacher.name)}">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
           </div>
         </div>`;
     }
 
+    /* ✅ UPDATED: edit + name-confirmed delete handlers */
     function bindTeachersEvents() {
       const btnCur = document.getElementById('btn-csv-current');
       const btnHist = document.getElementById('btn-csv-history');
       if (btnCur) btnCur.onclick = () => downloadCurrentCpdCSV();
       if (btnHist) btnHist.onclick = () => downloadHistoricCSV();
+
+      const btnSeed = document.getElementById('btn-seed-teachers');
+      if (btnSeed) {
+        btnSeed.onclick = async () => {
+          if (!confirm('This will add all 63 default teachers. Continue?')) return;
+          btnSeed.disabled = true;
+          btnSeed.textContent = 'Seeding...';
+          try {
+            const batch = writeBatch(db);
+            DEFAULT_TEACHERS.forEach(tc => {
+              const ref = doc(collection(db, 'teachers'));
+              batch.set(ref, tc);
+            });
+            await batch.commit();
+            toast('Default teachers added!', 'success');
+          } catch (err) {
+            toast(err.message, 'error');
+            btnSeed.disabled = false;
+            btnSeed.textContent = 'Seed Default Teachers';
+          }
+        };
+      }
+
+      const btnAdd = document.getElementById('btn-add-teacher');
+      if (btnAdd) {
+        btnAdd.onclick = () => {
+          const modal = document.createElement('div');
+          modal.className = 'profile-modal open';
+          modal.innerHTML = `
+            <div class="profile-card" style="text-align:left; max-width: 360px;">
+              <h2 style="font-size:20px;font-weight:900;margin-bottom:16px;">Add New Teacher</h2>
+              <form id="add-teacher-form">
+                <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Full Name</label>
+                <input name="name" required class="input" style="margin-bottom:16px;" placeholder="e.g. MUKAMANA Aline" />
+                <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Gender</label>
+                <select name="gender" class="input" style="margin-bottom:16px;">
+                  <option value="FEMALE">Female</option>
+                  <option value="MALE">Male</option>
+                </select>
+                <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Category</label>
+                <select name="category" class="input" style="margin-bottom:20px;">
+                  <option value="Nursery">Nursery</option>
+                  <option value="Primary">Primary</option>
+                  <option value="Secondary">Secondary</option>
+                </select>
+                <div style="display:flex; gap:10px;">
+                  <button type="button" class="btn btn-ghost" id="cancel-add" style="flex:1">Cancel</button>
+                  <button type="submit" class="btn btn-primary" id="save-add" style="flex:1">Save</button>
+                </div>
+              </form>
+            </div>`;
+          document.body.appendChild(modal);
+          modal.onclick = e => { if (e.target === modal) modal.remove(); };
+          modal.querySelector('#cancel-add').onclick = () => modal.remove();
+          modal.querySelector('#add-teacher-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = modal.querySelector('#save-add');
+            btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+              await addDoc(collection(db, 'teachers'), {
+                name: form.elements.name.value.trim().toUpperCase(),
+                gender: form.elements.gender.value,
+                category: form.elements.category.value
+              });
+              modal.remove();
+              toast('Teacher added successfully', 'success');
+            } catch (err) {
+              toast(err.message, 'error');
+              btn.disabled = false; btn.textContent = 'Save';
+            }
+          };
+        };
+      }
+
       document.querySelectorAll('[data-catfilter]').forEach(b => {
         b.onclick = () => { state.teacherCatFilter = b.dataset.catfilter; renderAdmin(); };
       });
@@ -1217,10 +1676,27 @@
           updateTeacherListsOnly();
         });
       }
-      // Delegated click → teacher detail (survives innerHTML swaps)
       const lists = document.getElementById('teacher-lists');
       if (lists) {
-        lists.onclick = (e) => {
+        lists.onclick = async (e) => {
+          const editBtn = e.target.closest('[data-edit-teacher]');
+          if (editBtn) {
+            e.stopPropagation();
+            openEditTeacherModal(editBtn.dataset.editTeacher);
+            return;
+          }
+          const delBtn = e.target.closest('[data-del-teacher]');
+          if (delBtn) {
+            e.stopPropagation();
+            const teacher = (state.teachers || []).find(tc => tc.id === delBtn.dataset.delTeacher);
+            const teacherName = teacher ? teacher.name : 'this teacher';
+            if (!confirm(`Remove ${teacherName}?\n\nTheir attendance history is preserved, but they will no longer appear in the teacher list.`)) return;
+            try {
+              await deleteDoc(doc(db, 'teachers', delBtn.dataset.delTeacher));
+              toast(`${teacherName} removed`, 'success');
+            } catch (err) { toast(err.message, 'error'); }
+            return;
+          }
           const row = e.target.closest('[data-teacher]');
           if (row) goTeacherDetail(row.dataset.teacher);
         };
@@ -1230,10 +1706,65 @@
     function updateTeacherListsOnly() {
       const container = document.getElementById('teacher-lists');
       if (!container) return;
-      container.innerHTML = renderTeacherColumns(buildTeacherStatusMap());
+      container.innerHTML = renderTeacherColumns(buildTeacherStatusMap(), buildTodayDailyMap());
     }
 
-    /* ==================== TEACHER DETAIL — FULL REPORT ==================== */
+    /* ✅ NEW: Edit teacher modal */
+    function openEditTeacherModal(teacherId) {
+      const teacher = (state.teachers || []).find(tc => tc.id === teacherId);
+      if (!teacher) { toast('Teacher not found.', 'error'); return; }
+
+      const modal = document.createElement('div');
+      modal.className = 'profile-modal open';
+      modal.innerHTML = `
+        <div class="profile-card" style="text-align:left; max-width: 380px;">
+          <h2 style="font-size:20px;font-weight:900;margin:0 0 16px;">Edit Teacher</h2>
+          <form id="edit-teacher-form">
+            <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Full Name</label>
+            <input name="name" required class="input" style="margin-bottom:16px;" value="${escapeHtml(teacher.name)}" />
+            <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Gender</label>
+            <select name="gender" class="input" style="margin-bottom:16px;">
+              <option value="FEMALE" ${teacher.gender === 'FEMALE' ? 'selected' : ''}>Female</option>
+              <option value="MALE" ${teacher.gender === 'MALE' ? 'selected' : ''}>Male</option>
+            </select>
+            <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Category</label>
+            <select name="category" class="input" style="margin-bottom:20px;">
+              <option value="Nursery" ${teacher.category === 'Nursery' ? 'selected' : ''}>Nursery</option>
+              <option value="Primary" ${teacher.category === 'Primary' ? 'selected' : ''}>Primary</option>
+              <option value="Secondary" ${teacher.category === 'Secondary' ? 'selected' : ''}>Secondary</option>
+            </select>
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn btn-ghost" id="cancel-edit" style="flex:1">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="save-edit" style="flex:1">Save Changes</button>
+            </div>
+          </form>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.onclick = e => { if (e.target === modal) modal.remove(); };
+      modal.querySelector('#cancel-edit').onclick = () => modal.remove();
+      modal.querySelector('#edit-teacher-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = modal.querySelector('#save-edit');
+        const newName = form.elements.name.value.trim();
+        if (!newName) { toast('Name is required.', 'error'); return; }
+        btn.disabled = true; btn.textContent = 'Saving...';
+        try {
+          await updateDoc(doc(db, 'teachers', teacherId), {
+            name: newName.toUpperCase(),
+            gender: form.elements.gender.value,
+            category: form.elements.category.value,
+          });
+          modal.remove();
+          toast('Teacher updated successfully', 'success');
+        } catch (err) {
+          toast(err.message, 'error');
+          btn.disabled = false; btn.textContent = 'Save Changes';
+        }
+      };
+    }
+
+    /* ==================== TEACHER DETAIL ==================== */
     function goTeacherDetail(name) {
       state.view = 'teacher-detail';
       state.teacherDetailName = name;
@@ -1242,7 +1773,7 @@
 
     function renderTeacherDetail() {
       const name = state.teacherDetailName;
-      const teacher = SCHOOL_TEACHERS.find(t => normalizeName(t.name) === normalizeName(name));
+      const teacher = (state.teachers || []).find(tc => normalizeName(tc.name) === normalizeName(name));
       if (!teacher) { state.view = 'admin'; state.adminTab = 'teachers'; renderAdmin(); return; }
 
       const myAtts = state.allAttendances.filter(a => normalizeName(a.teacherName) === normalizeName(name));
@@ -1264,11 +1795,9 @@
         return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
       }).length;
 
-      const catClass = teacher.category.toLowerCase();
       const catColor = CAT_COLOR[teacher.category];
       const genderStr = teacher.gender === 'MALE' ? t('male') : t('female');
 
-      // Group history by month
       const groups = {};
       sorted.forEach(a => {
         const d = toDate(a.attendedAt);
@@ -1302,6 +1831,37 @@
             }).join('')}
           `).join('');
 
+      const recentDaily = state.dailyRecords
+        .filter(r => normalizeName(r.teacherName) === normalizeName(name))
+        .sort((a,b) => b.date.localeCompare(a.date))
+        .slice(0, 5);
+
+      const dailyHtml = recentDaily.length === 0 ? '' : `
+        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:24px 0 12px;padding-left:4px">Recent Daily Attendance</h3>
+        ${recentDaily.map(r => {
+          const isLate = r.lateMinutes > 0;
+          const isEarly = r.earlyLeaveMinutes > 0;
+          const signIn = toDate(r.signInAt);
+          const signOut = toDate(r.signOutAt);
+          let statusBadge = '';
+          if (r.state === 'in') statusBadge = `<span class="badge badge-live">In School</span>`;
+          else statusBadge = `<span class="badge badge-out">Signed Out</span>`;
+
+          return `<div class="hist-item">
+            <div class="hist-info">
+              <h4>${new Date(r.date).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })}</h4>
+              <p>In: ${signIn ? signIn.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'}
+                 | Out: ${signOut ? signOut.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'}</p>
+            </div>
+            <div style="display:flex; gap:4px;">
+              ${isLate ? `<span class="badge badge-late">Late ${r.lateMinutes}m</span>` : ''}
+              ${isEarly ? `<span class="badge badge-absent">Early ${r.earlyLeaveMinutes}m</span>` : ''}
+              ${statusBadge}
+            </div>
+          </div>`;
+        }).join('')}
+      `;
+
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">
         <button id="btn-back-teacher" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back_to_teachers')}</button>
 
@@ -1322,6 +1882,8 @@
           <div class="td-stat"><div class="val" style="color:#10b981">${verifiedRate}%</div><div class="lbl">${t('verified_pct')}</div></div>
           <div class="td-stat"><div class="val" style="color:#fbbf24">${thisMonth}</div><div class="lbl">${t('this_month')}</div></div>
         </div>
+
+        ${dailyHtml}
 
         <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:24px 0 12px;padding-left:4px">${t('sessions_history')}</h3>
         ${historyHtml}
@@ -1574,7 +2136,7 @@
       };
     }
 
-    /* ==================== CPD DETAIL (MAP FIRST) ==================== */
+    /* ==================== CPD DETAIL ==================== */
     function goCpdDetail(cpdId) {
       state.view = 'cpd-detail'; state.selectedCpdId = cpdId;
       state.selectedCpd = null; state.cpdAttendances = [];
@@ -1604,21 +2166,21 @@
 
       const inCpdList = [];
       const notInCpdList = [];
-      SCHOOL_TEACHERS.forEach(t => {
-        const att = attByKey.get(normalizeName(t.name));
-        if (att) inCpdList.push({ teacher: t, attendance: att });
-        else notInCpdList.push({ teacher: t });
+      (state.teachers || []).forEach(tc => {
+        const att = attByKey.get(normalizeName(tc.name));
+        if (att) inCpdList.push({ teacher: tc, attendance: att });
+        else notInCpdList.push({ teacher: tc });
       });
 
       const groupByCat = (arr) => {
         const g = { Nursery: [], Primary: [], Secondary: [] };
-        arr.forEach(item => g[item.teacher.category].push(item));
+        arr.forEach(item => { if (g[item.teacher.category]) g[item.teacher.category].push(item); });
         return g;
       };
       const inCpdGrouped = groupByCat(inCpdList);
       const notInCpdGrouped = groupByCat(notInCpdList);
       const catTotal = { Nursery: 0, Primary: 0, Secondary: 0 };
-      SCHOOL_TEACHERS.forEach(t => catTotal[t.category]++);
+      (state.teachers || []).forEach(tc => { catTotal[tc.category]++; });
 
       const colHtml = (grouped, inCpd) => CATEGORIES.map(cat => {
         const items = grouped[cat];
@@ -1754,7 +2316,7 @@
     /* ==================== BOOT ==================== */
     document.getElementById('app').innerHTML = `
       <div class="loader">
-        <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="Logo" style="width:100px;height:100px;object-fit:contain" />
+        <img src="${LOGO_URL}" alt="Logo" style="width:100px;height:100px;object-fit:contain" />
         <div class="loader-ring"></div>
       </div>`;
   </script>
