@@ -1,5 +1,8 @@
 {
-  "version": 2,
-  "buildCommand": "mkdir -p dist && cp *.html dist/",
-  "outputDirectory": "dist"
+  "rewrites": [
+    {
+      "source": "/firebase-web-authn-api",
+      "destination": "https://us-central1-imena-smart-cpd-attendance.cloudfunctions.net/ext-firebase-web-authn-api"
+    }
+  ]
 }
