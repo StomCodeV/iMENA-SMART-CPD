@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#071B33" />
+  <title>iMENA Smart CPD — Teacher</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: #e2e8f0; -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; background: #0a0f1e; }
+    button, input { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    #bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; background: #0a0f1e; }
+    #app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header { position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 8px; background: rgba(10,15,30,0.72); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-bottom: 1px solid rgba(255,255,255,0.06); padding-top: max(10px, env(safe-area-inset-top)); }
+    .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .header-logo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; }
+    .header-title { font-size: 14px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+    .header-title span { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; background: linear-gradient(90deg,#ec4899,#8b5cf6,#06b6d4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 2px solid #8b5cf6; padding: 0; background: #fff; flex-shrink: 0; }
+    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Profile modal */
+    .profile-modal { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .profile-modal.open { opacity: 1; pointer-events: auto; }
+    .profile-card { background: #1e293b; color: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 340px; text-align: center; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .profile-modal.open .profile-card { transform: translateY(0); }
+    .profile-img { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px; border: 3px solid #8b5cf6; object-fit: cover; }
+    .profile-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: #94a3b8; margin-bottom: 12px; word-break: break-all; }
+    .profile-role { display: inline-block; padding: 6px 12px; border-radius: 99px; background: rgba(139,92,246,0.15); color: #c4b5fd; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
+    .profile-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-home, .btn-logout { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; }
+    .btn-home { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn-logout { background: rgba(239,68,68,0.15); color: #f87171; }
+
+    /* Buttons */
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px 20px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s; min-height: 48px; }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4); color: #fff; box-shadow: 0 6px 24px rgba(139,92,246,0.4); }
+    .btn-danger { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,0.35); }
+    .btn-ghost { background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* Main + tab bar */
+    .main { flex: 1; padding: 18px 14px calc(80px + env(safe-area-inset-bottom)); max-width: 800px; margin: 0 auto; width: 100%; }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; z-index: 90; background: rgba(10,15,30,0.85); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-top: 1px solid rgba(255,255,255,0.08); padding-bottom: env(safe-area-inset-bottom); }
+    .tab-btn { flex: 1; padding: 10px 2px; color: #64748b; font-size: 9.5px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.03em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+    .tab-btn.active { color: #fff; }
+    .tab-btn.active svg { filter: drop-shadow(0 0 8px rgba(236,72,153,0.6)); stroke: url(#teacherGrad); }
+
+    /* Teacher cards */
+    .t-hero { border-radius: 24px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.72); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255,255,255,0.1); }
+    .t-hero::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.7; }
+    .t-hero-active::before { background: linear-gradient(135deg,#10b981,#06b6d4); opacity: 1; }
+    .t-hero h1 { font-size: 22px; font-weight: 900; margin: 0 0 8px; line-height: 1.2; color: #fff; }
+    .t-hero p { font-size: 14px; color: #94a3b8; margin: 0 0 16px; line-height: 1.5; }
+    .t-hero .status-pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; margin-right: 6px; animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.5); } 50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(16,185,129,0); } }
+
+    .t-session-card { border-radius: 20px; padding: 18px; margin-bottom: 12px; background: rgba(15,23,42,0.72); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border: 1px solid rgba(255,255,255,0.08); position: relative; overflow: hidden; transition: transform 0.15s; }
+    .t-session-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg,#ec4899,#8b5cf6,#06b6d4); border-radius: 3px 0 0 3px; }
+    .t-session-card.live::before { background: linear-gradient(180deg,#10b981,#06b6d4); }
+    .t-session-card.ended::before { background: rgba(148,163,184,0.3); }
+    .t-session-card h3 { font-size: 17px; font-weight: 800; color: #fff; margin: 0 0 8px; line-height: 1.3; }
+    .t-session-meta { font-size: 13px; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .t-session-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-live { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.35); }
+    .badge-upcoming { background: rgba(148,163,184,0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
+    .badge-ended { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.15); }
+    .badge-verified { background: rgba(14,165,233,0.18); color: #38bdf8; border: 1px solid rgba(14,165,233,0.35); }
+    .badge-flagged { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+
+    /* Calendar */
+    .cal-wrap { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cal-title { font-size: 16px; font-weight: 800; color: #fff; }
+    .cal-nav { display: flex; gap: 6px; }
+    .cal-nav button { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .cal-nav button:active { transform: scale(0.95); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 6px 0; }
+    .cal-day { aspect-ratio: 1; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #cbd5e1; cursor: pointer; position: relative; transition: background 0.15s; }
+    .cal-day.empty { background: transparent; cursor: default; }
+    .cal-day.has-cpd { background: rgba(139,92,246,0.18); border: 1px solid rgba(139,92,246,0.4); color: #fff; }
+    .cal-day.has-cpd::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: #8b5cf6; }
+    .cal-day.today { border: 2px solid #06b6d4; }
+    .cal-day.selected { background: linear-gradient(135deg,#ec4899,#8b5cf6); color: #fff; border-color: transparent; }
+    .cal-day.selected::after { background: #fff; }
+    .cal-day:active:not(.empty) { transform: scale(0.94); }
+
+    /* Stats */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; text-align: center; }
+    .stat-card .val { font-size: 26px; font-weight: 900; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; }
+    .stat-card .lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.05em; }
+    .stat-card.grad-pink .val { background: linear-gradient(135deg,#ec4899,#8b5cf6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-card.grad-cyan .val { background: linear-gradient(135deg,#06b6d4,#0ea5e9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-card.grad-violet .val { background: linear-gradient(135deg,#8b5cf6,#ec4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-card.grad-green .val { background: linear-gradient(135deg,#10b981,#06b6d4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .ring-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; }
+    .ring-card .ring-info { flex: 1; }
+    .ring-card h3 { font-size: 14px; font-weight: 800; color: #fff; margin: 0 0 6px; }
+    .ring-card p { font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5; }
+
+    .chart-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
+    .chart-card h3 { font-size: 14px; font-weight: 800; color: #fff; margin: 0 0 16px; }
+    .bars { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+    .bars .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .bars .bar { width: 100%; background: linear-gradient(180deg,#ec4899,#8b5cf6); border-radius: 4px 4px 0 0; min-height: 4px; }
+    .bars .bar-lbl { font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .bars .bar-count { font-size: 10px; color: #cbd5e1; font-weight: 800; }
+
+    /* History */
+    .hist-month { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 8px; padding-left: 4px; }
+    .hist-month:first-child { margin-top: 0; }
+    .hist-item { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .hist-item .hist-info { flex: 1; min-width: 0; }
+    .hist-item h4 { font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 4px; }
+    .hist-item p { font-size: 12px; color: #94a3b8; margin: 0; }
+
+    .section-title { font-size: 13px; font-weight: 800; color: #94a3b8; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; padding-left: 4px; }
+    .section-title:first-child { margin-top: 0; }
+
+    .empty { text-align: center; padding: 40px 20px; color: #64748b; font-size: 14px; background: rgba(15,23,42,0.55); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.08); }
+    .empty strong { display: block; color: #94a3b8; font-size: 15px; margin-bottom: 6px; }
+
+    /* Professional empty state */
+    .pro-empty { text-align: center; padding: 32px 22px; margin: 16px 0; border-radius: 20px; background: rgba(15,23,42,0.6); border: 1px solid rgba(139,92,246,0.18); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); position: relative; overflow: hidden; }
+    .pro-empty::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, rgba(139,92,246,0.12), transparent 60%); }
+    .pro-empty-icon { font-size: 40px; line-height: 1; margin-bottom: 14px; display: inline-block; position: relative; filter: drop-shadow(0 4px 12px rgba(139,92,246,0.35)); }
+    .pro-empty strong { display: block; color: #fff; font-size: 16px; font-weight: 800; margin-bottom: 8px; position: relative; }
+    .pro-empty p { font-size: 13px; color: #94a3b8; margin: 0 auto; line-height: 1.6; max-width: 340px; position: relative; }
+
+    /* Teacher 3D overlays */
+    .teacher-aurora, .teacher-stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0; transition: opacity 0.8s ease; }
+    .teacher-aurora { opacity: 0.9; background: radial-gradient(ellipse at 15% 10%, rgba(104,228,224,0.14), transparent 38%), radial-gradient(ellipse at 85% 52%, rgba(168,140,255,0.14), transparent 42%), radial-gradient(ellipse at 45% 100%, rgba(212,255,105,0.08), transparent 40%); filter: blur(30px); animation: auroraFloat 18s ease-in-out infinite alternate; }
+    .teacher-stars { opacity: 0.28; background-image: radial-gradient(rgba(255,255,255,0.65) 1px, transparent 1px), radial-gradient(rgba(104,228,224,0.5) 1px, transparent 1px); background-size: 77px 77px, 137px 137px; background-position: 10px 20px, 40px 80px; animation: starsDrift 40s linear infinite; }
+    @keyframes auroraFloat { to { transform: scale(1.15) rotate(4deg); } }
+    @keyframes starsDrift { to { background-position: 100px 120px, 0 0; } }
+
+    /* Greeting card */
+    .greet-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 16px; border-radius: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.72); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); border: 1px solid rgba(139,92,246,0.3); }
+    .greet-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(135deg, rgba(236,72,153,0.10), rgba(139,92,246,0.10), rgba(6,182,212,0.10)); }
+    .greet-emoji { font-size: 34px; line-height: 1; flex-shrink: 0; animation: greetFloat 4s ease-in-out infinite; }
+    @keyframes greetFloat { 50% { transform: translateY(-4px) rotate(5deg); } }
+    .greet-text { min-width: 0; }
+    .greet-text h2 { font-size: 18px; font-weight: 900; margin: 0 0 4px; color: #fff; letter-spacing: -0.02em; line-height: 1.25; }
+    .greet-text p { font-size: 12.5px; color: #94a3b8; margin: 0; line-height: 1.5; }
+
+    /* Thank-you modal */
+    .thank-modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.72); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.25s; }
+    .thank-modal.open { opacity: 1; }
+    .thank-card { max-width: 360px; width: 100%; text-align: center; background: linear-gradient(160deg,#1e293b,#0f172a); border: 1px solid rgba(139,92,246,0.45); border-radius: 24px; padding: 30px 22px; transform: translateY(20px) scale(0.95); transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .thank-modal.open .thank-card { transform: translateY(0) scale(1); }
+    .thank-emoji { font-size: 54px; line-height: 1; margin-bottom: 12px; display: inline-block; animation: greetFloat 3s ease-in-out infinite; }
+    .thank-card h2 { font-size: 20px; font-weight: 900; color: #fff; margin: 0 0 10px; line-height: 1.3; }
+    .thank-card p { font-size: 14px; color: #cbd5e1; margin: 0 0 6px; line-height: 1.55; }
+    .thank-card .closing { font-size: 13px; color: #94a3b8; font-style: italic; margin-bottom: 20px; }
+
+    /* Toasts */
+    #toast-root { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+    .toast { padding: 14px 16px; border-radius: 14px; font-weight: 700; text-align: center; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.35); animation: slideUp 0.3s ease; }
+    .toast.success { background: linear-gradient(135deg,#10b981,#06b6d4); }
+    .toast.error { background: linear-gradient(135deg,#ef4444,#dc2626); }
+    .toast.warn { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader { position: fixed; inset: 0; background: #0a0f1e; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
+    .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,217,255,0.2); border-top-color: #00D9FF; animation: spin 1s linear infinite; }
+    .svg-defs { position: absolute; width: 0; height: 0; }
+
+    @media (min-width: 768px) {
+      .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
+      .header { padding: 14px 32px; }
+      .header-title { font-size: 16px; }
+      .header-logo { width: 38px; height: 38px; }
+      .avatar-btn { width: 42px; height: 42px; }
+      .stat-grid { grid-template-columns: repeat(4, 1fr); }
+      .t-hero h1 { font-size: 26px; }
+      .tab-btn { font-size: 11px; }
+    }
+  </style>
+</head>
+<body class="teacher-mode">
+  <svg class="svg-defs" aria-hidden="true">
+    <defs>
+      <linearGradient id="teacherGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ec4899" />
+        <stop offset="50%" stop-color="#8b5cf6" />
+        <stop offset="100%" stop-color="#06b6d4" />
+      </linearGradient>
+    </defs>
+  </svg>
+  <canvas id="bg-canvas"></canvas>
+  <div class="teacher-aurora"></div>
+  <div class="teacher-stars"></div>
+  <div id="app"></div>
+  <div id="toast-root"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
+    import {
+      getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, getDoc, addDoc, updateDoc,
+      onSnapshot, query, where, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
+      authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
+      projectId: "imena-smart-cpd-attendance",
+      storageBucket: "imena-smart-cpd-attendance.firebasestorage.app",
+      messagingSenderId: "515464832241",
+      appId: "1:515464832241:web:9e05a6cc3d4447dfff7550",
+      measurementId: "G-NQGDXWN6G8"
+    };
+    const firebaseApp = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+    try { getAnalytics(firebaseApp); } catch {}
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+    const state = {
+      user: null, profile: null, view: 'boot',
+      teacherTab: 'home',
+      calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
+      cpds: [], myAttendances: [],
+      subCpds: null, subMine: null,
+      watchId: null, watchingFor: null,
+      loading: true,
+    };
+
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const MOTION_SCALE = prefersReducedMotion ? 0.35 : 1.0;
+
+    /* ==================== I18N ==================== */
+    const I18N = {
+      en: {
+        home: 'Home', calendar: 'Calendar', stats: 'Stats', history: 'History',
+        logout: 'Sign Out', teacher: 'Teacher',
+        attend: 'ATTEND', end: 'END SESSION', locating: 'Locating...', finalizing: 'Ending...',
+        upcoming: 'Upcoming', ongoing: 'Ongoing', ended: 'Ended', live: 'Live',
+        verified: 'Verified', flagged: 'Flagged', not_started: 'Not Started', finish_current: 'Finish Current First',
+        currently_attending: 'You are currently attending:',
+        msg_sign_out: 'Sign out?',
+        sessions_attended: 'Sessions', total_hours: 'Hours in CPD', verified_rate: 'Verified Rate', this_month: 'This Month',
+        no_sessions_today: 'No sessions today', next_session: 'Next session',
+        sessions_this_month: 'Sessions per Month', attendance_history: 'Your Attendance History',
+        no_history: 'No completed sessions yet',
+        today: 'Today', no_sessions_day: 'No sessions on this day',
+        ready: "You're all caught up.",
+        empty_cpd_title: "You're all caught up",
+        empty_cpd_sub: 'There are no CPD sessions scheduled at the moment. New professional development opportunities will appear on this page as they are added.',
+        empty_cpd_new_title: 'Welcome to your CPD dashboard',
+        empty_cpd_new_sub: "Your professional development journey begins here. Scheduled sessions will appear on this page — you'll be able to check in from the venue when a session is live.",
+        thanks_generic: 'Your CPD attendance has been recorded.', continue_btn: 'Continue'
+      },
+      rw: {
+        home: 'Ahabanza', calendar: 'Ikalendari', stats: 'Imibare', history: 'Amateka', logout: 'Sohoka', teacher: 'Umwarimu', attend: 'ITABIRA', end: 'RANGIZA', locating: 'Turabona aho uri...', finalizing: 'Turarangiza...', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', not_started: 'Ntiratangire', finish_current: 'Rangiza iri mbere', currently_attending: 'Uri kwitabira:', msg_sign_out: 'Ushaka gusohoka?', sessions_attended: 'Amasomo', total_hours: 'Amasaha mu CPD', verified_rate: 'Byemejwe %', this_month: 'Uku kwezi', no_sessions_today: 'Nta masomo uyu munsi', next_session: 'Isomo rikurikira', sessions_this_month: 'Amasomo ku kwezi', attendance_history: 'Amateka y\'Kwitabira', no_history: 'Nta masomo yarangiye', today: 'Uyu munsi', no_sessions_day: 'Nta masomo kuri uyu munsi',
+        ready: 'Nta kintu gisigaye.', empty_cpd_title: 'Nta kintu gisigaye', empty_cpd_sub: 'Nta masomo ya CPD ateguwe ubu.', empty_cpd_new_title: 'Murakaza neza ku rubuga rwawe rwa CPD', empty_cpd_new_sub: 'Urugendo rwawe rw\'iterambere ry\'umwuga rutangira hano.', thanks_generic: 'Kwitabira kwawe CPD kwanditswe.', continue_btn: 'Komeza'
+      },
+      fr: {
+        home: 'Accueil', calendar: 'Calendrier', stats: 'Stats', history: 'Historique', logout: 'Déconnexion', teacher: 'Enseignant', attend: 'PARTICIPER', end: 'TERMINER', locating: 'Localisation...', finalizing: 'Finalisation...', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', not_started: 'Pas commencé', finish_current: 'Terminer l\'actuel', currently_attending: 'Vous participez à :', msg_sign_out: 'Déconnexion ?', sessions_attended: 'Sessions', total_hours: 'Heures CPD', verified_rate: 'Taux vérifié', this_month: 'Ce mois', no_sessions_today: 'Aucune session aujourd\'hui', next_session: 'Prochaine session', sessions_this_month: 'Sessions par mois', attendance_history: 'Historique', no_history: 'Aucune session terminée', today: 'Aujourd\'hui', no_sessions_day: 'Aucune session ce jour',
+        ready: 'Vous êtes à jour.', empty_cpd_title: 'Vous êtes à jour', empty_cpd_sub: 'Aucune session CPD n\'est programmée.', empty_cpd_new_title: 'Bienvenue sur votre tableau de bord CPD', empty_cpd_new_sub: 'Votre parcours de développement professionnel commence ici.', thanks_generic: 'Votre participation au CPD a été enregistrée.', continue_btn: 'Continuer'
+      }
+    };
+    function t(k) { return (I18N[state.lang || 'en'])[k] || I18N.en[k] || k; }
+    state.lang = 'en';
+
+    /* ==================== BG ENGINE (teacher only) ==================== */
+    const bgEngine = {
+      renderer: null, teacherScene: null, active: false, clock: null, time: 0,
+      init() {
+        try {
+          this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: false, antialias: false, powerPreference: 'high-performance' });
+          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2));
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
+          this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+          this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          this.renderer.toneMappingExposure = 1.0;
+          this.clock = new THREE.Clock();
+          this.teacherScene = this.build();
+          window.addEventListener('resize', () => this.resize());
+          this.active = true;
+          this.animate();
+        } catch (e) {
+          console.warn('[bgEngine]', e);
+          document.getElementById('bg-canvas').style.background = 'radial-gradient(circle at 30% 30%, #1a0a2e 0%, #0a0f1e 60%), radial-gradient(circle at 70% 70%, #0a1a2e 0%, #0a0f1e 50%)';
+        }
+      },
+      build() {
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const uniforms = { uTime: { value: 0 }, uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) } };
+        const material = new THREE.ShaderMaterial({
+          uniforms,
+          vertexShader: `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+          fragmentShader: `
+            precision mediump float;
+            uniform vec2 uResolution; uniform float uTime;
+            float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+            float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y); }
+            void main() {
+              vec2 uv = gl_FragCoord.xy / uResolution; float aspect = uResolution.x / uResolution.y;
+              vec2 uvA = uv; uvA.x *= aspect; float t = uTime * 0.22;
+              vec3 col = vec3(0.055, 0.075, 0.16);
+              vec2 b1 = vec2(0.30 * aspect + sin(t * 0.8) * 0.55 * aspect, 0.75 + cos(t * 0.62) * 0.30);
+              vec2 b2 = vec2(0.75 * aspect + sin(t * 0.55 + 1.7) * 0.45 * aspect, 0.35 + cos(t * 0.88 + 2.3) * 0.35);
+              vec2 b3 = vec2(0.50 * aspect + cos(t * 0.70 + 4.1) * 0.60 * aspect, 0.55 + sin(t * 0.50 + 1.2) * 0.35);
+              vec2 b4 = vec2(0.20 * aspect + sin(t * 0.42 + 3.6) * 0.35 * aspect, 0.20 + cos(t * 0.65 + 4.8) * 0.28);
+              col += vec3(0.20, 0.75, 1.00) * exp(-pow(length(uvA - b1),2.0) * 4.5) * 0.95;
+              col += vec3(0.85, 0.35, 0.95) * exp(-pow(length(uvA - b2),2.0) * 5.0) * 0.85;
+              col += vec3(1.00, 0.55, 0.35) * exp(-pow(length(uvA - b3),2.0) * 6.0) * 0.55;
+              col += vec3(0.35, 0.95, 0.75) * exp(-pow(length(uvA - b4),2.0) * 5.5) * 0.70;
+              float r1 = sin((uvA.x * 1.4 + uvA.y * 1.2) * 3.0 + t * 2.2) * 0.5 + 0.5;
+              float r2 = sin((uvA.x * -1.6 + uvA.y * 1.8) * 2.5 - t * 1.8 + 1.4) * 0.5 + 0.5;
+              float r3 = sin((uvA.x * 2.2 + uvA.y * -0.8) * 2.0 + t * 2.7 + 3.1) * 0.5 + 0.5;
+              col += vec3(0.55, 0.30, 0.95) * pow(r1, 6.0) * 0.25;
+              col += vec3(0.15, 0.70, 0.95) * pow(r2, 6.0) * 0.25;
+              col += vec3(0.95, 0.35, 0.70) * pow(r3, 8.0) * 0.20;
+              col += vec3(noise(uvA * 3.0 + vec2(t * 0.4, t * 0.3)) * 0.04);
+              col *= 1.0 - length(uv - 0.5) * 0.55;
+              col = pow(col, vec3(0.92));
+              gl_FragColor = vec4(col, 1.0);
+            }`,
+          depthTest: false, depthWrite: false
+        });
+        scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+        return { scene, camera, uniforms };
+      },
+      resize() {
+        if (!this.renderer) return;
+        const w = window.innerWidth, h = window.innerHeight;
+        this.renderer.setSize(w, h);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2));
+        if (this.teacherScene) this.teacherScene.uniforms.uResolution.value.set(w, h);
+      },
+      animate() {
+        if (!this.active) return;
+        requestAnimationFrame(() => this.animate());
+        if (document.hidden) { this.clock.getDelta(); return; }
+        const dt = Math.min(this.clock.getDelta(), 0.05);
+        this.time += dt * MOTION_SCALE;
+        if (this.teacherScene) {
+          this.teacherScene.uniforms.uTime.value = this.time;
+          this.renderer.render(this.teacherScene.scene, this.teacherScene.camera);
+        }
+      }
+    };
+
+    /* ==================== UTILS ==================== */
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+    function toDate(ts) { if (!ts) return null; if (ts.toDate) return ts.toDate(); if (ts instanceof Date) return ts; return new Date(ts); }
+    function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
+    function distanceMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000, toRad = d => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    function classify(m, r) { return m <= r ? 'near' : 'far'; }
+    function avatarUrlFor(photoURL, name, size = 64) {
+      if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
+      const q = encodeURIComponent((name || 'User').trim());
+      return `https://ui-avatars.com/api/?name=${q}&background=8b5cf6&color=fff&size=${size}&bold=true`;
+    }
+    function getPositionOnce() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported.'));
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+          err => reject(new Error(err.code === 1 ? 'Location denied.' : 'GPS error.')),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+      });
+    }
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`; el.textContent = msg;
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 4000);
+    }
+    function clearWatch() { if (state.watchId != null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; state.watchingFor = null; } }
+    function cpdStatus(cpd) {
+      const s = toDate(cpd.startTime)?.getTime(), e = toDate(cpd.endTime)?.getTime(), n = Date.now();
+      if (!s || !e) return 'unknown';
+      if (n < s - 15 * 60 * 1000) return 'upcoming';
+      if (n > e) return 'ended';
+      return 'ongoing';
+    }
+
+    /* ==================== GREETINGS ==================== */
+    const GREET_SUBLINES = {
+      morning: ['Ready to make today count?', 'Fresh day, fresh ideas.', 'A bright start makes a bright day.'],
+      lunch: ['Take a real break — you earned it.', 'Fuel up and keep going.', 'A little pause goes a long way.'],
+      afternoon: ['Keep the momentum going.', "You're doing great — keep it up.", 'One step at a time.'],
+      evening: ['Time to wind down a little.', 'Nice work today.', 'Evenings are for reflecting and recharging.'],
+      night: ['Rest well — tomorrow is another day.', 'Late-night effort noted. Rest soon.', 'Sleep is part of the process.']
+    };
+    function dayHash(salt) {
+      const d = new Date();
+      const uid = state.user?.uid || 'guest';
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}|${uid}|${salt || ''}`;
+      let h = 0;
+      for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+      return h;
+    }
+    function pickDaily(list, salt) { return list[dayHash(salt) % list.length]; }
+    function getGreetingInfo() {
+      const h = new Date().getHours();
+      const fullName = state.profile?.fullName || state.user?.displayName || state.user?.email || 'Friend';
+      const name = (fullName.split(/[\s@]/)[0] || 'Friend');
+      let slot, greetings, emoji;
+      if (h >= 5 && h < 11) { slot = 'morning'; emoji = '☀️'; greetings = ['Good morning','Hello','Hey','Welcome back','Rise and shine','Top of the morning']; }
+      else if (h >= 11 && h < 14) { slot = 'lunch'; emoji = '🍽️'; greetings = ['Have a good lunch','Hello','Hey','Good day','Enjoy your lunch']; }
+      else if (h >= 14 && h < 18) { slot = 'afternoon'; emoji = '🌤️'; greetings = ['Good afternoon','Hello','Hey','Welcome back','Good day']; }
+      else if (h >= 18 && h < 22) { slot = 'evening'; emoji = '🌆'; greetings = ['Good evening','Hello','Hey','Welcome','Nice to see you']; }
+      else { slot = 'night'; emoji = '🌙'; greetings = ['Good night','Hello','Hey','Working late','Welcome']; }
+      return { name, slot, emoji, greeting: pickDaily(greetings, 'greet'), sub: pickDaily(GREET_SUBLINES[slot], 'sub') };
+    }
+    function greetingCardHtml() {
+      const g = getGreetingInfo();
+      return `<div class="greet-card"><div class="greet-emoji">${g.emoji}</div><div class="greet-text"><h2>${escapeHtml(g.greeting)}, ${escapeHtml(g.name)}</h2><p>${escapeHtml(g.sub)}</p></div></div>`;
+    }
+    function proEmptyHtml() {
+      const isNew = state.myAttendances.length === 0;
+      const title = isNew ? t('empty_cpd_new_title') : t('empty_cpd_title');
+      const sub = isNew ? t('empty_cpd_new_sub') : t('empty_cpd_sub');
+      return `<div class="pro-empty"><div class="pro-empty-icon">📅</div><strong>${escapeHtml(title)}</strong><p>${escapeHtml(sub)}</p></div>`;
+    }
+    function showThankYouModal() {
+      const g = getGreetingInfo();
+      const closings = { morning: ['Have a great morning','Enjoy your morning'], lunch: ['Have a good lunch','Enjoy your lunch'], afternoon: ['Have a great afternoon','Enjoy the rest of your day'], evening: ['Have a good evening','Enjoy your evening'], night: ['Have a good night','Sleep well'] };
+      let closing = pickDaily(closings[g.slot] || closings.afternoon, 'close');
+      if ([0, 6].includes(new Date().getDay())) closing += ' and a lovely weekend';
+      const title = pickDaily(['I hope you enjoyed your CPD!','Thanks for attending — your growth matters.','Another session complete — proud of you!','Great job showing up today.','Your dedication is inspiring.','Every CPD makes you a stronger teacher.'], 'thank');
+      const emoji = pickDaily(['🎉','🌟','🙌','💪','✨','🎓'], 'emoji');
+      const modal = document.createElement('div');
+      modal.className = 'thank-modal';
+      modal.innerHTML = `<div class="thank-card"><div class="thank-emoji">${emoji}</div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(t('thanks_generic'))}</p><p class="closing">${escapeHtml(closing)}, ${escapeHtml(g.name)}.</p><button class="btn btn-primary" id="thank-close">${escapeHtml(t('continue_btn'))}</button></div>`;
+      document.body.appendChild(modal);
+      requestAnimationFrame(() => modal.classList.add('open'));
+      const close = () => { modal.classList.remove('open'); setTimeout(() => modal.remove(), 320); };
+      modal.querySelector('#thank-close').onclick = close;
+      modal.onclick = e => { if (e.target === modal) close(); };
+      setTimeout(close, 9000);
+    }
+
+    /* ==================== AUTH ==================== */
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.replace('index.html'); return; }
+      state.user = user;
+      try {
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          state.profile = snap.data();
+          if (user.photoURL && state.profile.photoURL !== user.photoURL) {
+            updateDoc(ref, { photoURL: user.photoURL }).catch(() => {});
+            state.profile.photoURL = user.photoURL;
+          }
+        } else {
+          // New user with no profile → send to index for role setup
+          window.location.replace('index.html'); return;
+        }
+      } catch (err) {
+        console.error('[profile]', err); window.location.replace('index.html'); return;
+      }
+      if (state.profile.role === 'admin') { window.location.replace('admin.html'); return; }
+      state.loading = false;
+      if (!bgEngine.active) bgEngine.init();
+      goTeacher();
+    });
+
+    /* ==================== HEADER ==================== */
+    function headerHtml() {
+      const name = state.profile?.fullName || state.user?.displayName || 'User';
+      const src = avatarUrlFor(state.user?.photoURL || state.profile?.photoURL, name, 128);
+      const fallback = avatarUrlFor(null, name, 128);
+      return `
+        <header class="header">
+          <div class="header-left">
+            <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" class="header-logo" alt="Logo" />
+            <div class="header-title">iMENA SMART CPD<span>${t('teacher')} Portal</span></div>
+          </div>
+          <div class="header-right">
+            <button class="avatar-btn" id="btn-profile" aria-label="Profile">
+              <img src="${escapeHtml(src)}" alt="Profile" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" />
+            </button>
+          </div>
+        </header>
+        <div class="profile-modal" id="profile-modal">
+          <div class="profile-card">
+            <img src="${escapeHtml(src)}" class="profile-img" alt="Profile" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" />
+            <div class="profile-name">${escapeHtml(name)}</div>
+            <div class="profile-email">${escapeHtml(state.user?.email || '')}</div>
+            <div class="profile-role">${t('teacher')}</div>
+            <div class="profile-actions">
+              <a href="index.html" class="btn-home">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+                ${t('home')}
+              </a>
+              <button class="btn-logout" id="btn-logout">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                ${t('logout')}
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+    function bindHeaderEvents() {
+      const modal = document.getElementById('profile-modal');
+      const btnProfile = document.getElementById('btn-profile');
+      const btnLogout = document.getElementById('btn-logout');
+      if (btnProfile) btnProfile.onclick = () => modal.classList.add('open');
+      if (modal) modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('open'); };
+      if (btnLogout) btnLogout.onclick = () => { if (confirm(t('msg_sign_out'))) signOut(auth); };
+    }
+
+    /* ==================== TEACHER ==================== */
+    function goTeacher() {
+      state.view = 'teacher';
+      if (!state.subCpds) state.subCpds = onSnapshot(collection(db, 'cpds'),
+        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (state.view === 'teacher') renderTeacher(); },
+        err => console.error(err));
+      if (!state.subMine && state.user) {
+        const q = query(collection(db, 'attendance'), where('teacherId', '==', state.user.uid));
+        state.subMine = onSnapshot(q,
+          snap => { state.myAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); ensureWatchForActive(); if (state.view === 'teacher') renderTeacher(); },
+          err => console.error(err));
+      }
+      renderTeacher();
+    }
+
+    function teacherTabBar() {
+      const tabs = [
+        { id: 'home', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>' },
+        { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
+        { id: 'stats', icon: '<path d="M18 20V10M12 20V4M6 20v-6"/>' },
+        { id: 'history', icon: '<path d="M12 8v4l3 3M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/>' }
+      ];
+      return `<nav class="tab-bar">${tabs.map(tb => `<button class="tab-btn ${state.teacherTab === tb.id ? 'active' : ''}" data-ttab="${tb.id}"><svg viewBox="0 0 24 24">${tb.icon}</svg>${t(tb.id)}</button>`).join('')}</nav>`;
+    }
+
+    function renderTeacher() {
+      const active = state.myAttendances.find(a => a.state === 'active');
+      let body = '';
+      if (state.teacherTab === 'calendar') body = renderTeacherCalendar();
+      else if (state.teacherTab === 'stats') body = renderTeacherStats();
+      else if (state.teacherTab === 'history') body = renderTeacherHistory();
+      else body = renderTeacherHome(active);
+      document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">${body}</main>${teacherTabBar()}`;
+      bindHeaderEvents();
+      document.querySelectorAll('[data-ttab]').forEach(b => b.onclick = () => { state.teacherTab = b.dataset.ttab; renderTeacher(); });
+      document.querySelectorAll('[data-attend]').forEach(b => { b.onclick = () => handleAttend(b.dataset.attend, b); });
+      document.querySelectorAll('[data-end]').forEach(b => { b.onclick = () => handleEnd(b.dataset.end, b); });
+      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = parseInt(b.dataset.calday); renderTeacher(); });
+      document.querySelectorAll('[data-calnav]').forEach(b => b.onclick = () => {
+        const delta = parseInt(b.dataset.calnav);
+        let m = state.calMonth + delta, y = state.calYear;
+        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+        state.calMonth = m; state.calYear = y; state.calSelectedDay = null;
+        renderTeacher();
+      });
+    }
+
+    function renderTeacherHome(active) {
+      const now = Date.now();
+      const todaySessions = state.cpds.filter(c => {
+        const d = toDate(c.startTime); if (!d) return false;
+        const s = new Date(d); s.setHours(0,0,0,0);
+        const e = new Date(d); e.setHours(23,59,59,999);
+        return now >= s.getTime() && now <= e.getTime();
+      }).sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0));
+      const upcomingSessions = state.cpds.filter(c => cpdStatus(c) === 'upcoming' || cpdStatus(c) === 'ongoing').sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0));
+      const nextUpcoming = upcomingSessions[0];
+
+      let hero;
+      if (active) {
+        const liveCpd = state.cpds.find(c => c.id === active.cpdId);
+        let distanceLine = '';
+        if (active.liveLat != null && liveCpd) {
+          const d = distanceMeters(active.liveLat, active.liveLng, liveCpd.venueLat, liveCpd.venueLng);
+          distanceLine = ` · ${Math.round(d)}m from venue`;
+        }
+        hero = `<div class="t-hero t-hero-active"><h1><span class="status-pulse"></span>${t('currently_attending')}</h1><p><strong style="color:#fff">${escapeHtml(active.cpdTitle)}</strong>${distanceLine ? `<br><span style="font-size:12px">${distanceLine.trim()}</span>` : ''}</p><button data-end="${active.id}" class="btn btn-danger" style="font-size:17px; padding:20px;">■ ${t('end')}</button></div>`;
+      } else if (nextUpcoming && cpdStatus(nextUpcoming) === 'ongoing') {
+        hero = `<div class="t-hero"><h1>🟢 ${t('live')}</h1><p><strong style="color:#fff">${escapeHtml(nextUpcoming.title)}</strong> · ${fmtTime(nextUpcoming.startTime)} – ${fmtTime(nextUpcoming.endTime)}</p><button data-attend="${nextUpcoming.id}" class="btn btn-primary" style="font-size:17px; padding:20px;">▶ ${t('attend')}</button></div>`;
+      } else if (nextUpcoming) {
+        const start = toDate(nextUpcoming.startTime).getTime();
+        const diffMs = start - now;
+        const diffH = Math.floor(diffMs / 3600000);
+        const diffM = Math.floor((diffMs % 3600000) / 60000);
+        const diffD = Math.floor(diffH / 24);
+        let countdown = '';
+        if (diffD > 0) countdown = `in ${diffD}d ${diffH % 24}h`;
+        else if (diffH > 0) countdown = `in ${diffH}h ${diffM}m`;
+        else countdown = `in ${diffM}m`;
+        hero = `<div class="t-hero"><h1>📅 ${t('next_session')}</h1><p><strong style="color:#fff">${escapeHtml(nextUpcoming.title)}</strong><br>${fmtTime(nextUpcoming.startTime)} · ${countdown}</p></div>`;
+      } else {
+        hero = `<div class="t-hero"><h1>☕ ${t('no_sessions_today')}</h1><p>${t('ready')}</p></div>`;
+      }
+
+      const todayCards = todaySessions.length > 0 ? `<div class="section-title">${t('today')}</div>${todaySessions.map(c => teacherSessionCard(c, active)).join('')}` : '';
+      const upcomingNonToday = upcomingSessions.filter(c => {
+        const d = toDate(c.startTime); if (!d) return false;
+        const s = new Date(d); s.setHours(0,0,0,0);
+        return s.getTime() > now;
+      }).slice(0, 5);
+      const upcomingCards = upcomingNonToday.length > 0 ? `<div class="section-title">${t('upcoming')}</div>${upcomingNonToday.map(c => teacherSessionCard(c, active)).join('')}` : '';
+      let emptyBlock = '';
+      if (!todayCards && !upcomingCards) emptyBlock = proEmptyHtml();
+
+      return `${greetingCardHtml()}${hero}${todayCards}${upcomingCards}${emptyBlock}`;
+    }
+
+    function teacherSessionCard(cpd, active) {
+      const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
+      const status = myAtt?.state === 'active' ? 'live' : myAtt?.state === 'ended' ? 'ended' : cpdStatus(cpd);
+      const isLive = status === 'live';
+      const isEnded = status === 'ended';
+      let badge = '';
+      if (status === 'live') badge = `<span class="badge badge-live">● ${t('live')}</span>`;
+      else if (status === 'ongoing') badge = `<span class="badge badge-live">● ${t('ongoing')}</span>`;
+      else if (status === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
+      else if (status === 'ended') badge = myAtt?.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+
+      let action = '';
+      if (isLive) action = `<button data-end="${myAtt.id}" class="btn btn-danger" style="font-size:15px">■ ${t('end')}</button>`;
+      else if (isEnded) action = '';
+      else if (myAtt) action = `<div style="padding:10px; text-align:center; font-size:13px; color:#94a3b8">✓ ${t('verified')}</div>`;
+      else if (status === 'ongoing') {
+        if (active) action = `<button disabled class="btn btn-ghost" style="font-size:13px">${t('finish_current')}</button>`;
+        else action = `<button data-attend="${cpd.id}" class="btn btn-primary">▶ ${t('attend')}</button>`;
+      } else if (status === 'upcoming') action = `<button disabled class="btn btn-ghost">${t('not_started')}</button>`;
+      else if (status === 'ended') action = `<button disabled class="btn btn-ghost">${t('ended')}</button>`;
+
+      return `<div class="t-session-card ${isLive ? 'live' : ''} ${isEnded ? 'ended' : ''}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;"><h3 style="flex:1">${escapeHtml(cpd.title)}</h3>${badge}</div>
+        <div class="t-session-meta"><span>⏰ ${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)}</span><span>📍 ${escapeHtml(cpd.venueName)}</span></div>
+        ${action}
+      </div>`;
+    }
+
+    function renderTeacherCalendar() {
+      const year = state.calYear, month = state.calMonth;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekday = (firstDay.getDay() + 6) % 7;
+      const daysInMonth = lastDay.getDate();
+      const sessionsByDay = {};
+      state.cpds.forEach(c => {
+        const d = toDate(c.startTime); if (!d) return;
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const key = d.getDate();
+          if (!sessionsByDay[key]) sessionsByDay[key] = [];
+          sessionsByDay[key].push(c);
+        }
+      });
+      const today = new Date();
+      const isToday = (day) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+      let grid = '';
+      for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const hasCpd = !!sessionsByDay[day];
+        const classes = ['cal-day'];
+        if (hasCpd) classes.push('has-cpd');
+        if (isToday(day)) classes.push('today');
+        if (state.calSelectedDay === day) classes.push('selected');
+        grid += `<div class="${classes.join(' ')}" data-calday="${day}">${day}</div>`;
+      }
+      const monthName = firstDay.toLocaleString('en', { month: 'long', year: 'numeric' });
+      let dayDetail = '';
+      if (state.calSelectedDay) {
+        const list = sessionsByDay[state.calSelectedDay] || [];
+        const dayDate = new Date(year, month, state.calSelectedDay).toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
+        dayDetail = `<div class="section-title">${dayDate}</div>`;
+        if (list.length === 0) dayDetail += `<div class="empty"><strong>${t('no_sessions_day')}</strong></div>`;
+        else {
+          const active = state.myAttendances.find(a => a.state === 'active');
+          dayDetail += list.map(c => teacherSessionCard(c, active)).join('');
+        }
+      }
+      return `<div class="cal-wrap"><div class="cal-header"><div class="cal-title">${monthName}</div><div class="cal-nav"><button data-calnav="-1">‹</button><button data-calnav="1">›</button></div></div><div class="cal-grid">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow">${d}</div>`).join('')}${grid}</div></div>${dayDetail}`;
+    }
+
+    function renderTeacherStats() {
+      const ended = state.myAttendances.filter(a => a.state === 'ended');
+      const verified = state.myAttendances.filter(a => a.verified).length;
+      const totalSessions = ended.length;
+      const verifiedRate = totalSessions > 0 ? Math.round(verified / totalSessions * 100) : 0;
+      const totalMinutes = ended.reduce((s, a) => {
+        const s1 = toDate(a.attendedAt)?.getTime();
+        const e1 = toDate(a.endedAt)?.getTime();
+        if (s1 && e1) return s + Math.max(0, (e1 - s1) / 60000);
+        return s;
+      }, 0);
+      const totalHours = (totalMinutes / 60).toFixed(1);
+      const now = new Date();
+      const thisMonthCount = state.myAttendances.filter(a => {
+        const ts = toDate(a.attendedAt)?.getTime();
+        return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      }).length;
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const start = d.getTime();
+        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).getTime();
+        const count = state.myAttendances.filter(a => {
+          const ts = toDate(a.attendedAt)?.getTime();
+          return ts && ts >= start && ts <= end;
+        }).length;
+        months.push({ label: d.toLocaleString('en', { month: 'short' }), count });
+      }
+      const maxCount = Math.max(1, ...months.map(m => m.count));
+      const circ = 2 * Math.PI * 32;
+      const dash = (verifiedRate / 100) * circ;
+      return `<div class="stat-grid">
+        <div class="stat-card grad-pink"><div class="val">${totalSessions}</div><div class="lbl">${t('sessions_attended')}</div></div>
+        <div class="stat-card grad-cyan"><div class="val">${totalHours}h</div><div class="lbl">${t('total_hours')}</div></div>
+        <div class="stat-card grad-violet"><div class="val">${thisMonthCount}</div><div class="lbl">${t('this_month')}</div></div>
+        <div class="stat-card grad-green"><div class="val">${verifiedRate}%</div><div class="lbl">${t('verified_rate')}</div></div>
+      </div>
+      <div class="ring-card"><svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" stroke="rgba(255,255,255,0.08)" stroke-width="8" fill="none"/><circle cx="40" cy="40" r="32" stroke="url(#teacherGrad)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${dash} ${circ}" transform="rotate(-90 40 40)"/></svg><div class="ring-info"><h3>${t('verified_rate')}</h3><p>${verified} / ${totalSessions} ${t('verified').toLowerCase()}</p></div></div>
+      <div class="chart-card"><h3>${t('sessions_this_month')}</h3><div class="bars">${months.map(m => {
+        const h = m.count === 0 ? 4 : Math.max(8, Math.round((m.count / maxCount) * 100));
+        return `<div class="bar-wrap"><div class="bar-count">${m.count || ''}</div><div class="bar" style="height:${h}px"></div><div class="bar-lbl">${m.label}</div></div>`;
+      }).join('')}</div></div>`;
+    }
+
+    function renderTeacherHistory() {
+      const ended = state.myAttendances.filter(a => a.state === 'ended').sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0));
+      if (ended.length === 0) return `<div class="empty" style="margin-top:40px"><strong>${t('no_history')}</strong><span>${t('ready')}</span></div>`;
+      const groups = {};
+      ended.forEach(a => {
+        const d = toDate(a.attendedAt); if (!d) return;
+        const key = d.toLocaleString('en', { month: 'long', year: 'numeric' });
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(a);
+      });
+      return `<div class="section-title">${t('attendance_history')}</div>` + Object.entries(groups).map(([month, list]) => `
+        <div class="hist-month">${month}</div>
+        ${list.map(a => {
+          const s1 = toDate(a.attendedAt)?.getTime();
+          const e1 = toDate(a.endedAt)?.getTime();
+          const mins = (s1 && e1) ? Math.round((e1 - s1) / 60000) : 0;
+          const durStr = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
+          const badge = a.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+          return `<div class="hist-item"><div class="hist-info"><h4>${escapeHtml(a.cpdTitle)}</h4><p>${fmtDate(a.attendedAt)} · ${fmtTime(a.attendedAt)} → ${fmtTime(a.endedAt)} · ${durStr}</p></div>${badge}</div>`;
+        }).join('')}`).join('');
+    }
+
+    async function handleAttend(cpdId, btn) {
+      const cpd = state.cpds.find(c => c.id === cpdId); if (!cpd) return;
+      if (state.myAttendances.some(a => a.state === 'active')) { toast(t('finish_current'), 'warn'); return; }
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> ${t('locating')}`;
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = classify(dist, cpd.radiusMeters);
+        await addDoc(collection(db, 'attendance'), {
+          cpdId, cpdTitle: cpd.title, teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email,
+          teacherEmail: state.user.email,
+          teacherPhotoURL: state.user.photoURL || state.profile?.photoURL || null,
+          attendedAt: serverTimestamp(), attendedLat: pos.lat, attendedLng: pos.lng,
+          attendedDistanceMeters: dist, attendedStatus: status,
+          liveLat: pos.lat, liveLng: pos.lng, liveAccuracy: pos.accuracy, liveUpdatedAt: serverTimestamp(),
+          state: 'active', verified: false,
+        });
+        toast('Attendance recorded!', 'success');
+      } catch (err) {
+        toast(err.message || 'GPS Error', 'error');
+        btn.disabled = false; btn.innerHTML = `▶ ${t('attend')}`;
+      }
+    }
+    async function handleEnd(attId, btn) {
+      const att = state.myAttendances.find(a => a.id === attId);
+      const cpd = state.cpds.find(c => c.id === att?.cpdId);
+      if (!att || !cpd) return;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> ${t('finalizing')}`;
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = classify(dist, cpd.radiusMeters);
+        const verified = att.attendedStatus === 'near' && status === 'near';
+        await updateDoc(doc(db, 'attendance', att.id), {
+          endedAt: serverTimestamp(), endedLat: pos.lat, endedLng: pos.lng,
+          endedDistanceMeters: dist, endedStatus: status, state: 'ended', verified,
+        });
+        clearWatch();
+        toast(verified ? t('verified') : t('flagged'), verified ? 'success' : 'warn');
+        showThankYouModal();
+      } catch (err) {
+        toast(err.message || 'GPS Error', 'error');
+        btn.disabled = false; btn.innerHTML = `■ ${t('end')}`;
+      }
+    }
+
+    function ensureWatchForActive() {
+      const active = state.myAttendances.find(a => a.state === 'active');
+      if (!active) { clearWatch(); return; }
+      if (state.watchingFor === active.id) return;
+      clearWatch();
+      state.watchingFor = active.id;
+      state.watchId = navigator.geolocation.watchPosition(
+        pos => { updateDoc(doc(db, 'attendance', active.id), { liveLat: pos.coords.latitude, liveLng: pos.coords.longitude, liveAccuracy: pos.coords.accuracy, liveUpdatedAt: serverTimestamp() }).catch(() => {}); },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+      );
+    }
+
+    /* ==================== BOOT ==================== */
+    document.getElementById('app').innerHTML = `
+      <div class="loader">
+        <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="Logo" style="width:100px;height:100px;object-fit:contain" />
+        <div class="loader-ring"></div>
+      </div>`;
+  </script>
+</body>
+</html>
