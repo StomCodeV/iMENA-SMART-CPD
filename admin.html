@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#071B33" />
+  <title>iMENA Smart CPD — Admin</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: #e2e8f0; -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; background: #0a0f1e; }
+    button, input { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    #bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; background: #0a0f1e; }
+    #app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header { position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 8px; background: rgba(10,15,30,0.72); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-bottom: 1px solid rgba(255,255,255,0.06); padding-top: max(10px, env(safe-area-inset-top)); }
+    .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .header-logo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; }
+    .header-title { font-size: 14px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+    .header-title span { display: block; font-size: 9px; color: #00ffcc; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 2px solid #00ffcc; padding: 0; background: #fff; flex-shrink: 0; }
+    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Profile modal */
+    .profile-modal { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .profile-modal.open { opacity: 1; pointer-events: auto; }
+    .profile-card { background: #1e293b; color: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 340px; text-align: center; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .profile-modal.open .profile-card { transform: translateY(0); }
+    .profile-img { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px; border: 3px solid #00ffcc; object-fit: cover; }
+    .profile-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: #94a3b8; margin-bottom: 12px; word-break: break-all; }
+    .profile-role { display: inline-block; padding: 6px 12px; border-radius: 99px; background: rgba(0,255,204,0.15); color: #00ffcc; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
+    .profile-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-home, .btn-logout { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; }
+    .btn-home { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn-logout { background: rgba(239,68,68,0.15); color: #f87171; }
+
+    /* Buttons */
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px 20px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s; min-height: 48px; }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg,#00ffcc,#0088ff); color: #0a0f1e; box-shadow: 0 6px 20px rgba(0,255,204,0.3); }
+    .btn-danger { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,0.35); }
+    .btn-ghost { background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
+
+    .input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.6); font-size: 15px; margin-bottom: 12px; color: #e2e8f0; }
+    .input:focus { outline: none; border-color: #00ffcc; box-shadow: 0 0 0 4px rgba(0,255,204,0.15); }
+
+    /* Main + tab bar */
+    .main { flex: 1; padding: 18px 14px calc(80px + env(safe-area-inset-bottom)); max-width: 800px; margin: 0 auto; width: 100%; }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; z-index: 90; background: rgba(10,15,30,0.85); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-top: 1px solid rgba(255,255,255,0.08); padding-bottom: env(safe-area-inset-bottom); }
+    .tab-btn { flex: 1; padding: 10px 2px; color: #64748b; font-size: 9.5px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.03em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+    .tab-btn.active { color: #00ffcc; filter: drop-shadow(0 0 8px rgba(0,255,204,0.5)); }
+
+    /* Admin stat cards */
+    .a-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .a-stat { background: rgba(15,23,42,0.55); backdrop-filter: blur(18px) saturate(160%); border: 1px solid rgba(0,255,204,0.2); border-radius: 14px; padding: 14px; text-align: center; }
+    .a-stat .val { font-size: 24px; font-weight: 900; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(0,255,204,0.35); }
+    .a-stat .lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.05em; }
+
+    .a-session-card { background: rgba(15,23,42,0.55); backdrop-filter: blur(18px); border: 1px solid rgba(0,255,204,0.18); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+    .a-session-card .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .a-session-card h3 { font-size: 15px; color: #fff; margin: 4px 0 4px; word-break: break-word; }
+    .a-session-card p { font-size: 12px; color: #94a3b8; margin: 0; }
+    .a-session-card .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .a-session-card .actions .btn { padding: 8px 12px; font-size: 12px; min-height: auto; width: auto; }
+
+    .section-title { font-size: 13px; font-weight: 800; color: #94a3b8; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; padding-left: 4px; }
+    .section-title:first-child { margin-top: 0; }
+
+    .filter-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding: 4px 0; }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .filter-tab { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 12px; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+    .filter-tab.active { background: rgba(0,255,204,0.12); color: #00ffcc; border-color: rgba(0,255,204,0.3); }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-live { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.35); }
+    .badge-upcoming { background: rgba(148,163,184,0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
+    .badge-ended { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.15); }
+    .badge-verified { background: rgba(14,165,233,0.18); color: #38bdf8; border: 1px solid rgba(14,165,233,0.35); }
+    .badge-flagged { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+
+    /* Past stats chips */
+    .past-stats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .past-stat { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.08); }
+    .past-stat.ok { color: #38bdf8; border-color: rgba(56,189,248,0.28); background: rgba(56,189,248,0.1); }
+
+    /* Calendar */
+    .cal-wrap { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cal-title { font-size: 16px; font-weight: 800; color: #fff; }
+    .cal-nav { display: flex; gap: 6px; }
+    .cal-nav button { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .cal-nav button:active { transform: scale(0.95); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 6px 0; }
+    .cal-day { aspect-ratio: 1; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #cbd5e1; cursor: pointer; position: relative; transition: background 0.15s; }
+    .cal-day.empty { background: transparent; cursor: default; }
+    .cal-day.has-cpd { background: rgba(139,92,246,0.18); border: 1px solid rgba(139,92,246,0.4); color: #fff; }
+    .cal-day.has-cpd::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: #8b5cf6; }
+    .cal-day.has-cpd.past-only { background: rgba(56,189,248,0.14); border-color: rgba(56,189,248,0.42); }
+    .cal-day.has-cpd.past-only::after { background: #38bdf8; }
+    .cal-day.has-cpd.live-day { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.45); }
+    .cal-day.has-cpd.live-day::after { background: #10b981; }
+    .cal-day.today { border: 2px solid #06b6d4; }
+    .cal-day.selected { background: linear-gradient(135deg,#ec4899,#8b5cf6); color: #fff; border-color: transparent; }
+    .cal-day.selected::after { background: #fff; }
+    .cal-day:active:not(.empty) { transform: scale(0.94); }
+    .cal-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .cal-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .cal-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .cal-legend .dot-ended { background: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.5); }
+    .cal-legend .dot-live { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+    .cal-legend .dot-upcoming { background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,0.5); }
+
+    /* Create form */
+    .form-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(0,255,204,0.22); border-radius: 20px; padding: 20px; }
+    .form-card label { display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
+    .form-card h2 { font-size: 20px; font-weight: 900; color: #fff; margin: 0 0 6px; }
+    .form-card .sub { font-size: 13px; color: #94a3b8; margin: 0 0 20px; }
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .chip { padding: 8px 14px; border-radius: 10px; background: rgba(0,255,204,0.08); border: 1px solid rgba(0,255,204,0.3); color: #00ffcc; font-size: 12px; font-weight: 700; }
+    .chip:active { transform: scale(0.96); }
+    .chip.active { background: #00ffcc; color: #0a0f1e; }
+    .chip-neutral { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #cbd5e1; }
+    .summary-line { background: rgba(0,0,0,0.4); border: 1px dashed rgba(0,255,204,0.35); border-radius: 12px; padding: 12px 14px; margin: 14px 0 16px; font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+    .summary-line strong { color: #00ffcc; }
+
+    /* Session detail */
+    .map-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+    .map-card h3 { font-size: 14px; font-weight: 800; color: #fff; margin: 0 0 12px; }
+    .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .detail-table th { text-align: left; padding: 10px 8px; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: 0.05em; }
+    .detail-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle; color: #cbd5e1; }
+    .att-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(0,255,204,0.3); }
+    .att-name { display: flex; align-items: center; gap: 10px; }
+
+    /* Greeting */
+    .greet-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 16px; border-radius: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.72); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); border: 1px solid rgba(0,255,204,0.25); }
+    .greet-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(135deg, rgba(0,255,204,0.09), rgba(0,136,255,0.09)); }
+    .greet-emoji { font-size: 34px; line-height: 1; flex-shrink: 0; animation: greetFloat 4s ease-in-out infinite; }
+    @keyframes greetFloat { 50% { transform: translateY(-4px) rotate(5deg); } }
+    .greet-text { min-width: 0; }
+    .greet-text h2 { font-size: 18px; font-weight: 900; margin: 0 0 4px; color: #fff; letter-spacing: -0.02em; line-height: 1.25; }
+    .greet-text p { font-size: 12.5px; color: #94a3b8; margin: 0; line-height: 1.5; }
+
+    /* Empty */
+    .empty { text-align: center; padding: 40px 20px; color: #64748b; font-size: 14px; background: rgba(15,23,42,0.55); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.08); }
+    .empty strong { display: block; color: #94a3b8; font-size: 15px; margin-bottom: 6px; }
+
+    /* Toasts */
+    #toast-root { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+    .toast { padding: 14px 16px; border-radius: 14px; font-weight: 700; text-align: center; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.35); animation: slideUp 0.3s ease; }
+    .toast.success { background: linear-gradient(135deg,#10b981,#06b6d4); }
+    .toast.error { background: linear-gradient(135deg,#ef4444,#dc2626); }
+    .toast.warn { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader { position: fixed; inset: 0; background: #0a0f1e; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
+    .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,217,255,0.2); border-top-color: #00D9FF; animation: spin 1s linear infinite; }
+
+    @media (min-width: 768px) {
+      .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
+      .header { padding: 14px 32px; }
+      .header-title { font-size: 16px; }
+      .header-logo { width: 38px; height: 38px; }
+      .avatar-btn { width: 42px; height: 42px; }
+      .a-stat-grid { grid-template-columns: repeat(4, 1fr); }
+      .tab-btn { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div id="app"></div>
+  <div id="toast-root"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
+    import {
+      getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc,
+      onSnapshot, query, where, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
+      authDomain: "imena-smart-cpd-attendance.firebaseapp.com",
+      projectId: "imena-smart-cpd-attendance",
+      storageBucket: "imena-smart-cpd-attendance.firebasestorage.app",
+      messagingSenderId: "515464832241",
+      appId: "1:515464832241:web:9e05a6cc3d4447dfff7550",
+      measurementId: "G-NQGDXWN6G8"
+    };
+    const firebaseApp = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+    try { getAnalytics(firebaseApp); } catch {}
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+    const SATELLITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    const SATELLITE_LABELS_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+    function addSatelliteBase(map) {
+      L.tileLayer(SATELLITE_URL, { attribution: 'Esri', maxZoom: 19 }).addTo(map);
+      L.tileLayer(SATELLITE_LABELS_URL, { maxZoom: 19, pane: 'overlayPane' }).addTo(map);
+    }
+    const DEFAULT_LAT = -2.129565168007717;
+    const DEFAULT_LNG = 29.77740799677921;
+
+    const state = {
+      user: null, profile: null, view: 'boot', lang: 'en',
+      adminTab: 'overview', adminSessionFilter: 'all',
+      calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
+      cpds: [], allAttendances: [],
+      selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
+      subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null,
+      liveMap: null,
+      loading: true,
+    };
+    state.lang = 'en';
+
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const MOTION_SCALE = prefersReducedMotion ? 0.35 : 1.0;
+
+    /* ==================== I18N ==================== */
+    const I18N = {
+      en: {
+        home: 'Home', logout: 'Sign Out', admin: 'Admin',
+        overview: 'Overview', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New CPD',
+        admin_title: 'Admin Dashboard', stat_total: 'Total', stat_ongoing: 'Ongoing', stat_upcoming: 'Upcoming', stat_ended: 'Ended',
+        stat_live_now: 'Live Now', stat_next_session: 'Next Session',
+        open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
+        create_title: 'Plan a Session', create_sub: 'Just fill the title — everything else has sensible defaults.',
+        form_title: 'Title *', form_theme: 'Theme', form_start: 'Start Time *', form_end: 'End Time *',
+        form_venue: 'Venue', form_map: 'Location & Map',
+        btn_create: 'Create Session', btn_creating: 'Creating...',
+        attendees: 'Attendees', record: 'Attendance Record', map: 'Map',
+        t_teacher: 'Teacher', t_attended: 'Checked In', t_ended: 'Ended', t_status: 'Status',
+        no_att: 'No attendance yet.', msg_sign_out: 'Sign out?', msg_delete: 'Delete this session?', msg_create: 'Session created!',
+        duration: 'Duration', use_location: 'Use my location', quick_now: 'Now',
+        upcoming: 'Upcoming', ongoing: 'Ongoing', ended: 'Ended', live: 'Live',
+        verified: 'Verified', flagged: 'Flagged',
+        past_sessions: 'Recent Sessions', all_sessions: 'All Sessions',
+        no_sessions_day: 'No sessions on this day'
+      },
+      rw: {
+        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya',
+        admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
+        stat_live_now: 'Kuri ubu', stat_next_session: 'Isomo rikurikira',
+        open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
+        create_title: 'Tegura Isomo', create_sub: 'Uzuza umutwe gusa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Isomo', btn_creating: 'Turifungura...',
+        attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Isomo ryafunguwe!',
+        duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Amasomo yaheruka', all_sessions: 'Amasomo yose', no_sessions_day: 'Nta masomo kuri uyu munsi'
+      },
+      fr: {
+        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau',
+        admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées',
+        stat_live_now: 'En direct', stat_next_session: 'Prochaine session',
+        open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver',
+        create_title: 'Créer un CPD', create_sub: 'Remplissez le titre.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...',
+        attendees: 'Participants', record: 'Registre', map: 'Carte', t_teacher: 'Enseignant', t_attended: 'Arrivée', t_ended: 'Départ', t_status: 'Statut', no_att: 'Aucune présence.', msg_sign_out: 'Déconnexion ?', msg_delete: 'Supprimer ?', msg_create: 'Session créée !',
+        duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', past_sessions: 'Sessions récentes', all_sessions: 'Toutes les sessions', no_sessions_day: 'Aucune session ce jour'
+      }
+    };
+    function t(k) { return (I18N[state.lang])[k] || I18N.en[k] || k; }
+
+    /* ==================== BG ENGINE (admin hex-sky only) ==================== */
+    const bgEngine = {
+      renderer: null, adminScene: null, active: false, clock: null, time: 0,
+      init() {
+        try {
+          this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: false, antialias: false, powerPreference: 'high-performance' });
+          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2));
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
+          this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+          this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          this.renderer.toneMappingExposure = 1.0;
+          this.clock = new THREE.Clock();
+          this.adminScene = this.build();
+          window.addEventListener('resize', () => this.resize());
+          this.active = true;
+          this.animate();
+        } catch (e) {
+          console.warn('[bgEngine]', e);
+          document.getElementById('bg-canvas').style.background = 'radial-gradient(circle at 30% 30%, #051a2e 0%, #0a0f1e 60%), radial-gradient(circle at 70% 70%, #0a1a2e 0%, #0a0f1e 50%)';
+        }
+      },
+      build() {
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x0a1a3a, 100, 550);
+        const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 1500);
+        camera.position.set(0, 12, 60);
+        camera.lookAt(0, 8, -30);
+        const skyMat = new THREE.ShaderMaterial({
+          side: THREE.BackSide, depthWrite: false,
+          uniforms: { uTime: { value: 0 }, uTop: { value: new THREE.Color(0x0a1a4a) }, uMid: { value: new THREE.Color(0x1a3a7a) }, uHorizon: { value: new THREE.Color(0x2a5a9a) }, uDeep: { value: new THREE.Color(0x050e2a) }, uGlow: { value: new THREE.Color(0x2a70c8) } },
+          vertexShader: `varying vec3 vDir; void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vDir=normalize(wp.xyz); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+          fragmentShader: `uniform float uTime; uniform vec3 uTop,uMid,uHorizon,uDeep,uGlow; varying vec3 vDir;
+            float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+            float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
+            float fbm(vec2 p){ float v=0.0,a=0.5; for(int i=0;i<5;i++){v+=a*noise(p);p*=2.03;a*=0.5;} return v; }
+            void main(){ vec3 dir=normalize(vDir); float h=clamp(dir.y*0.5+0.5,0.0,1.0);
+              vec3 col=mix(uDeep,uHorizon,smoothstep(0.32,0.55,h)); col=mix(col,uMid,smoothstep(0.55,0.78,h)); col=mix(col,uTop,smoothstep(0.78,1.0,h));
+              float cx=1.0-abs(dir.x); float hb=pow(1.0-abs(dir.y),12.0); col+=uGlow*pow(cx,3.0)*hb*0.7;
+              if(dir.y>0.01){ float alt=1.0/max(dir.y,0.008); vec2 uv=dir.xz*alt*0.1+vec2(uTime*0.012,uTime*0.008); float clouds=smoothstep(0.52,0.78,fbm(uv)); float fade=smoothstep(0.01,0.2,dir.y)*(1.0-smoothstep(0.7,1.0,dir.y)); col=mix(col,col*1.35+vec3(0.1,0.2,0.35),clouds*0.35*fade); }
+              gl_FragColor=vec4(col,1.0); }`
+        });
+        scene.add(new THREE.Mesh(new THREE.SphereGeometry(900, 48, 32), skyMat));
+        scene.add(new THREE.HemisphereLight(0x4a80c8, 0x0a1028, 0.8));
+        scene.add(new THREE.AmbientLight(0x3060a0, 0.4));
+
+        const hexPanels = [];
+        const hexCount = isMobileDevice ? 20 : 32;
+        const hexRingGeo = new THREE.RingGeometry(1.6, 1.85, 6);
+        const hexFillGeo = new THREE.CircleGeometry(1.6, 6);
+        for (let i = 0; i < hexCount; i++) {
+          const group = new THREE.Group();
+          const ringMat = new THREE.MeshBasicMaterial({ color: 0x4ab8ff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+          group.add(new THREE.Mesh(hexRingGeo, ringMat));
+          const fillMat = new THREE.MeshBasicMaterial({ color: 0x2a70b8, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+          const fill = new THREE.Mesh(hexFillGeo, fillMat); fill.position.z = -0.001; group.add(fill);
+          group.position.set((Math.random() - 0.5) * 90, 3 + Math.random() * 47, -30 - Math.random() * 200);
+          group.lookAt(0, group.position.y, -20);
+          group.rotation.z = Math.random() * Math.PI * 2;
+          group.scale.setScalar(0.7 + Math.random() * 1.2);
+          group.userData = { baseOpacity: 0.45 + Math.random() * 0.4, pulsePhase: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.25, driftPhase: Math.random() * Math.PI * 2, baseY: group.position.y };
+          scene.add(group);
+          hexPanels.push({ group, ringMat, fillMat });
+        }
+        const nodes = [];
+        const nodePositions = [];
+        const nodeCount = isMobileDevice ? 50 : 80;
+        const nodeGeo = new THREE.SphereGeometry(0.22, 6, 6);
+        for (let i = 0; i < nodeCount; i++) {
+          const mat = new THREE.MeshBasicMaterial({ color: 0x9ae0ff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
+          const node = new THREE.Mesh(nodeGeo, mat);
+          node.position.set((Math.random() - 0.5) * 80, 3 + Math.random() * 40, -30 - Math.random() * 200);
+          node.userData = { phase: Math.random() * Math.PI * 2, baseScale: 0.7 + Math.random() * 0.8 };
+          node.scale.setScalar(node.userData.baseScale);
+          scene.add(node); nodes.push(node); nodePositions.push(node.position.clone());
+        }
+        const edgePairs = [];
+        for (let i = 0; i < nodePositions.length; i++) {
+          for (let j = i + 1; j < nodePositions.length; j++) {
+            if (nodePositions[i].distanceTo(nodePositions[j]) < 32 && Math.random() < 0.4) edgePairs.push([i, j]);
+          }
+        }
+        const chosen = edgePairs.slice(0, isMobileDevice ? 40 : 70);
+        const edgeBuffer = new Float32Array(chosen.length * 6);
+        const lineGeo = new THREE.BufferGeometry();
+        lineGeo.setAttribute('position', new THREE.BufferAttribute(edgeBuffer, 3));
+        lineGeo.setDrawRange(0, 0);
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x4ab8ff, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false });
+        scene.add(new THREE.LineSegments(lineGeo, lineMat));
+        return { scene, camera, skyMat, hexPanels, nodes, nodePositions, edgePairs: chosen, lineGeo, lineMat };
+      },
+      resize() {
+        if (!this.renderer) return;
+        const w = window.innerWidth, h = window.innerHeight;
+        this.renderer.setSize(w, h);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2));
+        if (this.adminScene) { this.adminScene.camera.aspect = w / h; this.adminScene.camera.updateProjectionMatrix(); }
+      },
+      animate() {
+        if (!this.active) return;
+        requestAnimationFrame(() => this.animate());
+        if (document.hidden) { this.clock.getDelta(); return; }
+        const dt = Math.min(this.clock.getDelta(), 0.05);
+        this.time += dt * MOTION_SCALE;
+        const time = this.time;
+        if (!this.adminScene) return;
+        const s = this.adminScene;
+        const scrollY = window.scrollY || 0;
+        const docH = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const scrollNorm = Math.min(1, scrollY / docH);
+        const flowSpeed = 9.0 * (1 + scrollNorm * 1.8);
+        s.hexPanels.forEach(h => {
+          h.group.position.z += flowSpeed * dt;
+          if (h.group.position.z > 40) {
+            h.group.position.z = -220 - Math.random() * 40;
+            h.group.position.x = (Math.random() - 0.5) * 90;
+            h.group.position.y = 3 + Math.random() * 47;
+            h.group.userData.baseY = h.group.position.y;
+            h.group.lookAt(0, h.group.position.y, -20);
+          }
+          const pulse = 0.55 + Math.sin(time * 1.5 + h.group.userData.pulsePhase) * 0.4;
+          h.ringMat.opacity = h.group.userData.baseOpacity * pulse;
+          h.fillMat.opacity = 0.10 + pulse * 0.16;
+          h.group.rotation.z += h.group.userData.rotSpeed * dt;
+          h.group.position.y = h.group.userData.baseY + Math.sin(time * 0.6 + h.group.userData.driftPhase) * 1.8;
+        });
+        s.nodes.forEach((n, i) => {
+          n.position.z += flowSpeed * 1.15 * dt;
+          if (n.position.z > 40) {
+            n.position.z = -220 - Math.random() * 40;
+            n.position.x = (Math.random() - 0.5) * 80;
+            n.position.y = 3 + Math.random() * 40;
+          }
+          s.nodePositions[i].copy(n.position);
+          const pulse = 0.7 + Math.sin(time * 2.0 + n.userData.phase) * 0.5;
+          n.scale.setScalar(n.userData.baseScale * (0.85 + pulse * 0.45));
+          n.material.opacity = 0.5 + pulse * 0.5;
+        });
+        const edgeArr = s.lineGeo.attributes.position.array;
+        let drawCount = 0;
+        for (const pair of s.edgePairs) {
+          const a = s.nodePositions[pair[0]], b = s.nodePositions[pair[1]];
+          const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+          if (dx*dx + dy*dy + dz*dz > 2025) continue;
+          if (a.z < -200 || b.z < -200 || a.z > 40 || b.z > 40) continue;
+          edgeArr[drawCount*6] = a.x; edgeArr[drawCount*6+1] = a.y; edgeArr[drawCount*6+2] = a.z;
+          edgeArr[drawCount*6+3] = b.x; edgeArr[drawCount*6+4] = b.y; edgeArr[drawCount*6+5] = b.z;
+          drawCount++;
+        }
+        s.lineGeo.setDrawRange(0, drawCount * 2);
+        s.lineGeo.attributes.position.needsUpdate = true;
+        s.lineMat.opacity = 0.26 + Math.sin(time * 0.8) * 0.1;
+        s.skyMat.uniforms.uTime.value = time;
+        s.camera.position.x = Math.sin(time * 0.2) * 3 + Math.sin(scrollNorm * Math.PI * 2) * 3;
+        s.camera.position.y = 12 + Math.sin(time * 0.1) * 1 - scrollNorm * 2.5;
+        s.camera.lookAt(Math.sin(time * 0.15) * 2, 8 - scrollNorm * 3, -30 - scrollNorm * 15);
+        this.renderer.render(s.scene, s.camera);
+      }
+    };
+
+    /* ==================== UTILS ==================== */
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+    function toDate(ts) { if (!ts) return null; if (ts.toDate) return ts.toDate(); if (ts instanceof Date) return ts; return new Date(ts); }
+    function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function avatarUrlFor(photoURL, name, size = 64) {
+      if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
+      const q = encodeURIComponent((name || 'User').trim());
+      return `https://ui-avatars.com/api/?name=${q}&background=00ffcc&color=071b33&size=${size}&bold=true`;
+    }
+    function avatarImgTag(photoURL, name, size = 32) {
+      const initial = avatarUrlFor(photoURL, name, size * 2);
+      const fallback = avatarUrlFor(null, name, size * 2);
+      return `<img class="att-avatar" src="${escapeHtml(initial)}" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" alt="${escapeHtml(name || 'User')}" loading="lazy" />`;
+    }
+    function getPositionOnce() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported.'));
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+          err => reject(new Error(err.code === 1 ? 'Location denied.' : 'GPS error.')),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+      });
+    }
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`; el.textContent = msg;
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 4000);
+    }
+    function toLocalInputValue(d) { const pad = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+    function cpdStatus(cpd) {
+      const s = toDate(cpd.startTime)?.getTime(), e = toDate(cpd.endTime)?.getTime(), n = Date.now();
+      if (!s || !e) return 'unknown';
+      if (n < s - 15 * 60 * 1000) return 'upcoming';
+      if (n > e) return 'ended';
+      return 'ongoing';
+    }
+
+    /* ==================== GREETINGS ==================== */
+    const GREET_SUBLINES = {
+      morning: ['Ready to make today count?', 'Fresh day, fresh ideas.', 'A bright start makes a bright day.'],
+      lunch: ['Take a real break — you earned it.', 'Fuel up and keep going.', 'A little pause goes a long way.'],
+      afternoon: ['Keep the momentum going.', "You're doing great — keep it up.", 'One step at a time.'],
+      evening: ['Time to wind down a little.', 'Nice work today.', 'Evenings are for reflecting and recharging.'],
+      night: ['Rest well — tomorrow is another day.', 'Late-night effort noted. Rest soon.', 'Sleep is part of the process.']
+    };
+    const ADMIN_SUBLINES = [
+      'Thanks for leading the way — your team appreciates you.',
+      'Your guidance keeps iMENA moving forward.',
+      'Great leaders build great teachers.',
+      "You're making a real difference, one session at a time.",
+      'Proud of the work you do behind the scenes.'
+    ];
+    function dayHash(salt) {
+      const d = new Date();
+      const uid = state.user?.uid || 'guest';
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}|${uid}|${salt || ''}`;
+      let h = 0;
+      for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+      return h;
+    }
+    function pickDaily(list, salt) { return list[dayHash(salt) % list.length]; }
+    function getGreetingInfo() {
+      const h = new Date().getHours();
+      const fullName = state.profile?.fullName || state.user?.displayName || state.user?.email || 'Friend';
+      const name = (fullName.split(/[\s@]/)[0] || 'Friend');
+      let slot, greetings, emoji;
+      if (h >= 5 && h < 11) { slot = 'morning'; emoji = '☀️'; greetings = ['Good morning','Hello','Hey','Welcome back','Rise and shine','Top of the morning']; }
+      else if (h >= 11 && h < 14) { slot = 'lunch'; emoji = '🍽️'; greetings = ['Have a good lunch','Hello','Hey','Good day','Enjoy your lunch']; }
+      else if (h >= 14 && h < 18) { slot = 'afternoon'; emoji = '🌤️'; greetings = ['Good afternoon','Hello','Hey','Welcome back','Good day']; }
+      else if (h >= 18 && h < 22) { slot = 'evening'; emoji = '🌆'; greetings = ['Good evening','Hello','Hey','Welcome','Nice to see you']; }
+      else { slot = 'night'; emoji = '🌙'; greetings = ['Good night','Hello','Hey','Working late','Welcome']; }
+      return { name, slot, emoji, greeting: pickDaily(greetings, 'greet'), sub: pickDaily(ADMIN_SUBLINES, 'adminsub') };
+    }
+    function greetingCardHtml() {
+      const g = getGreetingInfo();
+      return `<div class="greet-card"><div class="greet-emoji">${g.emoji}</div><div class="greet-text"><h2>${escapeHtml(g.greeting)}, ${escapeHtml(g.name)}</h2><p>${escapeHtml(g.sub)}</p></div></div>`;
+    }
+
+    /* ==================== AUTH ==================== */
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.replace('index.html'); return; }
+      state.user = user;
+      try {
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) { window.location.replace('index.html'); return; }
+        state.profile = snap.data();
+        if (user.photoURL && state.profile.photoURL !== user.photoURL) {
+          updateDoc(ref, { photoURL: user.photoURL }).catch(() => {});
+          state.profile.photoURL = user.photoURL;
+        }
+      } catch (err) {
+        console.error('[profile]', err); window.location.replace('index.html'); return;
+      }
+      if (state.profile.role !== 'admin') { window.location.replace('teacher.html'); return; }
+      state.loading = false;
+      if (!bgEngine.active) bgEngine.init();
+      goAdmin();
+    });
+
+    /* ==================== HEADER ==================== */
+    function headerHtml() {
+      const name = state.profile?.fullName || state.user?.displayName || 'User';
+      const src = avatarUrlFor(state.user?.photoURL || state.profile?.photoURL, name, 128);
+      const fallback = avatarUrlFor(null, name, 128);
+      return `
+        <header class="header">
+          <div class="header-left">
+            <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" class="header-logo" alt="Logo" />
+            <div class="header-title">iMENA SMART CPD<span>${t('admin')} Portal</span></div>
+          </div>
+          <div class="header-right">
+            <button class="avatar-btn" id="btn-profile" aria-label="Profile">
+              <img src="${escapeHtml(src)}" alt="Profile" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" />
+            </button>
+          </div>
+        </header>
+        <div class="profile-modal" id="profile-modal">
+          <div class="profile-card">
+            <img src="${escapeHtml(src)}" class="profile-img" alt="Profile" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" />
+            <div class="profile-name">${escapeHtml(name)}</div>
+            <div class="profile-email">${escapeHtml(state.user?.email || '')}</div>
+            <div class="profile-role">${t('admin')}</div>
+            <div class="profile-actions">
+              <a href="index.html" class="btn-home">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+                ${t('home')}
+              </a>
+              <button class="btn-logout" id="btn-logout">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                ${t('logout')}
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+    function bindHeaderEvents() {
+      const modal = document.getElementById('profile-modal');
+      const btnProfile = document.getElementById('btn-profile');
+      const btnLogout = document.getElementById('btn-logout');
+      if (btnProfile) btnProfile.onclick = () => modal.classList.add('open');
+      if (modal) modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('open'); };
+      if (btnLogout) btnLogout.onclick = () => { if (confirm(t('msg_sign_out'))) signOut(auth); };
+    }
+
+    /* ==================== ADMIN ==================== */
+    function goAdmin() {
+      state.view = 'admin';
+      if (!state.subCpds) state.subCpds = onSnapshot(collection(db, 'cpds'),
+        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (state.view === 'admin') renderAdmin(); },
+        err => console.error(err));
+      if (!state.subAllAtt) state.subAllAtt = onSnapshot(collection(db, 'attendance'),
+        snap => {
+          state.allAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          if (state.view === 'admin' && state.adminTab !== 'new_cpd') renderAdmin();
+        },
+        err => console.error(err));
+      renderAdmin();
+    }
+
+    function adminTabBar() {
+      const tabs = [
+        { id: 'overview', icon: '<path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>' },
+        { id: 'sessions', icon: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>' },
+        { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
+        { id: 'new_cpd', icon: '<path d="M12 5v14M5 12h14"/>' }
+      ];
+      return `<nav class="tab-bar">${tabs.map(tb => `<button class="tab-btn ${state.adminTab === tb.id ? 'active' : ''}" data-atab="${tb.id}"><svg viewBox="0 0 24 24">${tb.icon}</svg>${t(tb.id)}</button>`).join('')}</nav>`;
+    }
+
+    function renderAdmin() {
+      let body = '';
+      if (state.adminTab === 'sessions') body = renderAdminSessions();
+      else if (state.adminTab === 'calendar') body = renderAdminCalendar();
+      else if (state.adminTab === 'new_cpd') body = renderAdminNew();
+      else body = renderAdminOverview();
+      document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">${body}</main>${state.adminTab === 'new_cpd' ? '' : adminTabBar()}`;
+      bindHeaderEvents();
+      document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => { state.adminTab = b.dataset.atab; state.calSelectedDay = null; renderAdmin(); });
+      const btnTopNew = document.getElementById('btn-top-new');
+      if (btnTopNew) btnTopNew.onclick = () => { state.adminTab = 'new_cpd'; renderAdmin(); };
+      document.querySelectorAll('[data-open-cpd]').forEach(el => { el.onclick = () => goCpdDetail(el.dataset.openCpd); });
+      document.querySelectorAll('[data-del-cpd]').forEach(el => {
+        el.onclick = async () => {
+          if (!confirm(t('msg_delete'))) return;
+          try { await deleteDoc(doc(db, 'cpds', el.dataset.delCpd)); toast('Deleted.', 'success'); }
+          catch (err) { toast(err.message, 'error'); }
+        };
+      });
+      document.querySelectorAll('[data-filter]').forEach(b => { b.onclick = () => { state.adminSessionFilter = b.dataset.filter; renderAdmin(); }; });
+      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = parseInt(b.dataset.calday); renderAdmin(); });
+      document.querySelectorAll('[data-calnav]').forEach(b => b.onclick = () => {
+        const delta = parseInt(b.dataset.calnav);
+        let m = state.calMonth + delta, y = state.calYear;
+        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+        state.calMonth = m; state.calYear = y; state.calSelectedDay = null;
+        renderAdmin();
+      });
+      if (state.adminTab === 'new_cpd') bindAdminNewEvents();
+    }
+
+    function renderAdminOverview() {
+      const list = state.cpds;
+      const now = Date.now();
+      const ongoing = list.filter(c => cpdStatus(c) === 'ongoing');
+      const upcoming = list.filter(c => cpdStatus(c) === 'upcoming').sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0));
+      const nextSession = upcoming[0];
+      const liveNow = ongoing.length;
+      let nextStr = '—';
+      if (nextSession) {
+        const d = toDate(nextSession.startTime);
+        if (d) {
+          const diffMs = d.getTime() - now;
+          const diffH = Math.floor(diffMs / 3600000);
+          const diffM = Math.floor((diffMs % 3600000) / 60000);
+          nextStr = diffH > 0 ? `${diffH}h ${diffM}m` : `${diffM}m`;
+        }
+      }
+
+      const ongoingCards = ongoing.map(c => `
+        <div class="a-session-card"><div class="row">
+          <div style="flex:1;min-width:0"><div><span class="badge badge-live">● ${t('live')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtTime(c.startTime)} – ${fmtTime(c.endTime)} · ${escapeHtml(c.venueName)}</p></div>
+          <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
+        </div></div>`).join('');
+
+      const upcomingCards = upcoming.slice(0, 4).map(c => `
+        <div class="a-session-card"><div class="row">
+          <div style="flex:1;min-width:0"><div><span class="badge badge-upcoming">${t('upcoming')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
+          <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
+        </div></div>`).join('');
+
+      const endedList = list.filter(c => cpdStatus(c) === 'ended').sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0)).slice(0, 4);
+      const endedCards = endedList.map(c => {
+        const atts = state.allAttendances.filter(a => a.cpdId === c.id);
+        const total = atts.length;
+        const verified = atts.filter(a => a.verified).length;
+        return `
+        <div class="a-session-card"><div class="row">
+          <div style="flex:1;min-width:0"><div><span class="badge badge-ended">${t('ended')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p>
+            <div class="past-stats"><span class="past-stat">👥 ${total} ${t('attendees')}</span><span class="past-stat ok">✓ ${verified} ${t('verified')}</span></div>
+          </div>
+          <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
+        </div></div>`;
+      }).join('');
+
+      return `
+        ${greetingCardHtml()}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('admin_title')}</h1>
+          <button id="btn-top-new" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">+ ${t('new_cpd')}</button>
+        </div>
+        <div class="a-stat-grid">
+          <div class="a-stat"><div class="val" style="color:#00ffcc">${liveNow}</div><div class="lbl">${t('stat_live_now')}</div></div>
+          <div class="a-stat"><div class="val">${list.length}</div><div class="lbl">${t('stat_total')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#a855f7">${upcoming.length}</div><div class="lbl">${t('stat_upcoming')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#fbbf24;font-size:18px">${nextStr}</div><div class="lbl">${t('stat_next_session')}</div></div>
+        </div>
+        ${ongoing.length > 0 ? `<div class="section-title">${t('ongoing')}</div>${ongoingCards}` : ''}
+        ${upcoming.length > 0 ? `<div class="section-title">${t('upcoming')}</div>${upcomingCards}` : ''}
+        ${endedList.length > 0 ? `<div class="section-title">${t('past_sessions')}</div>${endedCards}` : ''}
+        ${list.length === 0 ? `<div class="empty" style="margin-top:20px"><strong>${t('all_sessions')}</strong><span>${t('create_sub')}</span></div>` : ''}
+      `;
+    }
+
+    function renderAdminSessions() {
+      const filter = state.adminSessionFilter;
+      const list = [...state.cpds].sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0));
+      const filtered = filter === 'all' ? list : list.filter(c => cpdStatus(c) === filter);
+      const rows = filtered.map(c => {
+        const st = cpdStatus(c);
+        const badge = st === 'ongoing' ? `<span class="badge badge-live">● ${t('ongoing')}</span>` : st === 'upcoming' ? `<span class="badge badge-upcoming">${t('upcoming')}</span>` : `<span class="badge badge-ended">${t('ended')}</span>`;
+        return `<div class="a-session-card"><div class="row">
+          <div style="flex:1;min-width:0"><div>${badge}</div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
+          <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button><button data-del-cpd="${c.id}" class="btn btn-danger">🗑</button></div>
+        </div></div>`;
+      }).join('');
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('sessions')}</h1>
+        <div class="filter-tabs">
+          <button data-filter="all" class="filter-tab ${filter === 'all' ? 'active' : ''}">${t('all_sessions')}</button>
+          <button data-filter="ongoing" class="filter-tab ${filter === 'ongoing' ? 'active' : ''}">${t('ongoing')}</button>
+          <button data-filter="upcoming" class="filter-tab ${filter === 'upcoming' ? 'active' : ''}">${t('upcoming')}</button>
+          <button data-filter="ended" class="filter-tab ${filter === 'ended' ? 'active' : ''}">${t('ended')}</button>
+        </div>
+        ${filtered.length === 0 ? `<div class="empty"><strong>${t('all_sessions')}</strong><span>${t('create_sub')}</span></div>` : rows}
+      `;
+    }
+
+    function renderAdminCalendar() {
+      const year = state.calYear, month = state.calMonth;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekday = (firstDay.getDay() + 6) % 7;
+      const daysInMonth = lastDay.getDate();
+      const sessionsByDay = {};
+      state.cpds.forEach(c => {
+        const d = toDate(c.startTime); if (!d) return;
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const key = d.getDate();
+          if (!sessionsByDay[key]) sessionsByDay[key] = [];
+          sessionsByDay[key].push(c);
+        }
+      });
+      const today = new Date();
+      const isToday = (day) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+      let grid = '';
+      for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const sessions = sessionsByDay[day] || [];
+        const classes = ['cal-day'];
+        if (sessions.length > 0) {
+          classes.push('has-cpd');
+          const statuses = sessions.map(c => cpdStatus(c));
+          if (statuses.some(s => s === 'ongoing')) classes.push('live-day');
+          else if (statuses.every(s => s === 'ended')) classes.push('past-only');
+        }
+        if (isToday(day)) classes.push('today');
+        if (state.calSelectedDay === day) classes.push('selected');
+        grid += `<div class="${classes.join(' ')}" data-calday="${day}">${day}</div>`;
+      }
+      const monthName = firstDay.toLocaleString('en', { month: 'long', year: 'numeric' });
+      let dayDetail = '';
+      if (state.calSelectedDay) {
+        const list = sessionsByDay[state.calSelectedDay] || [];
+        const dayDate = new Date(year, month, state.calSelectedDay).toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
+        dayDetail = `<div class="section-title">${dayDate}</div>`;
+        if (list.length === 0) dayDetail += `<div class="empty"><strong>${t('no_sessions_day')}</strong></div>`;
+        else dayDetail += list.map(c => adminSessionDayCard(c)).join('');
+      }
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('calendar')}</h1>
+        <div class="cal-wrap">
+          <div class="cal-header"><div class="cal-title">${monthName}</div><div class="cal-nav"><button data-calnav="-1">‹</button><button data-calnav="1">›</button></div></div>
+          <div class="cal-grid">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow">${d}</div>`).join('')}${grid}</div>
+          <div class="cal-legend">
+            <span><i class="dot-ended"></i> ${t('ended')}</span>
+            <span><i class="dot-live"></i> ${t('live')}</span>
+            <span><i class="dot-upcoming"></i> ${t('upcoming')}</span>
+          </div>
+        </div>
+        ${dayDetail}`;
+    }
+
+    function adminSessionDayCard(cpd) {
+      const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
+      const total = atts.length;
+      const verified = atts.filter(a => a.verified).length;
+      const st = cpdStatus(cpd);
+      let badge = '';
+      if (st === 'ongoing') badge = `<span class="badge badge-live">● ${t('live')}</span>`;
+      else if (st === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
+      else badge = `<span class="badge badge-ended">${t('ended')}</span>`;
+      return `<div class="a-session-card"><div class="row">
+        <div style="flex:1;min-width:0"><div>${badge}</div><h3>${escapeHtml(cpd.title)}</h3><p>${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)}</p>
+          <div class="past-stats"><span class="past-stat">👥 ${total} ${t('attendees')}</span><span class="past-stat ok">✓ ${verified} ${t('verified')}</span></div>
+        </div>
+        <div class="actions"><button data-open-cpd="${cpd.id}" class="btn btn-primary">${t('open')}</button></div>
+      </div></div>`;
+    }
+
+    function renderAdminNew() {
+      const now = new Date(); now.setSeconds(0, 0); now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5);
+      const startStr = toLocalInputValue(now);
+      const endStr = toLocalInputValue(new Date(now.getTime() + 60 * 60 * 1000));
+      return `
+        <button id="btn-back" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px;">← ${t('back')}</button>
+        <div class="form-card">
+          <h2>${t('create_title')}</h2>
+          <p class="sub">${t('create_sub')}</p>
+          <form id="cpd-form">
+            <div id="form-error" style="display:none;margin-bottom:14px;padding:12px;background:rgba(239,68,68,0.25);color:#fca5a5;border-radius:12px;font-size:13px;font-weight:600"></div>
+            <label>${t('form_title')}</label>
+            <input name="title" required class="input" placeholder="e.g. Teaching Methodologies 2025" list="recent-titles" autocomplete="off" />
+            <datalist id="recent-titles">${[...new Set(state.cpds.map(c => c.title).filter(Boolean))].slice(0, 8).map(tl => `<option value="${escapeHtml(tl)}">`).join('')}</datalist>
+            <label>${t('form_theme')}</label>
+            <input name="theme" class="input" placeholder="e.g. Modern classroom practices" />
+            <label>${t('form_start')}</label>
+            <div style="display:flex;gap:8px;margin-bottom:4px">
+              <input type="datetime-local" name="startTime" value="${startStr}" required class="input" style="color-scheme:dark;margin-bottom:0" />
+              <button type="button" id="btn-now" class="chip chip-neutral" style="flex-shrink:0">${t('quick_now')}</button>
+            </div>
+            <label style="margin-top:12px">${t('duration')} / ${t('form_end')}</label>
+            <div class="chip-row" id="duration-chips">
+              <button type="button" class="chip" data-duration="30">30 min</button>
+              <button type="button" class="chip" data-duration="60">1 h</button>
+              <button type="button" class="chip active" data-duration="120">2 h</button>
+              <button type="button" class="chip" data-duration="240">4 h</button>
+              <button type="button" class="chip" data-duration="480">Full day</button>
+            </div>
+            <input type="datetime-local" name="endTime" value="${endStr}" required class="input" style="color-scheme:dark" />
+            <div class="summary-line" id="summary"><strong id="sum-title">—</strong> · <span id="sum-time">—</span> · <span id="sum-venue">GS St Etienne</span></div>
+            <details style="margin-bottom:16px;background:rgba(0,0,0,0.35);padding:12px;border-radius:12px;border:1px solid rgba(0,255,204,0.15)">
+              <summary style="font-size:13px;font-weight:700;color:#00ffcc;cursor:pointer">${t('form_map')}</summary>
+              <div style="margin-top:12px">
+                <label>${t('form_venue')}</label>
+                <input name="venueName" value="GS St Etienne" class="input" />
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <input name="venueLat" value="${DEFAULT_LAT}" class="input" placeholder="Lat" inputmode="decimal" />
+                  <input name="venueLng" value="${DEFAULT_LNG}" class="input" placeholder="Lng" inputmode="decimal" />
+                </div>
+                <button type="button" id="btn-use-location" class="chip" style="width:100%;margin-bottom:8px">📍 ${t('use_location')}</button>
+                <div id="venue-map" style="height:200px;border-radius:12px;overflow:hidden;margin-top:4px"></div>
+              </div>
+            </details>
+            <button type="submit" id="btn-save-cpd" class="btn btn-primary" style="padding:18px;font-size:16px">${t('btn_create')}</button>
+          </form>
+        </div>`;
+    }
+
+    function bindAdminNewEvents() {
+      document.getElementById('btn-back').onclick = () => { state.adminTab = 'overview'; renderAdmin(); };
+      const form = document.getElementById('cpd-form');
+      const startInput = form.elements.startTime;
+      const endInput = form.elements.endTime;
+      const latInput = form.elements.venueLat;
+      const lngInput = form.elements.venueLng;
+      document.querySelectorAll('#duration-chips .chip').forEach(chip => {
+        chip.onclick = () => {
+          document.querySelectorAll('#duration-chips .chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          const start = startInput.value ? new Date(startInput.value) : new Date();
+          endInput.value = toLocalInputValue(new Date(start.getTime() + parseInt(chip.dataset.duration) * 60000));
+          updateSummary();
+        };
+      });
+      document.getElementById('btn-now').onclick = () => {
+        const n = new Date(); n.setSeconds(0, 0); n.setMinutes(Math.ceil(n.getMinutes() / 5) * 5);
+        startInput.value = toLocalInputValue(n);
+        const active = document.querySelector('#duration-chips .chip.active');
+        const dur = active ? parseInt(active.dataset.duration) : 60;
+        endInput.value = toLocalInputValue(new Date(n.getTime() + dur * 60000));
+        updateSummary();
+      };
+      function updateSummary() {
+        const title = form.elements.title.value.trim() || '—';
+        const venue = form.elements.venueName.value.trim() || 'Venue';
+        const s = startInput.value ? new Date(startInput.value) : null;
+        const e = endInput.value ? new Date(endInput.value) : null;
+        document.getElementById('sum-title').textContent = title;
+        document.getElementById('sum-venue').textContent = venue;
+        if (s && e) {
+          const fmt = d => d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          const mins = Math.round((e - s) / 60000);
+          document.getElementById('sum-time').textContent = `${fmt(s)} → ${fmt(e)} (${mins} min)`;
+        }
+      }
+      form.elements.title.addEventListener('input', updateSummary);
+      form.elements.venueName.addEventListener('input', updateSummary);
+      startInput.addEventListener('change', updateSummary);
+      endInput.addEventListener('change', updateSummary);
+      updateSummary();
+      let mapInit = false;
+      const details = form.querySelector('details');
+      details.addEventListener('toggle', () => {
+        if (details.open && !mapInit) {
+          const map = L.map('venue-map', { zoomControl: false }).setView([parseFloat(latInput.value), parseFloat(lngInput.value)], 16);
+          addSatelliteBase(map);
+          const marker = L.marker([parseFloat(latInput.value), parseFloat(lngInput.value)]).addTo(map);
+          L.circle([parseFloat(latInput.value), parseFloat(lngInput.value)], { radius: 100, color: '#00ffcc', fillOpacity: 0.2 }).addTo(map);
+          map.on('click', e => { latInput.value = e.latlng.lat.toFixed(6); lngInput.value = e.latlng.lng.toFixed(6); marker.setLatLng(e.latlng); });
+          mapInit = true;
+          setTimeout(() => map.invalidateSize(), 100);
+        }
+      });
+      document.getElementById('btn-use-location').onclick = async () => {
+        try {
+          const pos = await getPositionOnce();
+          latInput.value = pos.lat.toFixed(6);
+          lngInput.value = pos.lng.toFixed(6);
+          toast('Location set.', 'success');
+        } catch (err) { toast(err.message, 'error'); }
+      };
+      form.onsubmit = async ev => {
+        ev.preventDefault();
+        const btn = document.getElementById('btn-save-cpd');
+        const errEl = document.getElementById('form-error');
+        errEl.style.display = 'none'; btn.disabled = true; btn.textContent = t('btn_creating');
+        try {
+          const fd = new FormData(form);
+          const data = {
+            title: String(fd.get('title') || '').trim(),
+            theme: String(fd.get('theme') || '').trim(),
+            startTime: new Date(fd.get('startTime')),
+            endTime: new Date(fd.get('endTime')),
+            venueName: String(fd.get('venueName') || 'GS St Etienne').trim(),
+            venueLat: Number(fd.get('venueLat')),
+            venueLng: Number(fd.get('venueLng')),
+            radiusMeters: 100,
+            createdBy: state.user.uid,
+            createdAt: serverTimestamp(),
+          };
+          if (!data.title) throw new Error('Title is required.');
+          if (isNaN(data.venueLat) || isNaN(data.venueLng)) throw new Error('Invalid coordinates.');
+          if (data.endTime <= data.startTime) throw new Error('End time must be after start time.');
+          await addDoc(collection(db, 'cpds'), data);
+          toast(t('msg_create'), 'success');
+          state.adminTab = 'overview'; goAdmin();
+        } catch (err) {
+          errEl.textContent = err.message; errEl.style.display = 'block';
+          btn.disabled = false; btn.textContent = t('btn_create');
+        }
+      };
+    }
+
+    /* ==================== SESSION DETAIL ==================== */
+    function goCpdDetail(cpdId) {
+      state.view = 'cpd-detail'; state.selectedCpdId = cpdId;
+      state.selectedCpd = null; state.cpdAttendances = [];
+      if (state.subDetail) { try { state.subDetail(); } catch {} }
+      if (state.subDetailAtt) { try { state.subDetailAtt(); } catch {} }
+      state.subDetail = onSnapshot(doc(db, 'cpds', cpdId),
+        snap => { state.selectedCpd = snap.exists() ? { id: snap.id, ...snap.data() } : null; if (state.view === 'cpd-detail') renderCpdDetail(); },
+        err => console.error(err));
+      const q = query(collection(db, 'attendance'), where('cpdId', '==', cpdId));
+      state.subDetailAtt = onSnapshot(q,
+        snap => { state.cpdAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (state.view === 'cpd-detail') renderCpdDetail(); },
+        err => console.error(err));
+      renderCpdDetail();
+    }
+
+    function renderCpdDetail() {
+      const cpd = state.selectedCpd;
+      if (!cpd) return;
+      const rows = state.cpdAttendances.map(a => {
+        let status = '';
+        if (!a.endedAt) status = `<span class="badge badge-live">${t('live')}</span>`;
+        else if (a.verified) status = `<span class="badge badge-verified">✓ ${t('verified')}</span>`;
+        else status = `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+        const approveBtn = (a.state === 'ended' && !a.verified)
+          ? `<button class="btn btn-primary" style="width:auto;padding:6px 10px;font-size:11px;min-height:auto" onclick="approveAtt('${a.id}')">${t('approve')}</button>`
+          : '';
+        return `<tr>
+          <td><div class="att-name">${avatarImgTag(a.teacherPhotoURL, a.teacherName || 'User', 32)}<div style="min-width:0"><div style="color:#fff;font-size:13px;font-weight:700">${escapeHtml(a.teacherName || 'Unknown')}</div><div style="color:#94a3b8;font-size:11px">${escapeHtml(a.teacherEmail || '')}</div></div></div></td>
+          <td style="font-size:12px">${fmtTime(a.attendedAt)}</td>
+          <td style="font-size:12px">${fmtTime(a.endedAt)}</td>
+          <td>${status}</td>
+          <td>${approveBtn}</td>
+        </tr>`;
+      }).join('');
+      const live = state.cpdAttendances.filter(a => a.state === 'active').length;
+      const verified = state.cpdAttendances.filter(a => a.verified).length;
+      document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">
+        <button id="btn-back-admin" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back')}</button>
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3)">${escapeHtml(cpd.title)}</h1>
+        <p style="font-size:13px;color:#94a3b8;margin:0 0 20px">${escapeHtml(cpd.venueName)} · ${fmtDateTime(cpd.startTime)}</p>
+        <div class="a-stat-grid">
+          <div class="a-stat"><div class="val">${state.cpdAttendances.length}</div><div class="lbl">${t('attendees')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#00ffcc">${live}</div><div class="lbl">${t('live')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#38bdf8">${verified}</div><div class="lbl">${t('verified')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#fbbf24">${state.cpdAttendances.length - verified - live}</div><div class="lbl">${t('flagged')}</div></div>
+        </div>
+        <div class="map-card"><h3>📍 ${t('map')}</h3><div id="live-map" style="height:280px;border-radius:12px;overflow:hidden"></div></div>
+        <div class="map-card"><h3>${t('record')}</h3>
+          <div style="overflow-x:auto">
+            <table class="detail-table">
+              <thead><tr><th>${t('t_teacher')}</th><th>${t('t_attended')}</th><th>${t('t_ended')}</th><th>${t('t_status')}</th><th></th></tr></thead>
+              <tbody>${rows || `<tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">${t('no_att')}</td></tr>`}</tbody>
+            </table>
+          </div>
+        </div>
+      </main>`;
+      bindHeaderEvents();
+      document.getElementById('btn-back-admin').onclick = () => goAdmin();
+      window.approveAtt = async (attId) => {
+        try { await updateDoc(doc(db, 'attendance', attId), { verified: true }); toast('Approved.', 'success'); }
+        catch (err) { toast(err.message, 'error'); }
+      };
+      requestAnimationFrame(() => updateLiveMap(cpd));
+    }
+
+    function updateLiveMap(cpd) {
+      const el = document.getElementById('live-map'); if (!el) return;
+      if (state.liveMap) { try { state.liveMap.remove(); } catch {} state.liveMap = null; }
+      const map = L.map(el, { zoomControl: false }).setView([cpd.venueLat, cpd.venueLng], 17);
+      addSatelliteBase(map);
+      L.circle([cpd.venueLat, cpd.venueLng], { radius: cpd.radiusMeters, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.15, weight: 2 }).addTo(map);
+      const venueIcon = L.divIcon({ className: '', html: `<div style="background:#00ffcc;width:24px;height:24px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [24,24], iconAnchor: [12,12] });
+      L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(map);
+      state.cpdAttendances.forEach(a => {
+        let lat, lng, color;
+        if (a.state === 'active' && a.liveLat != null) { lat = a.liveLat; lng = a.liveLng; color = '#10b981'; }
+        else if (a.endedLat != null) { lat = a.endedLat; lng = a.endedLng; color = a.verified ? '#0ea5e9' : '#f59e0b'; }
+        else if (a.attendedLat != null) { lat = a.attendedLat; lng = a.attendedLng; color = '#ef4444'; }
+        else return;
+        const icon = L.divIcon({ className: '', html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [16,16], iconAnchor: [8,8] });
+        L.marker([lat, lng], { icon }).addTo(map);
+      });
+      state.liveMap = map;
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    /* ==================== BOOT ==================== */
+    document.getElementById('app').innerHTML = `
+      <div class="loader">
+        <img src="https://i.postimg.cc/QMd5HYhd/i-MENA-Smart-CPD-Attendance-Logo.png" alt="Logo" style="width:100px;height:100px;object-fit:contain" />
+        <div class="loader-ring"></div>
+      </div>`;
+  </script>
+</body>
+</html>
