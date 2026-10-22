@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#071B33" />
-  <title>Admin of CPD</title>
+  <title>iMENA Smart CPD — Admin</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -811,19 +811,55 @@
     }
     function downloadSessionCSV(cpd) {
       const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
-      if (atts.length === 0) { toast('No attendance for this session.', 'warn'); return; }
-      const rows = [['#', 'Teacher', 'Email', 'Category', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
-      atts.slice().sort((a, b) => (toDate(a.attendedAt)?.getTime() || 0) - (toDate(b.attendedAt)?.getTime() || 0)).forEach((a, i) => {
-        const schoolT = findSchoolTeacher(a.teacherName);
+
+      // Map attendance by normalized teacher name (prefer active)
+      const attByKey = new Map();
+      atts.forEach(a => {
+        const key = normalizeName(a.teacherName);
+        const existing = attByKey.get(key);
+        if (!existing || (a.state === 'active' && existing.state !== 'active')) attByKey.set(key, a);
+      });
+
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'Status', 'Color', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Verified']];
+
+      // Attendees first (green)
+      let n = 0;
+      SCHOOL_TEACHERS.forEach(t => {
+        const a = attByKey.get(normalizeName(t.name));
+        if (!a) return;
+        n++;
         const start = toDate(a.attendedAt);
         const end = toDate(a.endedAt);
         const dur = (start && end) ? Math.round((end - start) / 60000) : '';
-        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', start?.toLocaleString() || '', end?.toLocaleString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
+        rows.push([
+          n, t.name, a.teacherEmail || '', t.category,
+          'Attended', 'Green',
+          start?.toLocaleString() || '', end?.toLocaleString() || '', dur,
+          a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '',
+          a.verified ? 'Yes' : (a.state === 'active' ? 'Live' : 'No')
+        ]);
       });
+
+      // Non-attendees after (red)
+      let absentCount = 0;
+      SCHOOL_TEACHERS.forEach(t => {
+        if (attByKey.has(normalizeName(t.name))) return;
+        absentCount++;
+        n++;
+        rows.push([
+          n, t.name, '', t.category,
+          'Did Not Attend', 'Red',
+          '', '', '', '', ''
+        ]);
+      });
+
+      const attendedCount = atts.length;
+      if (attendedCount === 0 && absentCount === 0) { toast('No teachers to export.', 'warn'); return; }
+
       const safeTitle = (cpd.title || 'session').replace(/[^a-z0-9]/gi, '_').slice(0, 40);
       const date = (toDate(cpd.startTime) || new Date()).toISOString().slice(0, 10);
       downloadCSV(`CPD-${safeTitle}-${date}.csv`, rows);
-      toast(`Downloaded ${atts.length} records`, 'success');
+      toast(`Downloaded ${attendedCount} attended, ${absentCount} absent`, 'success');
     }
 
     /* ==================== GREETINGS ==================== */
@@ -1631,25 +1667,6 @@
 
         <div class="map-card"><h3>📍 ${t('map')}</h3><div id="live-map" style="height:280px;border-radius:12px;overflow:hidden"></div></div>
 
-        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 12px;padding-left:4px;">${t('attendance_breakdown')}</h3>
-
-        <div class="cpd-split">
-          <div class="cpd-col attended">
-            <div class="cpd-col-head">
-              <h3>✓ ${t('currently_in_cpd')}</h3>
-              <span class="cnt">${inCpdList.length}/${colTotal}</span>
-            </div>
-            ${colHtml(inCpdGrouped, true)}
-          </div>
-          <div class="cpd-col not-attended">
-            <div class="cpd-col-head">
-              <h3>○ ${t('not_in_cpd_yet')}</h3>
-              <span class="cnt">${notInCpdList.length}/${colTotal}</span>
-            </div>
-            ${colHtml(notInCpdGrouped, false)}
-          </div>
-        </div>
-
         <div class="map-card"><h3>${t('record')}</h3>
           <div style="overflow-x:auto">
             <table class="detail-table">
@@ -1675,6 +1692,25 @@
                 }).join('')}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 12px;padding-left:4px;">${t('attendance_breakdown')}</h3>
+
+        <div class="cpd-split">
+          <div class="cpd-col attended">
+            <div class="cpd-col-head">
+              <h3>✓ ${t('currently_in_cpd')}</h3>
+              <span class="cnt">${inCpdList.length}/${colTotal}</span>
+            </div>
+            ${colHtml(inCpdGrouped, true)}
+          </div>
+          <div class="cpd-col not-attended">
+            <div class="cpd-col-head">
+              <h3>○ ${t('not_in_cpd_yet')}</h3>
+              <span class="cnt">${notInCpdList.length}/${colTotal}</span>
+            </div>
+            ${colHtml(notInCpdGrouped, false)}
           </div>
         </div>
       </main>`;
