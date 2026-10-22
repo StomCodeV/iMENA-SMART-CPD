@@ -3,6 +3,14 @@
     {
       "source": "/firebase-web-authn-api",
       "destination": "https://us-central1-imena-smart-cpd-attendance.cloudfunctions.net/ext-firebase-web-authn-api"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/teacher",
+      "destination": "/teacher.html"
     }
   ]
 }
