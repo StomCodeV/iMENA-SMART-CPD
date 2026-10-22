@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#071B33" />
-  <title>iMENA Smart CPD — Admin</title>
+  <title>Admin of CPD</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/268DpvQt/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -18,10 +18,14 @@
     button { cursor: pointer; border: none; background: none; color: inherit; }
     a { color: inherit; text-decoration: none; }
 
-    #bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; background: #0a0f1e; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 20% 10%, rgba(0,136,255,0.18), transparent 45%), radial-gradient(ellipse at 80% 60%, rgba(0,255,204,0.12), transparent 50%), linear-gradient(180deg, #050e2a 0%, #0a1a3a 50%, #050e2a 100%);
+    }
+    #bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; background: transparent; opacity: 0; transition: opacity 0.8s ease; }
+    #bg-canvas.ready { opacity: 1; }
     #app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* Header */
     .header { position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 8px; background: rgba(10,15,30,0.72); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-bottom: 1px solid rgba(255,255,255,0.06); padding-top: max(10px, env(safe-area-inset-top)); }
     .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
     .header-logo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; }
@@ -31,7 +35,6 @@
     .avatar-btn { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 2px solid #00ffcc; padding: 0; background: #fff; flex-shrink: 0; }
     .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* Profile modal */
     .profile-modal { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     .profile-modal.open { opacity: 1; pointer-events: auto; }
     .profile-card { background: #1e293b; color: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 340px; text-align: center; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
@@ -45,7 +48,6 @@
     .btn-home { background: rgba(255,255,255,0.05); color: #fff; }
     .btn-logout { background: rgba(239,68,68,0.15); color: #f87171; }
 
-    /* Buttons */
     .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px 20px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s; min-height: 48px; }
     .btn:active:not(:disabled) { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -56,14 +58,13 @@
     .input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.6); font-size: 15px; margin-bottom: 12px; color: #e2e8f0; }
     .input:focus { outline: none; border-color: #00ffcc; box-shadow: 0 0 0 4px rgba(0,255,204,0.15); }
 
-    /* Main + tab bar */
     .main { flex: 1; padding: 18px 14px calc(80px + env(safe-area-inset-bottom)); max-width: 800px; margin: 0 auto; width: 100%; }
+    .main.main-wide { max-width: 1400px; }
     .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; z-index: 90; background: rgba(10,15,30,0.85); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-top: 1px solid rgba(255,255,255,0.08); padding-bottom: env(safe-area-inset-bottom); }
-    .tab-btn { flex: 1; padding: 10px 2px; color: #64748b; font-size: 9.5px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.03em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+    .tab-btn { flex: 1; padding: 10px 2px; color: #64748b; font-size: 9px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.02em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .tab-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
     .tab-btn.active { color: #00ffcc; filter: drop-shadow(0 0 8px rgba(0,255,204,0.5)); }
 
-    /* Admin stat cards */
     .a-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .a-stat { background: rgba(15,23,42,0.55); backdrop-filter: blur(18px) saturate(160%); border: 1px solid rgba(0,255,204,0.2); border-radius: 14px; padding: 14px; text-align: center; }
     .a-stat .val { font-size: 24px; font-weight: 900; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(0,255,204,0.35); }
@@ -84,7 +85,6 @@
     .filter-tab { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 12px; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
     .filter-tab.active { background: rgba(0,255,204,0.12); color: #00ffcc; border-color: rgba(0,255,204,0.3); }
 
-    /* Badges */
     .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
     .badge-live { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.35); }
     .badge-upcoming { background: rgba(148,163,184,0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
@@ -92,12 +92,18 @@
     .badge-verified { background: rgba(14,165,233,0.18); color: #38bdf8; border: 1px solid rgba(14,165,233,0.35); }
     .badge-flagged { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
 
-    /* Past stats chips */
+    .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .status-dot.in-cpd { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.22), 0 0 12px rgba(16,185,129,0.7); animation: pulseDot 2s ease-in-out infinite; }
+    .status-dot.not-in-cpd { background: transparent; border: 2px solid #64748b; }
+    @keyframes pulseDot {
+      0%,100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.22), 0 0 12px rgba(16,185,129,0.7); }
+      50% { box-shadow: 0 0 0 6px rgba(16,185,129,0.05), 0 0 20px rgba(16,185,129,0.9); }
+    }
+
     .past-stats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .past-stat { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.08); }
     .past-stat.ok { color: #38bdf8; border-color: rgba(56,189,248,0.28); background: rgba(56,189,248,0.1); }
 
-    /* Calendar */
     .cal-wrap { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .cal-title { font-size: 16px; font-weight: 800; color: #fff; }
@@ -125,7 +131,6 @@
     .cal-legend .dot-live { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
     .cal-legend .dot-upcoming { background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,0.5); }
 
-    /* Create form */
     .form-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(0,255,204,0.22); border-radius: 20px; padding: 20px; }
     .form-card label { display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
     .form-card h2 { font-size: 20px; font-weight: 900; color: #fff; margin: 0 0 6px; }
@@ -138,7 +143,6 @@
     .summary-line { background: rgba(0,0,0,0.4); border: 1px dashed rgba(0,255,204,0.35); border-radius: 12px; padding: 12px 14px; margin: 14px 0 16px; font-size: 13px; color: #cbd5e1; line-height: 1.5; }
     .summary-line strong { color: #00ffcc; }
 
-    /* Session detail */
     .map-card { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
     .map-card h3 { font-size: 14px; font-weight: 800; color: #fff; margin: 0 0 12px; }
     .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -147,7 +151,6 @@
     .att-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(0,255,204,0.3); }
     .att-name { display: flex; align-items: center; gap: 10px; }
 
-    /* Greeting */
     .greet-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 16px; border-radius: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.72); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); border: 1px solid rgba(0,255,204,0.25); }
     .greet-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(135deg, rgba(0,255,204,0.09), rgba(0,136,255,0.09)); }
     .greet-emoji { font-size: 34px; line-height: 1; flex-shrink: 0; animation: greetFloat 4s ease-in-out infinite; }
@@ -156,11 +159,15 @@
     .greet-text h2 { font-size: 18px; font-weight: 900; margin: 0 0 4px; color: #fff; letter-spacing: -0.02em; line-height: 1.25; }
     .greet-text p { font-size: 12.5px; color: #94a3b8; margin: 0; line-height: 1.5; }
 
-    /* Empty */
     .empty { text-align: center; padding: 40px 20px; color: #64748b; font-size: 14px; background: rgba(15,23,42,0.55); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.08); }
     .empty strong { display: block; color: #94a3b8; font-size: 15px; margin-bottom: 6px; }
 
-    /* Toasts */
+    .skeleton { animation: skeletonShimmer 1.5s ease-in-out infinite; background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.10), rgba(255,255,255,0.04)); background-size: 200% 100%; border-radius: 14px; }
+    @keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skel-line { height: 16px; margin-bottom: 10px; }
+    .skel-card { height: 80px; margin-bottom: 12px; }
+    .skel-header { height: 44px; width: 60%; margin-bottom: 20px; }
+
     #toast-root { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
     .toast { padding: 14px 16px; border-radius: 14px; font-weight: 700; text-align: center; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.35); animation: slideUp 0.3s ease; }
     .toast.success { background: linear-gradient(135deg,#10b981,#06b6d4); }
@@ -173,6 +180,127 @@
     .loader { position: fixed; inset: 0; background: #0a0f1e; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
     .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(0,217,255,0.2); border-top-color: #00D9FF; animation: spin 1s linear infinite; }
 
+    /* Teachers tab */
+    .t-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .t-stat { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; text-align: center; position: relative; overflow: hidden; }
+    .t-stat.live { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
+    .t-stat .val { font-size: 26px; font-weight: 900; line-height: 1; color: #fff; }
+    .t-stat.live .val { color: #34d399; text-shadow: 0 0 12px rgba(16,185,129,0.4); }
+    .t-stat .lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.05em; }
+
+    .cat-filter-row { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding: 4px 0; }
+    .cat-filter-row::-webkit-scrollbar { display: none; }
+    .cat-filter { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 12px; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+    .cat-filter.active { background: rgba(0,255,204,0.12); color: #00ffcc; border-color: rgba(0,255,204,0.3); }
+
+    .csv-btn-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .csv-btn { padding: 10px 14px; border-radius: 10px; background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.3); color: #00ffcc; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .csv-btn:active { transform: scale(0.97); }
+    .csv-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .csv-btn.warn { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.35); color: #c4b5fd; }
+
+    .teacher-search { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.6); font-size: 14px; color: #e2e8f0; margin-bottom: 14px; }
+    .teacher-search:focus { outline: none; border-color: #00ffcc; box-shadow: 0 0 0 4px rgba(0,255,204,0.15); }
+    .teacher-search::placeholder { color: #64748b; }
+
+    .ongoing-banner { padding: 12px 14px; margin-bottom: 14px; border-radius: 14px; background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08)); border: 1px solid rgba(16,185,129,0.35); display: flex; align-items: center; gap: 10px; }
+    .ongoing-banner .pulse { width: 10px; height: 10px; border-radius: 50%; background: #10b981; animation: pulseDot 1.5s ease-in-out infinite; flex-shrink: 0; }
+    .ongoing-banner .info { flex: 1; min-width: 0; }
+    .ongoing-banner h4 { font-size: 13px; color: #fff; margin: 0 0 2px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ongoing-banner p { font-size: 11px; color: #94a3b8; margin: 0; }
+
+    /* 3-COLUMN LAYOUT */
+    .teacher-columns {
+      display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px;
+    }
+    @media (min-width: 900px) {
+      .teacher-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .teacher-column {
+      background: rgba(15,23,42,0.55);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .tc-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 10px; margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      gap: 6px;
+    }
+    .tc-head h3 { font-size: 12px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tc-head .cnt { font-size: 10px; color: #94a3b8; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+
+    .teacher-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 10px;
+      background: rgba(15,23,42,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 5px; transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .teacher-row:hover { border-color: rgba(0,255,204,0.25); background: rgba(0,255,204,0.04); }
+    .teacher-row:active { transform: scale(0.98); }
+    .teacher-row.live { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
+    .teacher-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; color: #0a0f1e;
+      background: #475569; flex-shrink: 0;
+    }
+    .teacher-row.live .teacher-avatar { background: linear-gradient(135deg,#10b981,#06b6d4); color: #fff; }
+    .teacher-info { flex: 1; min-width: 0; }
+    .teacher-name { font-size: 11.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.25; }
+    .teacher-stats-line { font-size: 9px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .teacher-stats-line strong { color: #94a3b8; font-weight: 700; }
+
+    .cat-empty { font-size: 11px; color: #64748b; padding: 8px 10px; font-style: italic; text-align: center; }
+
+    /* History (teacher detail) */
+    .hist-month { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin: 18px 0 8px; padding-left: 4px; }
+    .hist-item { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .hist-item .hist-info { flex: 1; min-width: 0; }
+    .hist-item h4 { font-size: 13px; font-weight: 700; color: #fff; margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-item p { font-size: 11px; color: #94a3b8; margin: 0; }
+
+    /* CPD detail split */
+    .cpd-split { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 16px; }
+    @media (min-width: 768px) { .cpd-split { grid-template-columns: 1fr 1fr; } }
+    .cpd-col { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border-radius: 20px; padding: 14px; border: 2px solid transparent; }
+    .cpd-col.attended { border-color: rgba(16,185,129,0.4); background: linear-gradient(180deg, rgba(16,185,129,0.08), rgba(15,23,42,0.72)); }
+    .cpd-col.not-attended { border-color: rgba(148,163,184,0.25); }
+    .cpd-col-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .cpd-col-head h3 { font-size: 13px; font-weight: 900; margin: 0; }
+    .cpd-col.attended .cpd-col-head h3 { color: #34d399; }
+    .cpd-col.not-attended .cpd-col-head h3 { color: #94a3b8; }
+    .cpd-col-head .cnt { font-size: 12px; font-weight: 900; padding: 4px 10px; border-radius: 99px; }
+    .cpd-col.attended .cpd-col-head .cnt { background: rgba(16,185,129,0.2); color: #34d399; }
+    .cpd-col.not-attended .cpd-col-head .cnt { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+
+    .cat-block { margin-bottom: 12px; }
+    .cat-block:last-child { margin-bottom: 0; }
+    .cat-block-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 6px; }
+    .cat-block-head .cat-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .cat-block-head .cat-label.nursery { color: #f472b6; }
+    .cat-block-head .cat-label.primary { color: #c4b5fd; }
+    .cat-block-head .cat-label.secondary { color: #67e8f9; }
+    .cat-block-head .cat-count { font-size: 10px; font-weight: 700; color: #94a3b8; }
+    .cat-people { display: flex; flex-direction: column; gap: 4px; }
+    .person-chip { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,0.04); font-size: 12px; }
+    .cpd-col.attended .person-chip { background: rgba(16,185,129,0.1); }
+    .person-chip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .cpd-col.attended .person-chip .dot { background: #10b981; }
+    .cpd-col.not-attended .person-chip .dot { background: #64748b; }
+    .person-chip .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e2e8f0; font-weight: 500; font-size: 11.5px; }
+    .person-chip .meta { font-size: 10px; color: #94a3b8; flex-shrink: 0; }
+
+    /* Teacher detail stats */
+    .td-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .td-stat { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px; text-align: center; }
+    .td-stat .val { font-size: 24px; font-weight: 900; line-height: 1; color: #fff; }
+    .td-stat .lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.05em; }
+
     @media (min-width: 768px) {
       .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
       .header { padding: 14px 32px; }
@@ -180,7 +308,9 @@
       .header-logo { width: 38px; height: 38px; }
       .avatar-btn { width: 42px; height: 42px; }
       .a-stat-grid { grid-template-columns: repeat(4, 1fr); }
-      .tab-btn { font-size: 11px; }
+      .t-stats, .td-stats { grid-template-columns: repeat(4, 1fr); }
+      .tab-btn { font-size: 10px; }
+      .tab-btn svg { width: 22px; height: 22px; }
     }
   </style>
 </head>
@@ -193,13 +323,8 @@
     import * as THREE from 'three';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
-    import {
-      getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
-    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import {
-      getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc,
-      onSnapshot, query, where, serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
@@ -225,6 +350,73 @@
     const DEFAULT_LAT = -2.129565168007717;
     const DEFAULT_LNG = 29.77740799677921;
 
+    const SCHOOL_TEACHERS = [
+      { name: 'BAMURANGE CHRISTINE', gender: 'FEMALE', category: 'Nursery' },
+      { name: 'MUKARUTESI LIBERATHE', gender: 'FEMALE', category: 'Nursery' },
+      { name: 'NAMUBIRU DIANE', gender: 'FEMALE', category: 'Nursery' },
+      { name: 'NYIRANSABIMANA VIOLETTE', gender: 'FEMALE', category: 'Nursery' },
+      { name: 'TUYIZERE Patrick', gender: 'MALE', category: 'Nursery' },
+      { name: 'UWIZEYIMANA Georgie', gender: 'FEMALE', category: 'Nursery' },
+      { name: 'BIZIREMA THOMAS', gender: 'MALE', category: 'Primary' },
+      { name: 'DUSHIMIMANA Marie Claire', gender: 'FEMALE', category: 'Primary' },
+      { name: 'GAKUNDE Charles', gender: 'MALE', category: 'Primary' },
+      { name: 'Horusenga Vedaste', gender: 'MALE', category: 'Primary' },
+      { name: 'IHOREHO Lydia', gender: 'FEMALE', category: 'Primary' },
+      { name: 'INGABIRE Claudine', gender: 'FEMALE', category: 'Primary' },
+      { name: 'KABASINGA Berine', gender: 'FEMALE', category: 'Primary' },
+      { name: 'KANKINDI Liliane', gender: 'FEMALE', category: 'Primary' },
+      { name: 'MUGISHA Elyse', gender: 'MALE', category: 'Primary' },
+      { name: 'MUKAMAZIMPAKA Aimee Alphonsine', gender: 'FEMALE', category: 'Primary' },
+      { name: 'MUKANDAHINYUKA ANTOINETTE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'MUKANTUMWA MARIE ROSE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'MUKANYABYENDA BERTHILDE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'NAHIMANA MARIE THEOPHILLA', gender: 'FEMALE', category: 'Primary' },
+      { name: 'Ndikumwenayo Gilbert', gender: 'MALE', category: 'Primary' },
+      { name: 'NDUHIRABANDI Jean Marie Vianney', gender: 'MALE', category: 'Primary' },
+      { name: 'NIKWINGABIRA JEANNETTE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'NIYOBASHAKA Esther', gender: 'FEMALE', category: 'Primary' },
+      { name: 'NYIRANSENGIYUMVA YVONNE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'TUYISHIME JEANNE', gender: 'MALE', category: 'Primary' },
+      { name: 'TUYISHIMIRE MARIE CLARISSE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'UMUGWANEZA FRANCOISE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'USANASE JOSEPHINE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'UWAMAHORO FRANCINE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'UWIBAMBE CELINE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'UWIMANA FRANCINE', gender: 'FEMALE', category: 'Primary' },
+      { name: 'UZAYISENGA Rose', gender: 'FEMALE', category: 'Primary' },
+      { name: 'IMANISHIMWE HOPE JOY', gender: 'FEMALE', category: 'Primary' },
+      { name: 'BIRAGUMA Gilbert', gender: 'MALE', category: 'Secondary' },
+      { name: 'BIZIMANA JEAN PIERRE', gender: 'MALE', category: 'Secondary' },
+      { name: 'BUSINGE AIDAH', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'DUSHIMIRE GISELE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'HANGANIMANA SERGIUS', gender: 'MALE', category: 'Secondary' },
+      { name: 'HICAYIYUMVA YUKUNDA', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'INGABIRE JEAN MARIE VIANNEY', gender: 'MALE', category: 'Secondary' },
+      { name: 'ISHIMWE PAUL', gender: 'MALE', category: 'Secondary' },
+      { name: 'KAJYIBWAMI ADALBERT', gender: 'MALE', category: 'Secondary' },
+      { name: 'KURADUSENGE JEAN BOSCO', gender: 'MALE', category: 'Secondary' },
+      { name: 'MUGIRWANAKE OLIVE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'MUJAWAYO JACQUELINE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'MUKABURANGA DEVOTA', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'MUKANDUNGUTSE CARINE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'MUKANSONEYE ADELINE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'MUNEZERO MARC ABDON', gender: 'MALE', category: 'Secondary' },
+      { name: 'MURAGIJEMARIYA CHANTAL', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'MUVUNYI VALENS', gender: 'MALE', category: 'Secondary' },
+      { name: 'NIRERE VALERIE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'NIYIGENA MEDIATRICE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'NYIRAMAJYAMBERE Rosine', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'NYIRANDABARUTA PELAGIE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'NZAMURAMBAHO VITAL', gender: 'MALE', category: 'Secondary' },
+      { name: 'RUGABA Michel', gender: 'MALE', category: 'Secondary' },
+      { name: 'TUGIRIMANA JEAN AIME', gender: 'MALE', category: 'Secondary' },
+      { name: 'TUYISENGE MARIE CLAIRE', gender: 'FEMALE', category: 'Secondary' },
+      { name: 'RUKUNDO IRENE', gender: 'MALE', category: 'Secondary' },
+      { name: 'UWIBAMBE MARIE ROSE', gender: 'FEMALE', category: 'Secondary' },
+    ];
+    const CATEGORIES = ['Nursery', 'Primary', 'Secondary'];
+    const CAT_COLOR = { Nursery: '#f472b6', Primary: '#c4b5fd', Secondary: '#67e8f9' };
+
     const state = {
       user: null, profile: null, view: 'boot', lang: 'en',
       adminTab: 'overview', adminSessionFilter: 'all',
@@ -232,7 +424,9 @@
       cpds: [], allAttendances: [],
       selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
       subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null,
-      liveMap: null,
+      liveMap: null, liveMapCpdId: null,
+      teacherSearch: '', teacherCatFilter: 'all',
+      teacherDetailName: null,
       loading: true,
     };
     state.lang = 'en';
@@ -240,12 +434,15 @@
     const isMobileDevice = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || window.innerWidth < 768;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const MOTION_SCALE = prefersReducedMotion ? 0.35 : 1.0;
+    const skip3D = prefersReducedMotion
+      || (navigator.deviceMemory && navigator.deviceMemory < 2)
+      || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 2)
+      || window.innerWidth < 380;
 
-    /* ==================== I18N ==================== */
     const I18N = {
       en: {
         home: 'Home', logout: 'Sign Out', admin: 'Admin',
-        overview: 'Overview', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New CPD',
+        overview: 'Overview', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New CPD', teachers: 'Teachers',
         admin_title: 'Admin Dashboard', stat_total: 'Total', stat_ongoing: 'Ongoing', stat_upcoming: 'Upcoming', stat_ended: 'Ended',
         stat_live_now: 'Live Now', stat_next_session: 'Next Session',
         open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
@@ -259,37 +456,82 @@
         duration: 'Duration', use_location: 'Use my location', quick_now: 'Now',
         upcoming: 'Upcoming', ongoing: 'Ongoing', ended: 'Ended', live: 'Live',
         verified: 'Verified', flagged: 'Flagged',
-        past_sessions: 'Recent Sessions', all_sessions: 'All Sessions',
-        no_sessions_day: 'No sessions on this day'
+        past_sessions: 'Recent Sessions', all_sessions: 'All Sessions', no_sessions_day: 'No sessions on this day',
+        teachers_title: 'Teachers · GS St Etienne',
+        stat_in_cpd: 'In CPD', stat_in_school: 'In School',
+        all_categories: 'All', nursery: 'Nursery', primary: 'Primary', secondary: 'Secondary',
+        no_teachers_match: 'No teachers match your search',
+        download_current: 'Download Current CPD', download_history: 'Download Full History', download_this: 'Download Session CSV',
+        male: 'Male', female: 'Female',
+        search_teacher_placeholder: '🔍 Search teacher by name…',
+        just_now: 'just now', min_ago: 'min', hour_ago: 'h', day_ago: 'd',
+        cpds_label: 'CPDs', last_label: 'Last', never_label: 'Never',
+        in_cpd_label: 'In CPD', not_in_cpd_label: 'Not in CPD',
+        attended_label: 'Attended', not_attended_label: 'Did not attend',
+        attendance_breakdown: 'Attendance Breakdown',
+        currently_in_cpd: 'Currently in CPD', not_in_cpd_yet: 'Not in CPD yet',
+        teacher_report: 'Teacher Report', total_cpds: 'CPDs', total_hours: 'Hours',
+        verified_pct: 'Verified %', this_month: 'This Month',
+        sessions_history: 'Sessions History', no_sessions_yet: 'No sessions attended yet',
+        back_to_teachers: 'Back to Teachers'
       },
       rw: {
-        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya',
+        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
         admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
         stat_live_now: 'Kuri ubu', stat_next_session: 'Isomo rikurikira',
         open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
         create_title: 'Tegura Isomo', create_sub: 'Uzuza umutwe gusa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Isomo', btn_creating: 'Turifungura...',
         attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Isomo ryafunguwe!',
-        duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Amasomo yaheruka', all_sessions: 'Amasomo yose', no_sessions_day: 'Nta masomo kuri uyu munsi'
+        duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Amasomo yaheruka', all_sessions: 'Amasomo yose', no_sessions_day: 'Nta masomo kuri uyu munsi',
+        teachers_title: 'Abarimu · GS St Etienne', stat_in_cpd: 'Mu CPD', stat_in_school: 'Mu ishuri', all_categories: 'Bose', nursery: 'Incuke', primary: 'P1–P6', secondary: 'S1–S6', no_teachers_match: 'Nta mwarimu uhuye n\'ubushakashatsi', download_current: 'Kuramo CPD y\'ubu', download_history: 'Kuramo Amateka Yose', download_this: 'Kuramo CSV y\'isomo',
+        male: 'Gabo', female: 'Gore',
+        search_teacher_placeholder: '🔍 Shakisha umwarimu ku izina…',
+        just_now: 'ubu', min_ago: 'min', hour_ago: 'h', day_ago: 'd',
+        cpds_label: 'CPD', last_label: 'Iheruka', never_label: 'Nta na rimwe',
+        in_cpd_label: 'Muri CPD', not_in_cpd_label: 'Ntabwo ari muri CPD',
+        attended_label: 'Yitabiriye', not_attended_label: 'Ntiyitabiriye',
+        attendance_breakdown: 'Uko bitabiriye',
+        currently_in_cpd: 'Kuri ubu muri CPD', not_in_cpd_yet: 'Batarinjiye muri CPD',
+        teacher_report: 'Raporo y\'Umwarimu', total_cpds: 'CPD', total_hours: 'Amasaha',
+        verified_pct: 'Byemejwe %', this_month: 'Uku kwezi',
+        sessions_history: 'Amateka y\'Amasomo', no_sessions_yet: 'Nta masomo yitabiriye',
+        back_to_teachers: 'Subira ku Barimu'
       },
       fr: {
-        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau',
+        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau', teachers: 'Enseignants',
         admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées',
         stat_live_now: 'En direct', stat_next_session: 'Prochaine session',
         open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver',
         create_title: 'Créer un CPD', create_sub: 'Remplissez le titre.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...',
         attendees: 'Participants', record: 'Registre', map: 'Carte', t_teacher: 'Enseignant', t_attended: 'Arrivée', t_ended: 'Départ', t_status: 'Statut', no_att: 'Aucune présence.', msg_sign_out: 'Déconnexion ?', msg_delete: 'Supprimer ?', msg_create: 'Session créée !',
-        duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', past_sessions: 'Sessions récentes', all_sessions: 'Toutes les sessions', no_sessions_day: 'Aucune session ce jour'
+        duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', past_sessions: 'Sessions récentes', all_sessions: 'Toutes les sessions', no_sessions_day: 'Aucune session ce jour',
+        teachers_title: 'Enseignants · GS St Etienne', stat_in_cpd: 'En CPD', stat_in_school: 'À l\'école', all_categories: 'Tous', nursery: 'Maternelle', primary: 'Primaire', secondary: 'Secondaire', no_teachers_match: 'Aucun enseignant ne correspond', download_current: 'Télécharger CPD actuel', download_history: 'Télécharger tout l\'historique', download_this: 'Télécharger CSV',
+        male: 'Homme', female: 'Femme',
+        search_teacher_placeholder: '🔍 Rechercher un enseignant…',
+        just_now: 'à l\'instant', min_ago: 'min', hour_ago: 'h', day_ago: 'j',
+        cpds_label: 'CPD', last_label: 'Dernière', never_label: 'Jamais',
+        in_cpd_label: 'En CPD', not_in_cpd_label: 'Pas en CPD',
+        attended_label: 'Présents', not_attended_label: 'Absents',
+        attendance_breakdown: 'Répartition des présences',
+        currently_in_cpd: 'Actuellement en CPD', not_in_cpd_yet: 'Pas encore en CPD',
+        teacher_report: 'Rapport enseignant', total_cpds: 'CPD', total_hours: 'Heures',
+        verified_pct: 'Vérifié %', this_month: 'Ce mois',
+        sessions_history: 'Historique des sessions', no_sessions_yet: 'Aucune session suivie',
+        back_to_teachers: 'Retour aux enseignants'
       }
     };
     function t(k) { return (I18N[state.lang])[k] || I18N.en[k] || k; }
 
-    /* ==================== BG ENGINE (admin hex-sky only) ==================== */
+    /* ==================== BG ENGINE ==================== */
     const bgEngine = {
-      renderer: null, adminScene: null, active: false, clock: null, time: 0,
+      renderer: null, adminScene: null, active: false, clock: null, time: 0, inited: false,
       init() {
+        if (this.inited) return;
+        this.inited = true;
+        if (skip3D) { document.getElementById('bg-canvas').style.display = 'none'; return; }
         try {
-          this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: false, antialias: false, powerPreference: 'high-performance' });
-          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2));
+          this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: false, antialias: false, powerPreference: 'low-power' });
+          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.2 : 1.8));
           this.renderer.setSize(window.innerWidth, window.innerHeight);
           this.renderer.outputColorSpace = THREE.SRGBColorSpace;
           this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -298,18 +540,18 @@
           this.adminScene = this.build();
           window.addEventListener('resize', () => this.resize());
           this.active = true;
+          setTimeout(() => document.getElementById('bg-canvas').classList.add('ready'), 100);
           this.animate();
         } catch (e) {
           console.warn('[bgEngine]', e);
-          document.getElementById('bg-canvas').style.background = 'radial-gradient(circle at 30% 30%, #051a2e 0%, #0a0f1e 60%), radial-gradient(circle at 70% 70%, #0a1a2e 0%, #0a0f1e 50%)';
+          document.getElementById('bg-canvas').style.display = 'none';
         }
       },
       build() {
         const scene = new THREE.Scene();
         scene.fog = new THREE.Fog(0x0a1a3a, 100, 550);
         const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 1500);
-        camera.position.set(0, 12, 60);
-        camera.lookAt(0, 8, -30);
+        camera.position.set(0, 12, 60); camera.lookAt(0, 8, -30);
         const skyMat = new THREE.ShaderMaterial({
           side: THREE.BackSide, depthWrite: false,
           uniforms: { uTime: { value: 0 }, uTop: { value: new THREE.Color(0x0a1a4a) }, uMid: { value: new THREE.Color(0x1a3a7a) }, uHorizon: { value: new THREE.Color(0x2a5a9a) }, uDeep: { value: new THREE.Color(0x050e2a) }, uGlow: { value: new THREE.Color(0x2a70c8) } },
@@ -329,7 +571,7 @@
         scene.add(new THREE.AmbientLight(0x3060a0, 0.4));
 
         const hexPanels = [];
-        const hexCount = isMobileDevice ? 20 : 32;
+        const hexCount = isMobileDevice ? 12 : 22;
         const hexRingGeo = new THREE.RingGeometry(1.6, 1.85, 6);
         const hexFillGeo = new THREE.CircleGeometry(1.6, 6);
         for (let i = 0; i < hexCount; i++) {
@@ -343,12 +585,11 @@
           group.rotation.z = Math.random() * Math.PI * 2;
           group.scale.setScalar(0.7 + Math.random() * 1.2);
           group.userData = { baseOpacity: 0.45 + Math.random() * 0.4, pulsePhase: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.25, driftPhase: Math.random() * Math.PI * 2, baseY: group.position.y };
-          scene.add(group);
-          hexPanels.push({ group, ringMat, fillMat });
+          scene.add(group); hexPanels.push({ group, ringMat, fillMat });
         }
         const nodes = [];
         const nodePositions = [];
-        const nodeCount = isMobileDevice ? 50 : 80;
+        const nodeCount = isMobileDevice ? 30 : 50;
         const nodeGeo = new THREE.SphereGeometry(0.22, 6, 6);
         for (let i = 0; i < nodeCount; i++) {
           const mat = new THREE.MeshBasicMaterial({ color: 0x9ae0ff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -364,7 +605,7 @@
             if (nodePositions[i].distanceTo(nodePositions[j]) < 32 && Math.random() < 0.4) edgePairs.push([i, j]);
           }
         }
-        const chosen = edgePairs.slice(0, isMobileDevice ? 40 : 70);
+        const chosen = edgePairs.slice(0, isMobileDevice ? 30 : 55);
         const edgeBuffer = new Float32Array(chosen.length * 6);
         const lineGeo = new THREE.BufferGeometry();
         lineGeo.setAttribute('position', new THREE.BufferAttribute(edgeBuffer, 3));
@@ -377,7 +618,7 @@
         if (!this.renderer) return;
         const w = window.innerWidth, h = window.innerHeight;
         this.renderer.setSize(w, h);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.2 : 1.8));
         if (this.adminScene) { this.adminScene.camera.aspect = w / h; this.adminScene.camera.updateProjectionMatrix(); }
       },
       animate() {
@@ -446,6 +687,7 @@
     function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
     function toDate(ts) { if (!ts) return null; if (ts.toDate) return ts.toDate(); if (ts instanceof Date) return ts; return new Date(ts); }
     function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
     function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
     function avatarUrlFor(photoURL, name, size = 64) {
       if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
@@ -481,15 +723,110 @@
       if (n > e) return 'ended';
       return 'ongoing';
     }
+    function normalizeName(s) { return String(s || '').toUpperCase().replace(/\s+/g, ' ').replace(/[^A-Z ]/g, '').trim(); }
+    function initialsOf(name) {
+      const parts = String(name || '').trim().split(/\s+/);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    function timeAgo(ts) {
+      const d = toDate(ts);
+      if (!d) return '';
+      const diff = Math.floor((Date.now() - d.getTime()) / 60000);
+      if (diff < 1) return t('just_now');
+      if (diff < 60) return `${diff}${t('min_ago')}`;
+      if (diff < 1440) return `${Math.floor(diff / 60)}${t('hour_ago')}`;
+      return `${Math.floor(diff / 1440)}${t('day_ago')}`;
+    }
+    function findSchoolTeacher(name) {
+      const key = normalizeName(name);
+      return SCHOOL_TEACHERS.find(t => normalizeName(t.name) === key);
+    }
+
+    function buildTeacherStatusMap() {
+      const map = new Map();
+      SCHOOL_TEACHERS.forEach(t => {
+        map.set(normalizeName(t.name), { active: null, totalRecords: 0, lastAttended: null, teacher: t });
+      });
+      state.allAttendances.forEach(a => {
+        const key = normalizeName(a.teacherName);
+        const entry = map.get(key);
+        if (!entry) return;
+        entry.totalRecords++;
+        const attTime = toDate(a.attendedAt)?.getTime() || 0;
+        if (!entry.lastAttended || attTime > (toDate(entry.lastAttended)?.getTime() || 0)) {
+          entry.lastAttended = a.attendedAt;
+        }
+        if (a.state === 'active') {
+          const curTime = entry.active ? (toDate(entry.active.attendedAt)?.getTime() || 0) : 0;
+          if (!entry.active || attTime > curTime) entry.active = a;
+        }
+      });
+      return map;
+    }
+
+    /* ==================== CSV ==================== */
+    function downloadCSV(filename, rows) {
+      const csv = '\uFEFF' + rows.map(row => row.map(cell => {
+        const v = String(cell ?? '');
+        return '"' + v.replace(/"/g, '""') + '"';
+      }).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = filename; link.style.display = 'none';
+      document.body.appendChild(link); link.click();
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
+    }
+    function downloadCurrentCpdCSV() {
+      const statusMap = buildTeacherStatusMap();
+      const rows = [['#', 'Teacher', 'Gender', 'Category', 'CPD Title', 'Attended At', 'Distance (m)', 'Verified']];
+      let n = 0;
+      SCHOOL_TEACHERS.forEach(t => {
+        const entry = statusMap.get(normalizeName(t.name));
+        if (entry?.active) {
+          n++;
+          const a = entry.active;
+          rows.push([n, t.name, t.gender, t.category, a.cpdTitle || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
+        }
+      });
+      if (n === 0) { toast('No teachers currently in CPD.', 'warn'); return; }
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCSV(`CPD-Attendees-${date}.csv`, rows);
+      toast(`Downloaded ${n} attendees`, 'success');
+    }
+    function downloadHistoricCSV() {
+      if (state.allAttendances.length === 0) { toast('No attendance history yet.', 'warn'); return; }
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'CPD Title', 'Date', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
+      state.allAttendances.slice().sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0)).forEach((a, i) => {
+        const schoolT = findSchoolTeacher(a.teacherName);
+        const start = toDate(a.attendedAt);
+        const end = toDate(a.endedAt);
+        const dur = (start && end) ? Math.round((end - start) / 60000) : '';
+        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', a.cpdTitle || '', start?.toLocaleDateString() || '', start?.toLocaleTimeString() || '', end?.toLocaleTimeString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
+      });
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCSV(`CPD-History-${date}.csv`, rows);
+      toast(`Downloaded ${state.allAttendances.length} records`, 'success');
+    }
+    function downloadSessionCSV(cpd) {
+      const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
+      if (atts.length === 0) { toast('No attendance for this session.', 'warn'); return; }
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
+      atts.slice().sort((a, b) => (toDate(a.attendedAt)?.getTime() || 0) - (toDate(b.attendedAt)?.getTime() || 0)).forEach((a, i) => {
+        const schoolT = findSchoolTeacher(a.teacherName);
+        const start = toDate(a.attendedAt);
+        const end = toDate(a.endedAt);
+        const dur = (start && end) ? Math.round((end - start) / 60000) : '';
+        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', start?.toLocaleString() || '', end?.toLocaleString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
+      });
+      const safeTitle = (cpd.title || 'session').replace(/[^a-z0-9]/gi, '_').slice(0, 40);
+      const date = (toDate(cpd.startTime) || new Date()).toISOString().slice(0, 10);
+      downloadCSV(`CPD-${safeTitle}-${date}.csv`, rows);
+      toast(`Downloaded ${atts.length} records`, 'success');
+    }
 
     /* ==================== GREETINGS ==================== */
-    const GREET_SUBLINES = {
-      morning: ['Ready to make today count?', 'Fresh day, fresh ideas.', 'A bright start makes a bright day.'],
-      lunch: ['Take a real break — you earned it.', 'Fuel up and keep going.', 'A little pause goes a long way.'],
-      afternoon: ['Keep the momentum going.', "You're doing great — keep it up.", 'One step at a time.'],
-      evening: ['Time to wind down a little.', 'Nice work today.', 'Evenings are for reflecting and recharging.'],
-      night: ['Rest well — tomorrow is another day.', 'Late-night effort noted. Rest soon.', 'Sleep is part of the process.']
-    };
     const ADMIN_SUBLINES = [
       'Thanks for leading the way — your team appreciates you.',
       'Your guidance keeps iMENA moving forward.',
@@ -527,6 +864,7 @@
     onAuthStateChanged(auth, async user => {
       if (!user) { window.location.replace('index.html'); return; }
       state.user = user;
+      document.getElementById('app').innerHTML = renderSkeleton();
       try {
         const ref = doc(db, 'users', user.uid);
         const snap = await getDoc(ref);
@@ -536,14 +874,24 @@
           updateDoc(ref, { photoURL: user.photoURL }).catch(() => {});
           state.profile.photoURL = user.photoURL;
         }
-      } catch (err) {
-        console.error('[profile]', err); window.location.replace('index.html'); return;
-      }
+      } catch (err) { console.error('[profile]', err); window.location.replace('index.html'); return; }
       if (state.profile.role !== 'admin') { window.location.replace('teacher.html'); return; }
       state.loading = false;
-      if (!bgEngine.active) bgEngine.init();
       goAdmin();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (window.requestIdleCallback) requestIdleCallback(() => bgEngine.init(), { timeout: 1500 });
+          else setTimeout(() => bgEngine.init(), 200);
+        });
+      });
     });
+
+    function renderSkeleton() {
+      return `${headerHtmlSkeleton()}<main class="main"><div class="skeleton skel-header"></div><div class="skeleton skel-card" style="height:64px"></div><div class="a-stat-grid"><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div></div><div class="skeleton skel-line" style="width:40%"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div></main>`;
+    }
+    function headerHtmlSkeleton() {
+      return `<header class="header"><div class="header-left"><div class="skeleton" style="width:34px;height:34px;border-radius:8px"></div><div class="skeleton" style="width:140px;height:20px;border-radius:6px"></div></div></header>`;
+    }
 
     /* ==================== HEADER ==================== */
     function headerHtml() {
@@ -590,17 +938,21 @@
       if (btnLogout) btnLogout.onclick = () => { if (confirm(t('msg_sign_out'))) signOut(auth); };
     }
 
-    /* ==================== ADMIN ==================== */
+    /* ==================== ROUTER ==================== */
+    function handleDataUpdate() {
+      if (state.view === 'admin' && state.adminTab !== 'new_cpd') renderAdmin();
+      else if (state.view === 'teacher-detail') renderTeacherDetail();
+      else if (state.view === 'cpd-detail') renderCpdDetail();
+    }
+
     function goAdmin() {
       state.view = 'admin';
+      state.teacherDetailName = null;
       if (!state.subCpds) state.subCpds = onSnapshot(collection(db, 'cpds'),
-        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (state.view === 'admin') renderAdmin(); },
+        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); handleDataUpdate(); },
         err => console.error(err));
       if (!state.subAllAtt) state.subAllAtt = onSnapshot(collection(db, 'attendance'),
-        snap => {
-          state.allAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          if (state.view === 'admin' && state.adminTab !== 'new_cpd') renderAdmin();
-        },
+        snap => { state.allAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); handleDataUpdate(); },
         err => console.error(err));
       renderAdmin();
     }
@@ -608,6 +960,7 @@
     function adminTabBar() {
       const tabs = [
         { id: 'overview', icon: '<path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>' },
+        { id: 'teachers', icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>' },
         { id: 'sessions', icon: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>' },
         { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
         { id: 'new_cpd', icon: '<path d="M12 5v14M5 12h14"/>' }
@@ -620,8 +973,10 @@
       if (state.adminTab === 'sessions') body = renderAdminSessions();
       else if (state.adminTab === 'calendar') body = renderAdminCalendar();
       else if (state.adminTab === 'new_cpd') body = renderAdminNew();
+      else if (state.adminTab === 'teachers') body = renderAdminTeachers();
       else body = renderAdminOverview();
-      document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">${body}</main>${state.adminTab === 'new_cpd' ? '' : adminTabBar()}`;
+      const mainClass = state.adminTab === 'teachers' ? 'main main-wide' : 'main';
+      document.getElementById('app').innerHTML = `${headerHtml()}<main class="${mainClass}">${body}</main>${state.adminTab === 'new_cpd' ? '' : adminTabBar()}`;
       bindHeaderEvents();
       document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => { state.adminTab = b.dataset.atab; state.calSelectedDay = null; renderAdmin(); });
       const btnTopNew = document.getElementById('btn-top-new');
@@ -643,6 +998,7 @@
         state.calMonth = m; state.calYear = y; state.calSelectedDay = null;
         renderAdmin();
       });
+      if (state.adminTab === 'teachers') bindTeachersEvents();
       if (state.adminTab === 'new_cpd') bindAdminNewEvents();
     }
 
@@ -663,19 +1019,16 @@
           nextStr = diffH > 0 ? `${diffH}h ${diffM}m` : `${diffM}m`;
         }
       }
-
       const ongoingCards = ongoing.map(c => `
         <div class="a-session-card"><div class="row">
           <div style="flex:1;min-width:0"><div><span class="badge badge-live">● ${t('live')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtTime(c.startTime)} – ${fmtTime(c.endTime)} · ${escapeHtml(c.venueName)}</p></div>
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
         </div></div>`).join('');
-
       const upcomingCards = upcoming.slice(0, 4).map(c => `
         <div class="a-session-card"><div class="row">
           <div style="flex:1;min-width:0"><div><span class="badge badge-upcoming">${t('upcoming')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
         </div></div>`).join('');
-
       const endedList = list.filter(c => cpdStatus(c) === 'ended').sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0)).slice(0, 4);
       const endedCards = endedList.map(c => {
         const atts = state.allAttendances.filter(a => a.cpdId === c.id);
@@ -689,7 +1042,6 @@
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
         </div></div>`;
       }).join('');
-
       return `
         ${greetingCardHtml()}
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -709,6 +1061,246 @@
       `;
     }
 
+    /* ==================== TEACHERS TAB — 3-COLUMN BY LEVEL ==================== */
+    function renderAdminTeachers() {
+      const statusMap = buildTeacherStatusMap();
+      const ongoingSessions = state.cpds.filter(c => cpdStatus(c) === 'ongoing');
+
+      let globalInCpd = 0, globalInSchool = 0;
+      const byCatInCpd = { Nursery: 0, Primary: 0, Secondary: 0 };
+      const byCatTotal = { Nursery: 0, Primary: 0, Secondary: 0 };
+      SCHOOL_TEACHERS.forEach(t => {
+        byCatTotal[t.category]++;
+        const entry = statusMap.get(normalizeName(t.name));
+        if (entry?.active) { globalInCpd++; byCatInCpd[t.category]++; }
+        else globalInSchool++;
+      });
+
+      const ongoingBanner = ongoingSessions.length > 0 ? `
+        <div class="ongoing-banner">
+          <div class="pulse"></div>
+          <div class="info">
+            <h4>${escapeHtml(ongoingSessions[0].title)}</h4>
+            <p>${fmtTime(ongoingSessions[0].startTime)} – ${fmtTime(ongoingSessions[0].endTime)} · ${escapeHtml(ongoingSessions[0].venueName)}</p>
+          </div>
+          <div style="font-size:20px;font-weight:900;color:#34d399">${globalInCpd}</div>
+        </div>` : '';
+
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('teachers_title')}</h1>
+        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${SCHOOL_TEACHERS.length} · ${byCatTotal.Nursery} ${t('nursery')} · ${byCatTotal.Primary} ${t('primary')} · ${byCatTotal.Secondary} ${t('secondary')}</p>
+
+        ${ongoingBanner}
+
+        <div class="t-stats">
+          <div class="t-stat live"><div class="val">${globalInCpd}</div><div class="lbl">${t('stat_in_cpd')}</div></div>
+          <div class="t-stat"><div class="val">${globalInSchool}</div><div class="lbl">${t('stat_in_school')}</div></div>
+          <div class="t-stat"><div class="val" style="color:#f472b6">${byCatInCpd.Nursery}/${byCatTotal.Nursery}</div><div class="lbl">${t('nursery')}</div></div>
+          <div class="t-stat"><div class="val" style="color:#c4b5fd">${byCatInCpd.Primary}/${byCatTotal.Primary}</div><div class="lbl">${t('primary')}</div></div>
+        </div>
+
+        <div class="csv-btn-row">
+          <button class="csv-btn" id="btn-csv-current">📥 ${t('download_current')}</button>
+          <button class="csv-btn warn" id="btn-csv-history">📥 ${t('download_history')}</button>
+        </div>
+
+        <div class="cat-filter-row">
+          <button class="cat-filter ${state.teacherCatFilter === 'all' ? 'active' : ''}" data-catfilter="all">${t('all_categories')} · ${SCHOOL_TEACHERS.length}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'nursery' ? 'active' : ''}" data-catfilter="nursery">${t('nursery')} · ${byCatTotal.Nursery}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'primary' ? 'active' : ''}" data-catfilter="primary">${t('primary')} · ${byCatTotal.Primary}</button>
+          <button class="cat-filter ${state.teacherCatFilter === 'secondary' ? 'active' : ''}" data-catfilter="secondary">${t('secondary')} · ${byCatTotal.Secondary}</button>
+        </div>
+
+        <input type="search" class="teacher-search" id="teacher-search" placeholder="${escapeHtml(t('search_teacher_placeholder'))}" value="${escapeHtml(state.teacherSearch)}" />
+
+        <div class="teacher-columns" id="teacher-lists">
+          ${renderTeacherColumns(statusMap)}
+        </div>
+      `;
+    }
+
+    function renderTeacherColumns(statusMap) {
+      const catFilter = state.teacherCatFilter;
+      const search = state.teacherSearch.toLowerCase().trim();
+      const byCat = { Nursery: [], Primary: [], Secondary: [] };
+      SCHOOL_TEACHERS.forEach(t => {
+        if (catFilter !== 'all' && t.category.toLowerCase() !== catFilter) return;
+        if (search && !t.name.toLowerCase().includes(search)) return;
+        const entry = statusMap.get(normalizeName(t.name)) || { active: null, totalRecords: 0, lastAttended: null };
+        byCat[t.category].push({ teacher: t, entry });
+      });
+
+      return CATEGORIES.map(cat => {
+        const items = byCat[cat];
+        const inCpdCount = items.filter(x => x.entry?.active).length;
+        const catClass = cat.toLowerCase();
+        return `
+          <div class="teacher-column">
+            <div class="tc-head">
+              <h3 style="color:${CAT_COLOR[cat]}">${t(catClass)}</h3>
+              <span class="cnt">${inCpdCount}/${items.length}</span>
+            </div>
+            ${items.length === 0
+              ? `<div class="cat-empty">${t('no_teachers_match')}</div>`
+              : items.map(x => teacherRowHtml(x, !!x.entry?.active)).join('')}
+          </div>`;
+      }).join('');
+    }
+
+    function teacherRowHtml(item, isLive) {
+      const { teacher, entry } = item;
+      const initials = initialsOf(teacher.name);
+      const genderStr = teacher.gender === 'MALE' ? t('male') : t('female');
+      const total = entry?.totalRecords || 0;
+      let statsLine = '';
+      if (total > 0) statsLine = `${total} ${t('cpds_label')} · ${t('last_label')}: ${timeAgo(entry.lastAttended)}`;
+      else statsLine = t('never_label');
+      return `
+        <div class="teacher-row ${isLive ? 'live' : ''}" data-teacher="${escapeHtml(teacher.name)}">
+          <span class="status-dot ${isLive ? 'in-cpd' : 'not-in-cpd'}" title="${isLive ? t('in_cpd_label') : t('not_in_cpd_label')}"></span>
+          <div class="teacher-avatar">${initials}</div>
+          <div class="teacher-info">
+            <div class="teacher-name">${escapeHtml(teacher.name)}</div>
+            <div class="teacher-stats-line">${genderStr} · ${statsLine}</div>
+          </div>
+        </div>`;
+    }
+
+    function bindTeachersEvents() {
+      const btnCur = document.getElementById('btn-csv-current');
+      const btnHist = document.getElementById('btn-csv-history');
+      if (btnCur) btnCur.onclick = () => downloadCurrentCpdCSV();
+      if (btnHist) btnHist.onclick = () => downloadHistoricCSV();
+      document.querySelectorAll('[data-catfilter]').forEach(b => {
+        b.onclick = () => { state.teacherCatFilter = b.dataset.catfilter; renderAdmin(); };
+      });
+      const searchInput = document.getElementById('teacher-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          state.teacherSearch = e.target.value;
+          updateTeacherListsOnly();
+        });
+      }
+      // Delegated click → teacher detail (survives innerHTML swaps)
+      const lists = document.getElementById('teacher-lists');
+      if (lists) {
+        lists.onclick = (e) => {
+          const row = e.target.closest('[data-teacher]');
+          if (row) goTeacherDetail(row.dataset.teacher);
+        };
+      }
+    }
+
+    function updateTeacherListsOnly() {
+      const container = document.getElementById('teacher-lists');
+      if (!container) return;
+      container.innerHTML = renderTeacherColumns(buildTeacherStatusMap());
+    }
+
+    /* ==================== TEACHER DETAIL — FULL REPORT ==================== */
+    function goTeacherDetail(name) {
+      state.view = 'teacher-detail';
+      state.teacherDetailName = name;
+      renderTeacherDetail();
+    }
+
+    function renderTeacherDetail() {
+      const name = state.teacherDetailName;
+      const teacher = SCHOOL_TEACHERS.find(t => normalizeName(t.name) === normalizeName(name));
+      if (!teacher) { state.view = 'admin'; state.adminTab = 'teachers'; renderAdmin(); return; }
+
+      const myAtts = state.allAttendances.filter(a => normalizeName(a.teacherName) === normalizeName(name));
+      const sorted = myAtts.slice().sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0));
+      const active = sorted.find(a => a.state === 'active');
+      const ended = sorted.filter(a => a.state === 'ended');
+      const verifiedCount = ended.filter(a => a.verified).length;
+      const totalMinutes = ended.reduce((s, a) => {
+        const start = toDate(a.attendedAt)?.getTime();
+        const end = toDate(a.endedAt)?.getTime();
+        if (start && end) return s + Math.max(0, (end - start) / 60000);
+        return s;
+      }, 0);
+      const totalHours = (totalMinutes / 60).toFixed(1);
+      const verifiedRate = ended.length > 0 ? Math.round(verifiedCount / ended.length * 100) : 0;
+      const now = new Date();
+      const thisMonth = sorted.filter(a => {
+        const ts = toDate(a.attendedAt)?.getTime();
+        return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      }).length;
+
+      const catClass = teacher.category.toLowerCase();
+      const catColor = CAT_COLOR[teacher.category];
+      const genderStr = teacher.gender === 'MALE' ? t('male') : t('female');
+
+      // Group history by month
+      const groups = {};
+      sorted.forEach(a => {
+        const d = toDate(a.attendedAt);
+        if (!d) return;
+        const key = d.toLocaleString('en', { month: 'long', year: 'numeric' });
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(a);
+      });
+
+      const historyHtml = sorted.length === 0
+        ? `<div class="empty"><strong>${t('no_sessions_yet')}</strong></div>`
+        : Object.entries(groups).map(([month, list]) => `
+            <div class="hist-month">${month}</div>
+            ${list.map(a => {
+              const start = toDate(a.attendedAt)?.getTime();
+              const end = toDate(a.endedAt)?.getTime();
+              const mins = (start && end) ? Math.round((end - start) / 60000) : 0;
+              const durStr = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
+              const badge = a.state === 'active'
+                ? `<span class="badge badge-live">${t('live')}</span>`
+                : a.verified
+                  ? `<span class="badge badge-verified">✓ ${t('verified')}</span>`
+                  : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+              return `<div class="hist-item">
+                <div class="hist-info">
+                  <h4>${escapeHtml(a.cpdTitle || '—')}</h4>
+                  <p>${fmtDate(a.attendedAt)} · ${fmtTime(a.attendedAt)}${a.endedAt ? ` → ${fmtTime(a.endedAt)} · ${durStr}` : ''}</p>
+                </div>
+                ${badge}
+              </div>`;
+            }).join('')}
+          `).join('');
+
+      document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">
+        <button id="btn-back-teacher" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back_to_teachers')}</button>
+
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#00ffcc,#0088ff);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#0a0f1e;box-shadow:0 8px 30px rgba(0,255,204,0.3)">${initialsOf(teacher.name)}</div>
+          <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;word-break:break-word">${escapeHtml(teacher.name)}</h1>
+          <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em;background:rgba(255,255,255,0.08);color:${catColor};border:1px solid ${catColor}55">${teacher.category}</span>
+            <span style="font-size:13px;color:#94a3b8">${genderStr}</span>
+          </div>
+        </div>
+
+        ${active ? `<div class="ongoing-banner"><div class="pulse"></div><div class="info"><h4>${escapeHtml(active.cpdTitle)}</h4><p>${t('in_cpd_label')} · ${fmtTime(active.attendedAt)}</p></div></div>` : ''}
+
+        <div class="td-stats">
+          <div class="td-stat"><div class="val">${sorted.length}</div><div class="lbl">${t('total_cpds')}</div></div>
+          <div class="td-stat"><div class="val" style="color:#38bdf8">${totalHours}h</div><div class="lbl">${t('total_hours')}</div></div>
+          <div class="td-stat"><div class="val" style="color:#10b981">${verifiedRate}%</div><div class="lbl">${t('verified_pct')}</div></div>
+          <div class="td-stat"><div class="val" style="color:#fbbf24">${thisMonth}</div><div class="lbl">${t('this_month')}</div></div>
+        </div>
+
+        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:24px 0 12px;padding-left:4px">${t('sessions_history')}</h3>
+        ${historyHtml}
+      </main>`;
+
+      bindHeaderEvents();
+      document.getElementById('btn-back-teacher').onclick = () => {
+        state.view = 'admin';
+        state.teacherDetailName = null;
+        state.adminTab = 'teachers';
+        renderAdmin();
+      };
+    }
+
+    /* ==================== SESSIONS ==================== */
     function renderAdminSessions() {
       const filter = state.adminSessionFilter;
       const list = [...state.cpds].sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0));
@@ -733,6 +1325,7 @@
       `;
     }
 
+    /* ==================== CALENDAR ==================== */
     function renderAdminCalendar() {
       const year = state.calYear, month = state.calMonth;
       const firstDay = new Date(year, month, 1);
@@ -779,15 +1372,10 @@
         <div class="cal-wrap">
           <div class="cal-header"><div class="cal-title">${monthName}</div><div class="cal-nav"><button data-calnav="-1">‹</button><button data-calnav="1">›</button></div></div>
           <div class="cal-grid">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow">${d}</div>`).join('')}${grid}</div>
-          <div class="cal-legend">
-            <span><i class="dot-ended"></i> ${t('ended')}</span>
-            <span><i class="dot-live"></i> ${t('live')}</span>
-            <span><i class="dot-upcoming"></i> ${t('upcoming')}</span>
-          </div>
+          <div class="cal-legend"><span><i class="dot-ended"></i> ${t('ended')}</span><span><i class="dot-live"></i> ${t('live')}</span><span><i class="dot-upcoming"></i> ${t('upcoming')}</span></div>
         </div>
         ${dayDetail}`;
     }
-
     function adminSessionDayCard(cpd) {
       const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
       const total = atts.length;
@@ -805,6 +1393,7 @@
       </div></div>`;
     }
 
+    /* ==================== NEW CPD ==================== */
     function renderAdminNew() {
       const now = new Date(); now.setSeconds(0, 0); now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5);
       const startStr = toLocalInputValue(now);
@@ -949,7 +1538,7 @@
       };
     }
 
-    /* ==================== SESSION DETAIL ==================== */
+    /* ==================== CPD DETAIL (MAP FIRST) ==================== */
     function goCpdDetail(cpdId) {
       state.view = 'cpd-detail'; state.selectedCpdId = cpdId;
       state.selectedCpd = null; state.cpdAttendances = [];
@@ -968,46 +1557,131 @@
     function renderCpdDetail() {
       const cpd = state.selectedCpd;
       if (!cpd) return;
-      const rows = state.cpdAttendances.map(a => {
-        let status = '';
-        if (!a.endedAt) status = `<span class="badge badge-live">${t('live')}</span>`;
-        else if (a.verified) status = `<span class="badge badge-verified">✓ ${t('verified')}</span>`;
-        else status = `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
-        const approveBtn = (a.state === 'ended' && !a.verified)
-          ? `<button class="btn btn-primary" style="width:auto;padding:6px 10px;font-size:11px;min-height:auto" onclick="approveAtt('${a.id}')">${t('approve')}</button>`
-          : '';
-        return `<tr>
-          <td><div class="att-name">${avatarImgTag(a.teacherPhotoURL, a.teacherName || 'User', 32)}<div style="min-width:0"><div style="color:#fff;font-size:13px;font-weight:700">${escapeHtml(a.teacherName || 'Unknown')}</div><div style="color:#94a3b8;font-size:11px">${escapeHtml(a.teacherEmail || '')}</div></div></div></td>
-          <td style="font-size:12px">${fmtTime(a.attendedAt)}</td>
-          <td style="font-size:12px">${fmtTime(a.endedAt)}</td>
-          <td>${status}</td>
-          <td>${approveBtn}</td>
-        </tr>`;
+
+      const attByKey = new Map();
+      state.cpdAttendances.forEach(a => {
+        const key = normalizeName(a.teacherName);
+        const existing = attByKey.get(key);
+        if (!existing) attByKey.set(key, a);
+        else if (a.state === 'active' && existing.state !== 'active') attByKey.set(key, a);
+      });
+
+      const inCpdList = [];
+      const notInCpdList = [];
+      SCHOOL_TEACHERS.forEach(t => {
+        const att = attByKey.get(normalizeName(t.name));
+        if (att) inCpdList.push({ teacher: t, attendance: att });
+        else notInCpdList.push({ teacher: t });
+      });
+
+      const groupByCat = (arr) => {
+        const g = { Nursery: [], Primary: [], Secondary: [] };
+        arr.forEach(item => g[item.teacher.category].push(item));
+        return g;
+      };
+      const inCpdGrouped = groupByCat(inCpdList);
+      const notInCpdGrouped = groupByCat(notInCpdList);
+      const catTotal = { Nursery: 0, Primary: 0, Secondary: 0 };
+      SCHOOL_TEACHERS.forEach(t => catTotal[t.category]++);
+
+      const colHtml = (grouped, inCpd) => CATEGORIES.map(cat => {
+        const items = grouped[cat];
+        const catClass = cat.toLowerCase();
+        const headLabel = t(catClass);
+        return `
+          <div class="cat-block">
+            <div class="cat-block-head">
+              <span class="cat-label ${catClass}">${headLabel}</span>
+              <span class="cat-count">${items.length}/${catTotal[cat]}</span>
+            </div>
+            <div class="cat-people">
+              ${items.length === 0
+                ? `<div class="cat-empty">—</div>`
+                : items.map(item => {
+                  if (inCpd) {
+                    const a = item.attendance;
+                    const liveTag = a.state === 'active' ? '· Live' : '';
+                    return `<div class="person-chip"><span class="dot"></span><span class="nm">${escapeHtml(item.teacher.name)}</span><span class="meta">${fmtTime(a.attendedAt)}${liveTag}</span></div>`;
+                  } else {
+                    return `<div class="person-chip"><span class="dot"></span><span class="nm">${escapeHtml(item.teacher.name)}</span></div>`;
+                  }
+                }).join('')}
+            </div>
+          </div>`;
       }).join('');
-      const live = state.cpdAttendances.filter(a => a.state === 'active').length;
-      const verified = state.cpdAttendances.filter(a => a.verified).length;
+
+      const colTotal = inCpdList.length + notInCpdList.length;
+      const liveCount = inCpdList.filter(x => x.attendance.state === 'active').length;
+      const verifiedCount = inCpdList.filter(x => x.attendance.verified).length;
+
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">
         <button id="btn-back-admin" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back')}</button>
-        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3)">${escapeHtml(cpd.title)}</h1>
-        <p style="font-size:13px;color:#94a3b8;margin:0 0 20px">${escapeHtml(cpd.venueName)} · ${fmtDateTime(cpd.startTime)}</p>
-        <div class="a-stat-grid">
-          <div class="a-stat"><div class="val">${state.cpdAttendances.length}</div><div class="lbl">${t('attendees')}</div></div>
-          <div class="a-stat"><div class="val" style="color:#00ffcc">${live}</div><div class="lbl">${t('live')}</div></div>
-          <div class="a-stat"><div class="val" style="color:#38bdf8">${verified}</div><div class="lbl">${t('verified')}</div></div>
-          <div class="a-stat"><div class="val" style="color:#fbbf24">${state.cpdAttendances.length - verified - live}</div><div class="lbl">${t('flagged')}</div></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3);flex:1">${escapeHtml(cpd.title)}</h1>
+          <button id="btn-export-session" class="csv-btn" style="flex-shrink:0">📥 ${t('download_this')}</button>
         </div>
+        <p style="font-size:13px;color:#94a3b8;margin:0 0 20px">${escapeHtml(cpd.venueName)} · ${fmtDateTime(cpd.startTime)}</p>
+
+        <div class="a-stat-grid">
+          <div class="a-stat"><div class="val">${inCpdList.length}/${colTotal}</div><div class="lbl">${t('in_cpd_label')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#00ffcc">${liveCount}</div><div class="lbl">${t('live')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#38bdf8">${verifiedCount}</div><div class="lbl">${t('verified')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#94a3b8">${notInCpdList.length}</div><div class="lbl">${t('not_in_cpd_label')}</div></div>
+        </div>
+
         <div class="map-card"><h3>📍 ${t('map')}</h3><div id="live-map" style="height:280px;border-radius:12px;overflow:hidden"></div></div>
+
+        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 12px;padding-left:4px;">${t('attendance_breakdown')}</h3>
+
+        <div class="cpd-split">
+          <div class="cpd-col attended">
+            <div class="cpd-col-head">
+              <h3>✓ ${t('currently_in_cpd')}</h3>
+              <span class="cnt">${inCpdList.length}/${colTotal}</span>
+            </div>
+            ${colHtml(inCpdGrouped, true)}
+          </div>
+          <div class="cpd-col not-attended">
+            <div class="cpd-col-head">
+              <h3>○ ${t('not_in_cpd_yet')}</h3>
+              <span class="cnt">${notInCpdList.length}/${colTotal}</span>
+            </div>
+            ${colHtml(notInCpdGrouped, false)}
+          </div>
+        </div>
+
         <div class="map-card"><h3>${t('record')}</h3>
           <div style="overflow-x:auto">
             <table class="detail-table">
               <thead><tr><th>${t('t_teacher')}</th><th>${t('t_attended')}</th><th>${t('t_ended')}</th><th>${t('t_status')}</th><th></th></tr></thead>
-              <tbody>${rows || `<tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">${t('no_att')}</td></tr>`}</tbody>
+              <tbody>${state.cpdAttendances.length === 0
+                ? `<tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">${t('no_att')}</td></tr>`
+                : state.cpdAttendances.map(a => {
+                  const schoolT = findSchoolTeacher(a.teacherName);
+                  let status = '';
+                  if (!a.endedAt) status = `<span class="badge badge-live">${t('live')}</span>`;
+                  else if (a.verified) status = `<span class="badge badge-verified">✓ ${t('verified')}</span>`;
+                  else status = `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+                  const approveBtn = (a.state === 'ended' && !a.verified)
+                    ? `<button class="btn btn-primary" style="width:auto;padding:6px 10px;font-size:11px;min-height:auto" onclick="approveAtt('${a.id}')">${t('approve')}</button>`
+                    : '';
+                  return `<tr>
+                    <td><div class="att-name">${avatarImgTag(a.teacherPhotoURL, a.teacherName || 'User', 32)}<div style="min-width:0"><div style="color:#fff;font-size:13px;font-weight:700">${escapeHtml(a.teacherName || 'Unknown')}</div><div style="color:#94a3b8;font-size:11px">${schoolT ? schoolT.category : escapeHtml(a.teacherEmail || '')}</div></div></div></td>
+                    <td style="font-size:12px">${fmtTime(a.attendedAt)}</td>
+                    <td style="font-size:12px">${fmtTime(a.endedAt)}</td>
+                    <td>${status}</td>
+                    <td>${approveBtn}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
             </table>
           </div>
         </div>
       </main>`;
+
       bindHeaderEvents();
-      document.getElementById('btn-back-admin').onclick = () => goAdmin();
+      document.getElementById('btn-back-admin').onclick = () => { state.view = 'admin'; goAdmin(); };
+      document.getElementById('btn-export-session').onclick = () => downloadSessionCSV(cpd);
       window.approveAtt = async (attId) => {
         try { await updateDoc(doc(db, 'attendance', attId), { verified: true }); toast('Approved.', 'success'); }
         catch (err) { toast(err.message, 'error'); }
@@ -1017,12 +1691,18 @@
 
     function updateLiveMap(cpd) {
       const el = document.getElementById('live-map'); if (!el) return;
-      if (state.liveMap) { try { state.liveMap.remove(); } catch {} state.liveMap = null; }
-      const map = L.map(el, { zoomControl: false }).setView([cpd.venueLat, cpd.venueLng], 17);
-      addSatelliteBase(map);
-      L.circle([cpd.venueLat, cpd.venueLng], { radius: cpd.radiusMeters, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.15, weight: 2 }).addTo(map);
-      const venueIcon = L.divIcon({ className: '', html: `<div style="background:#00ffcc;width:24px;height:24px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [24,24], iconAnchor: [12,12] });
-      L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(map);
+      if (state.liveMap && state.liveMapCpdId === cpd.id && document.body.contains(state.liveMap.getContainer())) {
+        state.liveMap.eachLayer(layer => { if (layer instanceof L.Marker && layer._isTeacherMarker) state.liveMap.removeLayer(layer); });
+      } else {
+        if (state.liveMap) { try { state.liveMap.remove(); } catch {} }
+        state.liveMap = L.map(el, { zoomControl: false }).setView([cpd.venueLat, cpd.venueLng], 17);
+        addSatelliteBase(state.liveMap);
+        L.circle([cpd.venueLat, cpd.venueLng], { radius: cpd.radiusMeters, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.15, weight: 2 }).addTo(state.liveMap);
+        const venueIcon = L.divIcon({ className: '', html: `<div style="background:#00ffcc;width:24px;height:24px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [24,24], iconAnchor: [12,12] });
+        L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(state.liveMap);
+        state.liveMapCpdId = cpd.id;
+        setTimeout(() => state.liveMap.invalidateSize(), 100);
+      }
       state.cpdAttendances.forEach(a => {
         let lat, lng, color;
         if (a.state === 'active' && a.liveLat != null) { lat = a.liveLat; lng = a.liveLng; color = '#10b981'; }
@@ -1030,10 +1710,9 @@
         else if (a.attendedLat != null) { lat = a.attendedLat; lng = a.attendedLng; color = '#ef4444'; }
         else return;
         const icon = L.divIcon({ className: '', html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [16,16], iconAnchor: [8,8] });
-        L.marker([lat, lng], { icon }).addTo(map);
+        const marker = L.marker([lat, lng], { icon }).addTo(state.liveMap);
+        marker._isTeacherMarker = true;
       });
-      state.liveMap = map;
-      setTimeout(() => map.invalidateSize(), 100);
     }
 
     /* ==================== BOOT ==================== */
