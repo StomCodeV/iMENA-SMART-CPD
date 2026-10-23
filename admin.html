@@ -312,6 +312,10 @@
     .daily-row .daily-times { font-size: 10.5px; color: #94a3b8; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; gap: 8px;}
     .daily-row .daily-times strong { color: #cbd5e1; font-weight: 700; }
     .daily-row .daily-badges { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    
+    /* PHOTO THUMBNAIL STYLES */
+    .photo-thumb { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--cyan); cursor: pointer; flex-shrink: 0; }
+    .photo-thumb:hover { transform: scale(1.1); }
 
     /* ✅ NEW: touch-friendly per-teacher action buttons (Edit + Delete) */
     .teacher-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: auto; padding-left: 4px; }
@@ -344,7 +348,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
     import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, onSnapshot, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch, onSnapshot, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
@@ -448,10 +452,11 @@
       user: null, profile: null, view: 'boot', lang: 'en',
       adminTab: 'overview', adminSessionFilter: 'all',
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
-      cpds: [], allAttendances: [], teachers: [],
-      dailyDate: todayKeyInit, dailyRecords: [],
+      cpds: [], allAttendances: [], teachers: [], dailyRecords: [],
+      settings: { startTime: '08:00', endTime: '17:00' },
       subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null, subTeachers: null,
-      subDaily: null, subDailyDate: null,
+      subDaily: null, subSettings: null,
+      dailyDate: todayKeyInit,
       selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
       liveMap: null, liveMapCpdId: null,
       teacherSearch: '', teacherCatFilter: 'all',
@@ -476,7 +481,7 @@
         stat_live_now: 'Live Now', stat_next_session: 'Next Session',
         open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
         create_title: 'Plan a Session', create_sub: 'Just fill the title — everything else has sensible defaults.',
-        form_title: 'Title *', form_theme: 'Theme', form_start: 'Start Time *', form_end: 'End Time *',
+        form_title: 'Title *', form_theme: 'Theme', form_start: 'Start Time *', form_end: 'End Time *', form_facilitator: 'Facilitator',
         form_venue: 'Venue', form_map: 'Location & Map',
         btn_create: 'Create Session', btn_creating: 'Creating...',
         attendees: 'Attendees', record: 'Attendance Record', map: 'Map',
@@ -503,27 +508,25 @@
         verified_pct: 'Verified %', this_month: 'This Month',
         sessions_history: 'Sessions History', no_sessions_yet: 'No sessions attended yet',
         back_to_teachers: 'Back to Teachers',
-        daily_title: 'Daily Attendance',
-        daily_sub: 'Track teacher sign-in and sign-out for each school day',
-        daily_today: 'Today',
-        daily_prev: 'Previous day', daily_next: 'Next day',
+        daily_title: 'Daily Attendance', daily_sub: 'Track teacher sign-in and sign-out for each school day',
+        daily_today: 'Today', daily_prev: 'Previous day', daily_next: 'Next day',
         daily_in_school: 'In School', daily_signed_out: 'Signed Out', daily_not_arrived: 'Not Arrived', daily_late: 'Late',
         daily_present: 'Present', daily_missing_out: 'Missing Sign-Out', daily_absent: 'Absent',
-        daily_sign_in: 'Sign In', daily_sign_out: 'Sign Out',
-        daily_download: 'Download Day CSV',
+        daily_sign_in: 'Sign In', daily_sign_out: 'Sign Out', daily_download: 'Download Day CSV',
         daily_no_records: 'No records for this day.',
         daily_late_badge: 'Late', daily_ontime_badge: 'On Time',
         daily_stat_present: 'Present', daily_stat_absent: 'Absent',
         weekly_trend: '7-Day Attendance Trend',
-        today_status: 'Today',
-        total_staff: 'staff'
+        today_status: 'Today', total_staff: 'staff',
+        school_settings: 'School Hours Settings'
       },
       rw: {
         home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', daily: 'Buri Munsi', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
         admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
         stat_live_now: 'Kuri ubu', stat_next_session: 'Isomo rikurikira',
         open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
-        create_title: 'Tegura Isomo', create_sub: 'Uzuza umutwe gusa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Isomo', btn_creating: 'Turifungura...',
+        create_title: 'Tegura Isomo', create_sub: 'Uzuza umutwe gusa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_facilitator: 'Umuyobozi',
+        form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Isomo', btn_creating: 'Turifungura...',
         attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Isomo ryafunguwe!',
         duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Amasomo yaheruka', all_sessions: 'Amasomo yose', no_sessions_day: 'Nta masomo kuri uyu munsi',
         teachers_title: 'Abarimu · GS St Etienne', stat_in_cpd: 'Mu CPD', stat_in_school: 'Mu ishuri', all_categories: 'Bose', nursery: 'Incuke', primary: 'P1–P6', secondary: 'S1–S6', no_teachers_match: 'Nta mwarimu uhuye n\'ubushakashatsi', download_current: 'Kuramo CPD y\'ubu', download_history: 'Kuramo Amateka Yose', download_this: 'Kuramo CSV y\'isomo',
@@ -539,27 +542,25 @@
         verified_pct: 'Byemejwe %', this_month: 'Uku kwezi',
         sessions_history: 'Amateka y\'Amasomo', no_sessions_yet: 'Nta masomo yitabiriye',
         back_to_teachers: 'Subira ku Barimu',
-        daily_title: 'Kujya ku Ishuri Buri Munsi',
-        daily_sub: 'Kurikirana uko abarimu binjira bakava ku ishuri',
-        daily_today: 'Uyu munsi',
-        daily_prev: 'Umunsi ushize', daily_next: 'Umunsi utaha',
+        daily_title: 'Kujya ku Ishuri Buri Munsi', daily_sub: 'Kurikirana uko abarimu binjira bakava ku ishuri',
+        daily_today: 'Uyu munsi', daily_prev: 'Umunsi ushize', daily_next: 'Umunsi utaha',
         daily_in_school: 'Muri ishuri', daily_signed_out: 'Basohotse', daily_not_arrived: 'Bataraje', daily_late: 'Bateye',
         daily_present: 'Baje', daily_missing_out: 'Ntibasohotse', daily_absent: 'Ntabwo baje',
-        daily_sign_in: 'Kwinjira', daily_sign_out: 'Gusohoka',
-        daily_download: 'Kuramo CSV y\'umunsi',
+        daily_sign_in: 'Kwinjira', daily_sign_out: 'Gusohoka', daily_download: 'Kuramo CSV y\'umunsi',
         daily_no_records: 'Nta byanditswe kuri uyu munsi.',
         daily_late_badge: 'Yateye', daily_ontime_badge: 'Yageze ku gihe',
         daily_stat_present: 'Baje', daily_stat_absent: 'Bataje',
         weekly_trend: 'Iminsi 7 y\'ishuri',
-        today_status: 'Uyu munsi',
-        total_staff: 'abarimu'
+        today_status: 'Uyu munsi', total_staff: 'abarimu',
+        school_settings: 'Igihe Ishuri Ritangira'
       },
       fr: {
         home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', daily: 'Quotidien', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau', teachers: 'Enseignants',
         admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées',
         stat_live_now: 'En direct', stat_next_session: 'Prochaine session',
         open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver',
-        create_title: 'Créer un CPD', create_sub: 'Remplissez le titre.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...',
+        create_title: 'Créer un CPD', create_sub: 'Remplissez le titre.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_facilitator: 'Facilitateur',
+        form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...',
         attendees: 'Participants', record: 'Registre', map: 'Carte', t_teacher: 'Enseignant', t_attended: 'Arrivée', t_ended: 'Départ', t_status: 'Statut', no_att: 'Aucune présence.', msg_sign_out: 'Déconnexion ?', msg_delete: 'Supprimer ?', msg_create: 'Session créée !',
         duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', past_sessions: 'Sessions récentes', all_sessions: 'Toutes les sessions', no_sessions_day: 'Aucune session ce jour',
         teachers_title: 'Enseignants · GS St Etienne', stat_in_cpd: 'En CPD', stat_in_school: 'À l\'école', all_categories: 'Tous', nursery: 'Maternelle', primary: 'Primaire', secondary: 'Secondaire', no_teachers_match: 'Aucun enseignant ne correspond', download_current: 'Télécharger CPD actuel', download_history: 'Télécharger tout l\'historique', download_this: 'Télécharger CSV',
@@ -575,23 +576,28 @@
         verified_pct: 'Vérifié %', this_month: 'Ce mois',
         sessions_history: 'Historique des sessions', no_sessions_yet: 'Aucune session suivie',
         back_to_teachers: 'Retour aux enseignants',
-        daily_title: 'Présence Quotidienne',
-        daily_sub: 'Suivi des arrivées et départs des enseignants',
-        daily_today: 'Aujourd\'hui',
-        daily_prev: 'Jour précédent', daily_next: 'Jour suivant',
+        daily_title: 'Présence Quotidienne', daily_sub: 'Suivi des arrivées et départs des enseignants',
+        daily_today: 'Aujourd\'hui', daily_prev: 'Jour précédent', daily_next: 'Jour suivant',
         daily_in_school: 'À l\'école', daily_signed_out: 'Partis', daily_not_arrived: 'Non arrivés', daily_late: 'En retard',
         daily_present: 'Présents', daily_missing_out: 'Départ manquant', daily_absent: 'Absents',
-        daily_sign_in: 'Arrivée', daily_sign_out: 'Départ',
-        daily_download: 'Télécharger CSV du jour',
+        daily_sign_in: 'Arrivée', daily_sign_out: 'Départ', daily_download: 'Télécharger CSV du jour',
         daily_no_records: 'Aucun enregistrement pour ce jour.',
         daily_late_badge: 'Retard', daily_ontime_badge: 'À l\'heure',
         daily_stat_present: 'Présents', daily_stat_absent: 'Absents',
         weekly_trend: 'Tendance sur 7 jours',
-        today_status: 'Aujourd\'hui',
-        total_staff: 'enseignants'
+        today_status: 'Aujourd\'hui', total_staff: 'enseignants',
+        school_settings: 'Heures de l\'école'
       }
     };
     function t(k) { return (I18N[state.lang])[k] || I18N.en[k] || k; }
+
+    // Format minutes to h m (e.g., 90 -> 1h 30m)
+    function formatMins(mins) {
+      if (mins <= 0) return '0m';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
 
     /* ==================== BG ENGINE ==================== */
     const bgEngine = {
@@ -871,14 +877,15 @@
     }
     function downloadCurrentCpdCSV() {
       const statusMap = buildTeacherStatusMap();
-      const rows = [['#', 'Teacher', 'Gender', 'Category', 'CPD Title', 'Attended At', 'Distance (m)', 'Verified']];
+      const rows = [['#', 'Teacher', 'Gender', 'Category', 'CPD Title', 'Facilitator', 'Attended At', 'Distance (m)', 'Verified']];
       let n = 0;
       (state.teachers || []).forEach(tc => {
         const entry = statusMap.get(normalizeName(tc.name));
         if (entry?.active) {
           n++;
           const a = entry.active;
-          rows.push([n, tc.name, tc.gender, tc.category, a.cpdTitle || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
+          const cpd = state.cpds.find(c => c.id === a.cpdId);
+          rows.push([n, tc.name, tc.gender, tc.category, a.cpdTitle || '', cpd?.facilitator || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
         }
       });
       if (n === 0) { toast('No teachers currently in CPD.', 'warn'); return; }
@@ -888,13 +895,14 @@
     }
     function downloadHistoricCSV() {
       if (state.allAttendances.length === 0) { toast('No attendance history yet.', 'warn'); return; }
-      const rows = [['#', 'Teacher', 'Email', 'Category', 'CPD Title', 'Date', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'CPD Title', 'Facilitator', 'Date', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
       state.allAttendances.slice().sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0)).forEach((a, i) => {
         const schoolT = findSchoolTeacher(a.teacherName);
+        const cpd = state.cpds.find(c => c.id === a.cpdId);
         const start = toDate(a.attendedAt);
         const end = toDate(a.endedAt);
         const dur = (start && end) ? Math.round((end - start) / 60000) : '';
-        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', a.cpdTitle || '', start?.toLocaleDateString() || '', start?.toLocaleTimeString() || '', end?.toLocaleTimeString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
+        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', a.cpdTitle || '', cpd?.facilitator || '', start?.toLocaleDateString() || '', start?.toLocaleTimeString() || '', end?.toLocaleTimeString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
       });
       const date = new Date().toISOString().slice(0, 10);
       downloadCSV(`CPD-History-${date}.csv`, rows);
@@ -902,7 +910,6 @@
     }
     function downloadSessionCSV(cpd) {
       const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
-
       const attByKey = new Map();
       atts.forEach(a => {
         const key = normalizeName(a.teacherName);
@@ -910,7 +917,7 @@
         if (!existing || (a.state === 'active' && existing.state !== 'active')) attByKey.set(key, a);
       });
 
-      const rows = [['#', 'Teacher', 'Email', 'Category', 'Status', 'Color', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Verified']];
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'Facilitator', 'Status', 'Color', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Verified']];
 
       let n = 0;
       (state.teachers || []).forEach(tc => {
@@ -921,7 +928,7 @@
         const end = toDate(a.endedAt);
         const dur = (start && end) ? Math.round((end - start) / 60000) : '';
         rows.push([
-          n, tc.name, a.teacherEmail || '', tc.category,
+          n, tc.name, a.teacherEmail || '', tc.category, cpd.facilitator || '',
           'Attended', 'Green',
           start?.toLocaleString() || '', end?.toLocaleString() || '', dur,
           a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '',
@@ -934,20 +941,14 @@
         if (attByKey.has(normalizeName(tc.name))) return;
         absentCount++;
         n++;
-        rows.push([
-          n, tc.name, '', tc.category,
-          'Did Not Attend', 'Red',
-          '', '', '', '', ''
-        ]);
+        rows.push([n, tc.name, '', tc.category, cpd.facilitator || '', 'Did Not Attend', 'Red', '', '', '', '', '']);
       });
 
-      const attendedCount = atts.length;
-      if (attendedCount === 0 && absentCount === 0) { toast('No teachers to export.', 'warn'); return; }
-
+      if (n === 0) { toast('No teachers to export.', 'warn'); return; }
       const safeTitle = (cpd.title || 'session').replace(/[^a-z0-9]/gi, '_').slice(0, 40);
       const date = (toDate(cpd.startTime) || new Date()).toISOString().slice(0, 10);
       downloadCSV(`CPD-${safeTitle}-${date}.csv`, rows);
-      toast(`Downloaded ${attendedCount} attended, ${absentCount} absent`, 'success');
+      toast(`Downloaded ${n} records`, 'success');
     }
     function downloadDailyCSV() {
       const date = state.dailyDate;
@@ -955,7 +956,7 @@
       const recByKey = new Map();
       dayRecords.forEach(r => recByKey.set(normalizeName(r.teacherName), r));
 
-      const rows = [['#', 'Teacher', 'Category', 'Date', 'Sign In', 'Sign Out', 'Status', 'Color', 'Late (m)', 'Early Leave (m)', 'In Dist (m)', 'Out Dist (m)', 'Verified']];
+      const rows = [['#', 'Teacher', 'Category', 'Date', 'Sign In', 'Sign Out', 'Status', 'Color', 'Late (min)', 'Early Leave (min)', 'In Dist (m)', 'Out Dist (m)', 'Verified']];
 
       let n = 0;
       (state.teachers || []).forEach(tc => {
@@ -964,18 +965,14 @@
         n++;
         const signIn = toDate(r.signInAt);
         const signOut = toDate(r.signOutAt);
-
         let status;
         if (r.state === 'in') status = r.lateMinutes > 0 ? 'In School (Late)' : 'In School';
         else status = r.lateMinutes > 0 ? 'Signed Out (Late)' : 'Signed Out';
-
-        rows.push([
-          n, tc.name, tc.category, date,
+        rows.push([n, tc.name, tc.category, date,
           signIn?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '',
           signOut?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '',
-          status, 'Green',
-          r.lateMinutes > 0 ? r.lateMinutes : '0',
-          r.earlyLeaveMinutes > 0 ? r.earlyLeaveMinutes : '0',
+          status, 'Green', r.lateMinutes > 0 ? formatMins(r.lateMinutes) : '0',
+          r.earlyLeaveMinutes > 0 ? formatMins(r.earlyLeaveMinutes) : '0',
           r.signInDistanceMeters != null ? r.signInDistanceMeters.toFixed(0) : '',
           r.signOutDistanceMeters != null ? r.signOutDistanceMeters.toFixed(0) : '',
           r.verified ? 'Yes' : 'No'
@@ -987,16 +984,12 @@
         if (recByKey.has(normalizeName(tc.name))) return;
         absent++;
         n++;
-        rows.push([
-          n, tc.name, tc.category, date,
-          '', '', 'Absent', 'Red', '', '', '', '', ''
-        ]);
+        rows.push([n, tc.name, tc.category, date, '', '', 'Absent', 'Red', '', '', '', '', '']);
       });
 
-      const present = n - absent;
       if (n === 0) { toast('No teachers to export.', 'warn'); return; }
       downloadCSV(`Daily-Attendance-${date}.csv`, rows);
-      toast(`Downloaded ${present} present, ${absent} absent`, 'success');
+      toast(`Downloaded ${n} records`, 'success');
     }
 
     /* ==================== GREETINGS ==================== */
@@ -1130,6 +1123,13 @@
       if (!state.subTeachers) state.subTeachers = onSnapshot(collection(db, 'teachers'),
         snap => { state.teachers = snap.docs.map(d => ({ id: d.id, ...d.data() })); handleDataUpdate(); },
         err => console.error(err));
+      if (!state.subSettings) state.subSettings = onSnapshot(doc(db, 'settings', 'attendance'), snap => {
+        if (snap.exists()) {
+          const d = snap.data();
+          state.settings = { startTime: d.startTime || '08:00', endTime: d.endTime || '17:00' };
+        }
+        handleDataUpdate();
+      });
       renderAdmin();
     }
 
@@ -1283,31 +1283,18 @@
       const last7Days = Array.from({length: 7}, (_, i) => shiftDateKey(todayKey, i - 6));
       const chartData = last7Days.map(d => {
         const dayRecs = state.dailyRecords.filter(r => r.date === d && r.signInAt);
-        return {
-          date: d,
-          label: new Date(d + 'T00:00:00').toLocaleDateString([], { weekday: 'short' }),
-          count: dayRecs.length
-        };
+        return { date: d, label: new Date(d + 'T00:00:00').toLocaleDateString([], { weekday: 'short' }), count: dayRecs.length };
       });
       const maxChartVal = Math.max(...chartData.map(d => d.count), 1);
 
       const chartHtml = `
         <div class="chart-card">
-          <div class="chart-title">
-            <span>${t('weekly_trend')}</span>
-            <span style="color:#00ffcc">${(state.teachers||[]).length} ${t('total_staff')}</span>
-          </div>
+          <div class="chart-title"><span>${t('weekly_trend')}</span><span style="color:#00ffcc">${(state.teachers||[]).length} ${t('total_staff')}</span></div>
           <div class="chart-bars">
             ${chartData.map(d => {
               const heightPct = (d.count / maxChartVal) * 100;
               const isActive = d.date === date;
-              return `
-                <div class="chart-col">
-                  <div class="chart-val">${d.count}</div>
-                  <div class="chart-bar ${isActive ? 'active' : ''}" style="height: ${Math.max(heightPct, 4)}%"></div>
-                  <div class="chart-label" style="${isActive ? 'color:#00ffcc' : ''}">${d.label}</div>
-                </div>
-              `;
+              return `<div class="chart-col"><div class="chart-val">${d.count}</div><div class="chart-bar ${isActive ? 'active' : ''}" style="height: ${Math.max(heightPct, 4)}%"></div><div class="chart-label" style="${isActive ? 'color:#00ffcc' : ''}">${d.label}</div></div>`;
             }).join('')}
           </div>
         </div>
@@ -1339,6 +1326,7 @@
         let statusClass = 'absent';
         let badgeHtml = `<span class="badge badge-absent">${t('daily_absent')}</span>`;
         let timesLine = '';
+        let photoIn = '', photoOut = '';
 
         if (record && record.signInAt) {
           const signIn = toDate(record.signInAt);
@@ -1346,25 +1334,19 @@
           const isLate = record.lateMinutes > 0;
           const isEarly = record.earlyLeaveMinutes > 0;
 
+          if (record.selfieIn) photoIn = `<img src="${record.selfieIn}" class="photo-thumb" title="Arrival Selfie" onclick="showFullPhoto('${record.selfieIn}')" />`;
+          if (record.selfieOut) photoOut = `<img src="${record.selfieOut}" class="photo-thumb" title="Departure Selfie" onclick="showFullPhoto('${record.selfieOut}')" />`;
+
           timesLine = `<span><strong>In:</strong> ${signIn ? signIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</span>`;
-          if (signOut) {
-            timesLine += `<span><strong>Out:</strong> ${signOut.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
-          }
+          if (signOut) timesLine += `<span><strong>Out:</strong> ${signOut.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
 
           if (record.state === 'in') {
-            if (isPast) {
-              statusClass = 'missing-out';
-              badgeHtml = `<span class="badge badge-missing">${t('daily_missing_out')}</span>`;
-            } else {
-              statusClass = 'in-school';
-              badgeHtml = `<span class="badge badge-live">● ${t('daily_in_school')}</span>`;
-            }
-          } else {
-            statusClass = 'signed-out';
-            badgeHtml = `<span class="badge badge-out">${t('daily_signed_out')}</span>`;
-          }
-          if (isLate) badgeHtml += `<span class="badge badge-late">Late ${record.lateMinutes}m</span>`;
-          if (isEarly) badgeHtml += `<span class="badge badge-absent">Early ${record.earlyLeaveMinutes}m</span>`;
+            if (isPast) { statusClass = 'missing-out'; badgeHtml = `<span class="badge badge-missing">${t('daily_missing_out')}</span>`; }
+            else { statusClass = 'in-school'; badgeHtml = `<span class="badge badge-live">● ${t('daily_in_school')}</span>`; }
+          } else { statusClass = 'signed-out'; badgeHtml = `<span class="badge badge-out">${t('daily_signed_out')}</span>`; }
+          
+          if (isLate) badgeHtml += `<span class="badge badge-late">Late ${formatMins(record.lateMinutes)}</span>`;
+          if (isEarly) badgeHtml += `<span class="badge badge-absent">Early ${formatMins(record.earlyLeaveMinutes)}</span>`;
         }
 
         return `<div class="daily-row ${statusClass}">
@@ -1373,7 +1355,10 @@
             <div class="daily-name">${escapeHtml(teacher.name)}</div>
             <div class="daily-times">${timesLine || 'No check-in'}</div>
           </div>
-          <div class="daily-badges">${badgeHtml}</div>
+          <div class="daily-badges">
+            ${photoIn} ${photoOut}
+            ${badgeHtml}
+          </div>
         </div>`;
       };
 
@@ -1381,17 +1366,19 @@
         const items = groups[cat] || [];
         const presentInCat = items.filter(x => x.record && x.record.signInAt).length;
         return `<div class="teacher-column">
-          <div class="tc-head">
-            <h3 style="color:${CAT_COLOR[cat]}">${t(cat.toLowerCase())}</h3>
-            <span class="cnt">${presentInCat}/${items.length}</span>
-          </div>
+          <div class="tc-head"><h3 style="color:${CAT_COLOR[cat]}">${t(cat.toLowerCase())}</h3><span class="cnt">${presentInCat}/${items.length}</span></div>
           ${items.length === 0 ? `<div class="empty" style="border:none;background:transparent;padding:10px;">No teachers</div>` : items.map(renderRow).join('')}
         </div>`;
       }).join('');
 
       return `
-        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('daily_title')}</h1>
-        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${t('daily_sub')}</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('daily_title')}</h1>
+            <p style="font-size:12px;color:#94a3b8;margin:0">${t('daily_sub')}</p>
+          </div>
+          <button id="btn-edit-settings" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">⚙️ ${t('school_settings')}</button>
+        </div>
 
         ${chartHtml}
 
@@ -1423,21 +1410,49 @@
       const today = document.getElementById('daily-today');
       const dateInput = document.getElementById('daily-date');
       const btnCsv = document.getElementById('btn-daily-csv');
+      const btnSettings = document.getElementById('btn-edit-settings');
 
       if (prev) prev.onclick = () => { state.dailyDate = shiftDateKey(state.dailyDate, -1); renderAdminDaily(); };
-      if (next) next.onclick = () => {
-        const newDate = shiftDateKey(state.dailyDate, 1);
-        if (newDate > todayLocalDateKey()) return;
-        state.dailyDate = newDate; renderAdminDaily();
-      };
+      if (next) next.onclick = () => { const newDate = shiftDateKey(state.dailyDate, 1); if (newDate > todayLocalDateKey()) return; state.dailyDate = newDate; renderAdminDaily(); };
       if (today) today.onclick = () => { state.dailyDate = todayLocalDateKey(); renderAdminDaily(); };
-      if (dateInput) dateInput.onchange = (e) => {
-        const v = e.target.value;
-        if (!v) return;
-        state.dailyDate = v > todayLocalDateKey() ? todayLocalDateKey() : v;
-        renderAdminDaily();
-      };
+      if (dateInput) dateInput.onchange = (e) => { const v = e.target.value; if (!v) return; state.dailyDate = v > todayLocalDateKey() ? todayLocalDateKey() : v; renderAdminDaily(); };
       if (btnCsv) btnCsv.onclick = () => downloadDailyCSV();
+      
+      if (btnSettings) {
+        btnSettings.onclick = () => {
+          const modal = document.createElement('div');
+          modal.className = 'profile-modal open';
+          modal.innerHTML = `
+            <div class="profile-card" style="text-align:left; max-width: 340px;">
+              <h2 style="font-size:20px;font-weight:900;margin-bottom:16px;">School Hours Settings</h2>
+              <form id="settings-form">
+                <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Official Start Time</label>
+                <input type="time" name="startTime" required class="input" style="margin-bottom:16px;" value="${state.settings.startTime}" />
+                <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Official End Time</label>
+                <input type="time" name="endTime" required class="input" style="margin-bottom:20px;" value="${state.settings.endTime}" />
+                <div style="display:flex; gap:10px;">
+                  <button type="button" class="btn btn-ghost" id="cancel-settings" style="flex:1">Cancel</button>
+                  <button type="submit" class="btn btn-primary" id="save-settings" style="flex:1">Save</button>
+                </div>
+              </form>
+            </div>`;
+          document.body.appendChild(modal);
+          modal.onclick = e => { if (e.target === modal) modal.remove(); };
+          modal.querySelector('#cancel-settings').onclick = () => modal.remove();
+          modal.querySelector('#settings-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target; const btn = modal.querySelector('#save-settings');
+            btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+              await setDoc(doc(db, 'settings', 'attendance'), {
+                startTime: form.elements.startTime.value,
+                endTime: form.elements.endTime.value
+              }, { merge: true });
+              modal.remove(); toast('School hours updated!', 'success');
+            } catch (err) { toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Save'; }
+          };
+        };
+      }
     }
 
     /* ==================== TEACHERS TAB ==================== */
@@ -1542,7 +1557,6 @@
       }).join('');
     }
 
-    /* ✅ UPDATED: teacher row now shows Edit + Delete buttons (touch-friendly) */
     function teacherRowHtml(item, isLiveCpd) {
       const { teacher, entry, daily } = item;
       const initials = initialsOf(teacher.name);
@@ -1551,16 +1565,11 @@
       let dailyBadge = '';
       let rowClass = '';
       if (daily) {
-        if (daily.state === 'in') {
-          dailyBadge = `<span class="status-dot in-school" title="In School"></span>`;
-          rowClass = 'live';
-        } else {
-          dailyBadge = `<span class="status-dot signed-out" title="Signed Out"></span>`;
-        }
+        if (daily.state === 'in') { dailyBadge = `<span class="status-dot in-school" title="In School"></span>`; rowClass = 'live'; }
+        else { dailyBadge = `<span class="status-dot signed-out" title="Signed Out"></span>`; }
       } else {
         dailyBadge = `<span class="status-dot absent" title="Absent Today"></span>`;
       }
-
       const cpdStatusDot = isLiveCpd ? `<span class="status-dot in-cpd" title="In CPD"></span>` : '';
 
       return `
@@ -1585,7 +1594,6 @@
         </div>`;
     }
 
-    /* ✅ UPDATED: edit + name-confirmed delete handlers */
     function bindTeachersEvents() {
       const btnCur = document.getElementById('btn-csv-current');
       const btnHist = document.getElementById('btn-csv-history');
@@ -1596,21 +1604,12 @@
       if (btnSeed) {
         btnSeed.onclick = async () => {
           if (!confirm('This will add all 63 default teachers. Continue?')) return;
-          btnSeed.disabled = true;
-          btnSeed.textContent = 'Seeding...';
+          btnSeed.disabled = true; btnSeed.textContent = 'Seeding...';
           try {
             const batch = writeBatch(db);
-            DEFAULT_TEACHERS.forEach(tc => {
-              const ref = doc(collection(db, 'teachers'));
-              batch.set(ref, tc);
-            });
-            await batch.commit();
-            toast('Default teachers added!', 'success');
-          } catch (err) {
-            toast(err.message, 'error');
-            btnSeed.disabled = false;
-            btnSeed.textContent = 'Seed Default Teachers';
-          }
+            DEFAULT_TEACHERS.forEach(tc => { const ref = doc(collection(db, 'teachers')); batch.set(ref, tc); });
+            await batch.commit(); toast('Default teachers added!', 'success');
+          } catch (err) { toast(err.message, 'error'); btnSeed.disabled = false; btnSeed.textContent = 'Seed Default Teachers'; }
         };
       }
 
@@ -1626,75 +1625,43 @@
                 <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Full Name</label>
                 <input name="name" required class="input" style="margin-bottom:16px;" placeholder="e.g. MUKAMANA Aline" />
                 <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Gender</label>
-                <select name="gender" class="input" style="margin-bottom:16px;">
-                  <option value="FEMALE">Female</option>
-                  <option value="MALE">Male</option>
-                </select>
+                <select name="gender" class="input" style="margin-bottom:16px;"><option value="FEMALE">Female</option><option value="MALE">Male</option></select>
                 <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Category</label>
-                <select name="category" class="input" style="margin-bottom:20px;">
-                  <option value="Nursery">Nursery</option>
-                  <option value="Primary">Primary</option>
-                  <option value="Secondary">Secondary</option>
-                </select>
-                <div style="display:flex; gap:10px;">
-                  <button type="button" class="btn btn-ghost" id="cancel-add" style="flex:1">Cancel</button>
-                  <button type="submit" class="btn btn-primary" id="save-add" style="flex:1">Save</button>
-                </div>
+                <select name="category" class="input" style="margin-bottom:20px;"><option value="Nursery">Nursery</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option></select>
+                <div style="display:flex; gap:10px;"><button type="button" class="btn btn-ghost" id="cancel-add" style="flex:1">Cancel</button><button type="submit" class="btn btn-primary" id="save-add" style="flex:1">Save</button></div>
               </form>
             </div>`;
           document.body.appendChild(modal);
           modal.onclick = e => { if (e.target === modal) modal.remove(); };
           modal.querySelector('#cancel-add').onclick = () => modal.remove();
           modal.querySelector('#add-teacher-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const btn = modal.querySelector('#save-add');
+            e.preventDefault(); const form = e.target; const btn = modal.querySelector('#save-add');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
-              await addDoc(collection(db, 'teachers'), {
-                name: form.elements.name.value.trim().toUpperCase(),
-                gender: form.elements.gender.value,
-                category: form.elements.category.value
-              });
-              modal.remove();
-              toast('Teacher added successfully', 'success');
-            } catch (err) {
-              toast(err.message, 'error');
-              btn.disabled = false; btn.textContent = 'Save';
-            }
+              await addDoc(collection(db, 'teachers'), { name: form.elements.name.value.trim().toUpperCase(), gender: form.elements.gender.value, category: form.elements.category.value });
+              modal.remove(); toast('Teacher added successfully', 'success');
+            } catch (err) { toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Save'; }
           };
         };
       }
 
-      document.querySelectorAll('[data-catfilter]').forEach(b => {
-        b.onclick = () => { state.teacherCatFilter = b.dataset.catfilter; renderAdmin(); };
-      });
+      document.querySelectorAll('[data-catfilter]').forEach(b => { b.onclick = () => { state.teacherCatFilter = b.dataset.catfilter; renderAdmin(); }; });
       const searchInput = document.getElementById('teacher-search');
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          state.teacherSearch = e.target.value;
-          updateTeacherListsOnly();
-        });
-      }
+      if (searchInput) searchInput.addEventListener('input', (e) => { state.teacherSearch = e.target.value; updateTeacherListsOnly(); });
+      
       const lists = document.getElementById('teacher-lists');
       if (lists) {
         lists.onclick = async (e) => {
           const editBtn = e.target.closest('[data-edit-teacher]');
-          if (editBtn) {
-            e.stopPropagation();
-            openEditTeacherModal(editBtn.dataset.editTeacher);
-            return;
-          }
+          if (editBtn) { e.stopPropagation(); openEditTeacherModal(editBtn.dataset.editTeacher); return; }
           const delBtn = e.target.closest('[data-del-teacher]');
           if (delBtn) {
             e.stopPropagation();
             const teacher = (state.teachers || []).find(tc => tc.id === delBtn.dataset.delTeacher);
             const teacherName = teacher ? teacher.name : 'this teacher';
             if (!confirm(`Remove ${teacherName}?\n\nTheir attendance history is preserved, but they will no longer appear in the teacher list.`)) return;
-            try {
-              await deleteDoc(doc(db, 'teachers', delBtn.dataset.delTeacher));
-              toast(`${teacherName} removed`, 'success');
-            } catch (err) { toast(err.message, 'error'); }
+            try { await deleteDoc(doc(db, 'teachers', delBtn.dataset.delTeacher)); toast(`${teacherName} removed`, 'success'); }
+            catch (err) { toast(err.message, 'error'); }
             return;
           }
           const row = e.target.closest('[data-teacher]');
@@ -1709,11 +1676,9 @@
       container.innerHTML = renderTeacherColumns(buildTeacherStatusMap(), buildTodayDailyMap());
     }
 
-    /* ✅ NEW: Edit teacher modal */
     function openEditTeacherModal(teacherId) {
       const teacher = (state.teachers || []).find(tc => tc.id === teacherId);
       if (!teacher) { toast('Teacher not found.', 'error'); return; }
-
       const modal = document.createElement('div');
       modal.className = 'profile-modal open';
       modal.innerHTML = `
@@ -1723,52 +1688,29 @@
             <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Full Name</label>
             <input name="name" required class="input" style="margin-bottom:16px;" value="${escapeHtml(teacher.name)}" />
             <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Gender</label>
-            <select name="gender" class="input" style="margin-bottom:16px;">
-              <option value="FEMALE" ${teacher.gender === 'FEMALE' ? 'selected' : ''}>Female</option>
-              <option value="MALE" ${teacher.gender === 'MALE' ? 'selected' : ''}>Male</option>
-            </select>
+            <select name="gender" class="input" style="margin-bottom:16px;"><option value="FEMALE" ${teacher.gender === 'FEMALE' ? 'selected' : ''}>Female</option><option value="MALE" ${teacher.gender === 'MALE' ? 'selected' : ''}>Male</option></select>
             <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Category</label>
-            <select name="category" class="input" style="margin-bottom:20px;">
-              <option value="Nursery" ${teacher.category === 'Nursery' ? 'selected' : ''}>Nursery</option>
-              <option value="Primary" ${teacher.category === 'Primary' ? 'selected' : ''}>Primary</option>
-              <option value="Secondary" ${teacher.category === 'Secondary' ? 'selected' : ''}>Secondary</option>
-            </select>
-            <div style="display:flex; gap:10px;">
-              <button type="button" class="btn btn-ghost" id="cancel-edit" style="flex:1">Cancel</button>
-              <button type="submit" class="btn btn-primary" id="save-edit" style="flex:1">Save Changes</button>
-            </div>
+            <select name="category" class="input" style="margin-bottom:20px;"><option value="Nursery" ${teacher.category === 'Nursery' ? 'selected' : ''}>Nursery</option><option value="Primary" ${teacher.category === 'Primary' ? 'selected' : ''}>Primary</option><option value="Secondary" ${teacher.category === 'Secondary' ? 'selected' : ''}>Secondary</option></select>
+            <div style="display:flex; gap:10px;"><button type="button" class="btn btn-ghost" id="cancel-edit" style="flex:1">Cancel</button><button type="submit" class="btn btn-primary" id="save-edit" style="flex:1">Save Changes</button></div>
           </form>
         </div>`;
       document.body.appendChild(modal);
       modal.onclick = e => { if (e.target === modal) modal.remove(); };
       modal.querySelector('#cancel-edit').onclick = () => modal.remove();
       modal.querySelector('#edit-teacher-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const btn = modal.querySelector('#save-edit');
-        const newName = form.elements.name.value.trim();
-        if (!newName) { toast('Name is required.', 'error'); return; }
+        e.preventDefault(); const form = e.target; const btn = modal.querySelector('#save-edit');
+        const newName = form.elements.name.value.trim(); if (!newName) { toast('Name is required.', 'error'); return; }
         btn.disabled = true; btn.textContent = 'Saving...';
         try {
-          await updateDoc(doc(db, 'teachers', teacherId), {
-            name: newName.toUpperCase(),
-            gender: form.elements.gender.value,
-            category: form.elements.category.value,
-          });
-          modal.remove();
-          toast('Teacher updated successfully', 'success');
-        } catch (err) {
-          toast(err.message, 'error');
-          btn.disabled = false; btn.textContent = 'Save Changes';
-        }
+          await updateDoc(doc(db, 'teachers', teacherId), { name: newName.toUpperCase(), gender: form.elements.gender.value, category: form.elements.category.value });
+          modal.remove(); toast('Teacher updated successfully', 'success');
+        } catch (err) { toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Save Changes'; }
       };
     }
 
     /* ==================== TEACHER DETAIL ==================== */
     function goTeacherDetail(name) {
-      state.view = 'teacher-detail';
-      state.teacherDetailName = name;
-      renderTeacherDetail();
+      state.view = 'teacher-detail'; state.teacherDetailName = name; renderTeacherDetail();
     }
 
     function renderTeacherDetail() {
@@ -1782,29 +1724,22 @@
       const ended = sorted.filter(a => a.state === 'ended');
       const verifiedCount = ended.filter(a => a.verified).length;
       const totalMinutes = ended.reduce((s, a) => {
-        const start = toDate(a.attendedAt)?.getTime();
-        const end = toDate(a.endedAt)?.getTime();
-        if (start && end) return s + Math.max(0, (end - start) / 60000);
-        return s;
+        const start = toDate(a.attendedAt)?.getTime(); const end = toDate(a.endedAt)?.getTime();
+        if (start && end) return s + Math.max(0, (end - start) / 60000); return s;
       }, 0);
       const totalHours = (totalMinutes / 60).toFixed(1);
       const verifiedRate = ended.length > 0 ? Math.round(verifiedCount / ended.length * 100) : 0;
       const now = new Date();
-      const thisMonth = sorted.filter(a => {
-        const ts = toDate(a.attendedAt)?.getTime();
-        return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-      }).length;
+      const thisMonth = sorted.filter(a => { const ts = toDate(a.attendedAt)?.getTime(); return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime(); }).length;
 
       const catColor = CAT_COLOR[teacher.category];
       const genderStr = teacher.gender === 'MALE' ? t('male') : t('female');
 
       const groups = {};
       sorted.forEach(a => {
-        const d = toDate(a.attendedAt);
-        if (!d) return;
+        const d = toDate(a.attendedAt); if (!d) return;
         const key = d.toLocaleString('en', { month: 'long', year: 'numeric' });
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(a);
+        if (!groups[key]) groups[key] = []; groups[key].push(a);
       });
 
       const historyHtml = sorted.length === 0
@@ -1812,59 +1747,31 @@
         : Object.entries(groups).map(([month, list]) => `
             <div class="hist-month">${month}</div>
             ${list.map(a => {
-              const start = toDate(a.attendedAt)?.getTime();
-              const end = toDate(a.endedAt)?.getTime();
+              const start = toDate(a.attendedAt)?.getTime(); const end = toDate(a.endedAt)?.getTime();
               const mins = (start && end) ? Math.round((end - start) / 60000) : 0;
-              const durStr = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
-              const badge = a.state === 'active'
-                ? `<span class="badge badge-live">${t('live')}</span>`
-                : a.verified
-                  ? `<span class="badge badge-verified">✓ ${t('verified')}</span>`
-                  : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
-              return `<div class="hist-item">
-                <div class="hist-info">
-                  <h4>${escapeHtml(a.cpdTitle || '—')}</h4>
-                  <p>${fmtDate(a.attendedAt)} · ${fmtTime(a.attendedAt)}${a.endedAt ? ` → ${fmtTime(a.endedAt)} · ${durStr}` : ''}</p>
-                </div>
-                ${badge}
-              </div>`;
+              const durStr = formatMins(mins);
+              const badge = a.state === 'active' ? `<span class="badge badge-live">${t('live')}</span>` : a.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+              return `<div class="hist-item"><div class="hist-info"><h4>${escapeHtml(a.cpdTitle || '—')}</h4><p>${fmtDate(a.attendedAt)} · ${fmtTime(a.attendedAt)}${a.endedAt ? ` → ${fmtTime(a.endedAt)} · ${durStr}` : ''}</p></div>${badge}</div>`;
             }).join('')}
           `).join('');
 
-      const recentDaily = state.dailyRecords
-        .filter(r => normalizeName(r.teacherName) === normalizeName(name))
-        .sort((a,b) => b.date.localeCompare(a.date))
-        .slice(0, 5);
+      const recentDaily = state.dailyRecords.filter(r => normalizeName(r.teacherName) === normalizeName(name)).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
 
       const dailyHtml = recentDaily.length === 0 ? '' : `
         <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:24px 0 12px;padding-left:4px">Recent Daily Attendance</h3>
         ${recentDaily.map(r => {
-          const isLate = r.lateMinutes > 0;
-          const isEarly = r.earlyLeaveMinutes > 0;
-          const signIn = toDate(r.signInAt);
-          const signOut = toDate(r.signOutAt);
-          let statusBadge = '';
-          if (r.state === 'in') statusBadge = `<span class="badge badge-live">In School</span>`;
-          else statusBadge = `<span class="badge badge-out">Signed Out</span>`;
-
+          const isLate = r.lateMinutes > 0; const isEarly = r.earlyLeaveMinutes > 0;
+          const signIn = toDate(r.signInAt); const signOut = toDate(r.signOutAt);
+          let statusBadge = ''; if (r.state === 'in') statusBadge = `<span class="badge badge-live">In School</span>`; else statusBadge = `<span class="badge badge-out">Signed Out</span>`;
           return `<div class="hist-item">
-            <div class="hist-info">
-              <h4>${new Date(r.date).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })}</h4>
-              <p>In: ${signIn ? signIn.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'}
-                 | Out: ${signOut ? signOut.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'}</p>
-            </div>
-            <div style="display:flex; gap:4px;">
-              ${isLate ? `<span class="badge badge-late">Late ${r.lateMinutes}m</span>` : ''}
-              ${isEarly ? `<span class="badge badge-absent">Early ${r.earlyLeaveMinutes}m</span>` : ''}
-              ${statusBadge}
-            </div>
+            <div class="hist-info"><h4>${new Date(r.date).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })}</h4><p>In: ${signIn ? signIn.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'} | Out: ${signOut ? signOut.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'}</p></div>
+            <div style="display:flex; gap:4px;">${isLate ? `<span class="badge badge-late">Late ${formatMins(r.lateMinutes)}</span>` : ''}${isEarly ? `<span class="badge badge-absent">Early ${formatMins(r.earlyLeaveMinutes)}</span>` : ''}${statusBadge}</div>
           </div>`;
         }).join('')}
       `;
 
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">
         <button id="btn-back-teacher" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back_to_teachers')}</button>
-
         <div style="text-align:center;margin-bottom:24px">
           <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#00ffcc,#0088ff);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#0a0f1e;box-shadow:0 8px 30px rgba(0,255,204,0.3)">${initialsOf(teacher.name)}</div>
           <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;word-break:break-word">${escapeHtml(teacher.name)}</h1>
@@ -1873,29 +1780,19 @@
             <span style="font-size:13px;color:#94a3b8">${genderStr}</span>
           </div>
         </div>
-
         ${active ? `<div class="ongoing-banner"><div class="pulse"></div><div class="info"><h4>${escapeHtml(active.cpdTitle)}</h4><p>${t('in_cpd_label')} · ${fmtTime(active.attendedAt)}</p></div></div>` : ''}
-
         <div class="td-stats">
           <div class="td-stat"><div class="val">${sorted.length}</div><div class="lbl">${t('total_cpds')}</div></div>
           <div class="td-stat"><div class="val" style="color:#38bdf8">${totalHours}h</div><div class="lbl">${t('total_hours')}</div></div>
           <div class="td-stat"><div class="val" style="color:#10b981">${verifiedRate}%</div><div class="lbl">${t('verified_pct')}</div></div>
           <div class="td-stat"><div class="val" style="color:#fbbf24">${thisMonth}</div><div class="lbl">${t('this_month')}</div></div>
         </div>
-
         ${dailyHtml}
-
         <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:24px 0 12px;padding-left:4px">${t('sessions_history')}</h3>
         ${historyHtml}
       </main>`;
-
       bindHeaderEvents();
-      document.getElementById('btn-back-teacher').onclick = () => {
-        state.view = 'admin';
-        state.teacherDetailName = null;
-        state.adminTab = 'teachers';
-        renderAdmin();
-      };
+      document.getElementById('btn-back-teacher').onclick = () => { state.view = 'admin'; state.teacherDetailName = null; state.adminTab = 'teachers'; renderAdmin(); };
     }
 
     /* ==================== SESSIONS ==================== */
@@ -1926,17 +1823,13 @@
     /* ==================== CALENDAR ==================== */
     function renderAdminCalendar() {
       const year = state.calYear, month = state.calMonth;
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startWeekday = (firstDay.getDay() + 6) % 7;
-      const daysInMonth = lastDay.getDate();
+      const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
+      const startWeekday = (firstDay.getDay() + 6) % 7; const daysInMonth = lastDay.getDate();
       const sessionsByDay = {};
       state.cpds.forEach(c => {
         const d = toDate(c.startTime); if (!d) return;
         if (d.getFullYear() === year && d.getMonth() === month) {
-          const key = d.getDate();
-          if (!sessionsByDay[key]) sessionsByDay[key] = [];
-          sessionsByDay[key].push(c);
+          const key = d.getDate(); if (!sessionsByDay[key]) sessionsByDay[key] = []; sessionsByDay[key].push(c);
         }
       });
       const today = new Date();
@@ -1944,8 +1837,7 @@
       let grid = '';
       for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
       for (let day = 1; day <= daysInMonth; day++) {
-        const sessions = sessionsByDay[day] || [];
-        const classes = ['cal-day'];
+        const sessions = sessionsByDay[day] || []; const classes = ['cal-day'];
         if (sessions.length > 0) {
           classes.push('has-cpd');
           const statuses = sessions.map(c => cpdStatus(c));
@@ -1976,13 +1868,9 @@
     }
     function adminSessionDayCard(cpd) {
       const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
-      const total = atts.length;
-      const verified = atts.filter(a => a.verified).length;
+      const total = atts.length; const verified = atts.filter(a => a.verified).length;
       const st = cpdStatus(cpd);
-      let badge = '';
-      if (st === 'ongoing') badge = `<span class="badge badge-live">● ${t('live')}</span>`;
-      else if (st === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
-      else badge = `<span class="badge badge-ended">${t('ended')}</span>`;
+      let badge = ''; if (st === 'ongoing') badge = `<span class="badge badge-live">● ${t('live')}</span>`; else if (st === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`; else badge = `<span class="badge badge-ended">${t('ended')}</span>`;
       return `<div class="a-session-card"><div class="row">
         <div style="flex:1;min-width:0"><div>${badge}</div><h3>${escapeHtml(cpd.title)}</h3><p>${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)}</p>
           <div class="past-stats"><span class="past-stat">👥 ${total} ${t('attendees')}</span><span class="past-stat ok">✓ ${verified} ${t('verified')}</span></div>
@@ -2008,6 +1896,10 @@
             <datalist id="recent-titles">${[...new Set(state.cpds.map(c => c.title).filter(Boolean))].slice(0, 8).map(tl => `<option value="${escapeHtml(tl)}">`).join('')}</datalist>
             <label>${t('form_theme')}</label>
             <input name="theme" class="input" placeholder="e.g. Modern classroom practices" />
+            
+            <label>${t('form_facilitator')}</label>
+            <input name="facilitator" class="input" placeholder="e.g. Mr. John Doe" />
+
             <label>${t('form_start')}</label>
             <div style="display:flex;gap:8px;margin-bottom:4px">
               <input type="datetime-local" name="startTime" value="${startStr}" required class="input" style="color-scheme:dark;margin-bottom:0" />
@@ -2044,14 +1936,11 @@
     function bindAdminNewEvents() {
       document.getElementById('btn-back').onclick = () => { state.adminTab = 'overview'; renderAdmin(); };
       const form = document.getElementById('cpd-form');
-      const startInput = form.elements.startTime;
-      const endInput = form.elements.endTime;
-      const latInput = form.elements.venueLat;
-      const lngInput = form.elements.venueLng;
+      const startInput = form.elements.startTime; const endInput = form.elements.endTime;
+      const latInput = form.elements.venueLat; const lngInput = form.elements.venueLng;
       document.querySelectorAll('#duration-chips .chip').forEach(chip => {
         chip.onclick = () => {
-          document.querySelectorAll('#duration-chips .chip').forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
+          document.querySelectorAll('#duration-chips .chip').forEach(c => c.classList.remove('active')); chip.classList.add('active');
           const start = startInput.value ? new Date(startInput.value) : new Date();
           endInput.value = toLocalInputValue(new Date(start.getTime() + parseInt(chip.dataset.duration) * 60000));
           updateSummary();
@@ -2060,16 +1949,12 @@
       document.getElementById('btn-now').onclick = () => {
         const n = new Date(); n.setSeconds(0, 0); n.setMinutes(Math.ceil(n.getMinutes() / 5) * 5);
         startInput.value = toLocalInputValue(n);
-        const active = document.querySelector('#duration-chips .chip.active');
-        const dur = active ? parseInt(active.dataset.duration) : 60;
-        endInput.value = toLocalInputValue(new Date(n.getTime() + dur * 60000));
-        updateSummary();
+        const active = document.querySelector('#duration-chips .chip.active'); const dur = active ? parseInt(active.dataset.duration) : 60;
+        endInput.value = toLocalInputValue(new Date(n.getTime() + dur * 60000)); updateSummary();
       };
       function updateSummary() {
-        const title = form.elements.title.value.trim() || '—';
-        const venue = form.elements.venueName.value.trim() || 'Venue';
-        const s = startInput.value ? new Date(startInput.value) : null;
-        const e = endInput.value ? new Date(endInput.value) : null;
+        const title = form.elements.title.value.trim() || '—'; const venue = form.elements.venueName.value.trim() || 'Venue';
+        const s = startInput.value ? new Date(startInput.value) : null; const e = endInput.value ? new Date(endInput.value) : null;
         document.getElementById('sum-title').textContent = title;
         document.getElementById('sum-venue').textContent = venue;
         if (s && e) {
@@ -2092,43 +1977,37 @@
           const marker = L.marker([parseFloat(latInput.value), parseFloat(lngInput.value)]).addTo(map);
           L.circle([parseFloat(latInput.value), parseFloat(lngInput.value)], { radius: 100, color: '#00ffcc', fillOpacity: 0.2 }).addTo(map);
           map.on('click', e => { latInput.value = e.latlng.lat.toFixed(6); lngInput.value = e.latlng.lng.toFixed(6); marker.setLatLng(e.latlng); });
-          mapInit = true;
-          setTimeout(() => map.invalidateSize(), 100);
+          mapInit = true; setTimeout(() => map.invalidateSize(), 100);
         }
       });
       document.getElementById('btn-use-location').onclick = async () => {
         try {
           const pos = await getPositionOnce();
-          latInput.value = pos.lat.toFixed(6);
-          lngInput.value = pos.lng.toFixed(6);
+          latInput.value = pos.lat.toFixed(6); lngInput.value = pos.lng.toFixed(6);
           toast('Location set.', 'success');
         } catch (err) { toast(err.message, 'error'); }
       };
       form.onsubmit = async ev => {
         ev.preventDefault();
-        const btn = document.getElementById('btn-save-cpd');
-        const errEl = document.getElementById('form-error');
+        const btn = document.getElementById('btn-save-cpd'); const errEl = document.getElementById('form-error');
         errEl.style.display = 'none'; btn.disabled = true; btn.textContent = t('btn_creating');
         try {
           const fd = new FormData(form);
           const data = {
             title: String(fd.get('title') || '').trim(),
             theme: String(fd.get('theme') || '').trim(),
+            facilitator: String(fd.get('facilitator') || '').trim(),
             startTime: new Date(fd.get('startTime')),
             endTime: new Date(fd.get('endTime')),
             venueName: String(fd.get('venueName') || 'GS St Etienne').trim(),
-            venueLat: Number(fd.get('venueLat')),
-            venueLng: Number(fd.get('venueLng')),
-            radiusMeters: 100,
-            createdBy: state.user.uid,
-            createdAt: serverTimestamp(),
+            venueLat: Number(fd.get('venueLat')), venueLng: Number(fd.get('venueLng')),
+            radiusMeters: 100, createdBy: state.user.uid, createdAt: serverTimestamp(),
           };
           if (!data.title) throw new Error('Title is required.');
           if (isNaN(data.venueLat) || isNaN(data.venueLng)) throw new Error('Invalid coordinates.');
           if (data.endTime <= data.startTime) throw new Error('End time must be after start time.');
           await addDoc(collection(db, 'cpds'), data);
-          toast(t('msg_create'), 'success');
-          state.adminTab = 'overview'; goAdmin();
+          toast(t('msg_create'), 'success'); state.adminTab = 'overview'; goAdmin();
         } catch (err) {
           errEl.textContent = err.message; errEl.style.display = 'block';
           btn.disabled = false; btn.textContent = t('btn_create');
@@ -2153,59 +2032,33 @@
     }
 
     function renderCpdDetail() {
-      const cpd = state.selectedCpd;
-      if (!cpd) return;
-
+      const cpd = state.selectedCpd; if (!cpd) return;
       const attByKey = new Map();
       state.cpdAttendances.forEach(a => {
-        const key = normalizeName(a.teacherName);
-        const existing = attByKey.get(key);
-        if (!existing) attByKey.set(key, a);
-        else if (a.state === 'active' && existing.state !== 'active') attByKey.set(key, a);
+        const key = normalizeName(a.teacherName); const existing = attByKey.get(key);
+        if (!existing) attByKey.set(key, a); else if (a.state === 'active' && existing.state !== 'active') attByKey.set(key, a);
       });
-
-      const inCpdList = [];
-      const notInCpdList = [];
+      const inCpdList = []; const notInCpdList = [];
       (state.teachers || []).forEach(tc => {
         const att = attByKey.get(normalizeName(tc.name));
-        if (att) inCpdList.push({ teacher: tc, attendance: att });
-        else notInCpdList.push({ teacher: tc });
+        if (att) inCpdList.push({ teacher: tc, attendance: att }); else notInCpdList.push({ teacher: tc });
       });
-
       const groupByCat = (arr) => {
         const g = { Nursery: [], Primary: [], Secondary: [] };
-        arr.forEach(item => { if (g[item.teacher.category]) g[item.teacher.category].push(item); });
-        return g;
+        arr.forEach(item => { if (g[item.teacher.category]) g[item.teacher.category].push(item); }); return g;
       };
-      const inCpdGrouped = groupByCat(inCpdList);
-      const notInCpdGrouped = groupByCat(notInCpdList);
+      const inCpdGrouped = groupByCat(inCpdList); const notInCpdGrouped = groupByCat(notInCpdList);
       const catTotal = { Nursery: 0, Primary: 0, Secondary: 0 };
       (state.teachers || []).forEach(tc => { catTotal[tc.category]++; });
 
       const colHtml = (grouped, inCpd) => CATEGORIES.map(cat => {
-        const items = grouped[cat];
-        const catClass = cat.toLowerCase();
-        const headLabel = t(catClass);
-        return `
-          <div class="cat-block">
-            <div class="cat-block-head">
-              <span class="cat-label ${catClass}">${headLabel}</span>
-              <span class="cat-count">${items.length}/${catTotal[cat]}</span>
-            </div>
-            <div class="cat-people">
-              ${items.length === 0
-                ? `<div class="cat-empty">—</div>`
-                : items.map(item => {
-                  if (inCpd) {
-                    const a = item.attendance;
-                    const liveTag = a.state === 'active' ? '· Live' : '';
-                    return `<div class="person-chip"><span class="dot"></span><span class="nm">${escapeHtml(item.teacher.name)}</span><span class="meta">${fmtTime(a.attendedAt)}${liveTag}</span></div>`;
-                  } else {
-                    return `<div class="person-chip"><span class="dot"></span><span class="nm">${escapeHtml(item.teacher.name)}</span></div>`;
-                  }
-                }).join('')}
-            </div>
-          </div>`;
+        const items = grouped[cat]; const catClass = cat.toLowerCase(); const headLabel = t(catClass);
+        return `<div class="cat-block"><div class="cat-block-head"><span class="cat-label ${catClass}">${headLabel}</span><span class="cat-count">${items.length}/${catTotal[cat]}</span></div><div class="cat-people">
+          ${items.length === 0 ? `<div class="cat-empty">—</div>` : items.map(item => {
+            if (inCpd) { const a = item.attendance; const liveTag = a.state === 'active' ? '· Live' : ''; return `<div class="person-chip"><span class="dot"></span><span class="nm">${escapeHtml(item.teacher.name)}</span><span class="meta">${fmtTime(a.attendedAt)}${liveTag}</span></div>`; }
+            else { return `<div class="person-chip"><span class="dot"></span><span class="nm">${escapeHtml(item.teacher.name)}</span></div>`; }
+          }).join('')}
+        </div></div>`;
       }).join('');
 
       const colTotal = inCpdList.length + notInCpdList.length;
@@ -2215,7 +2068,10 @@
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">
         <button id="btn-back-admin" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back')}</button>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap">
-          <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3);flex:1">${escapeHtml(cpd.title)}</h1>
+          <div>
+            <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3);">${escapeHtml(cpd.title)}</h1>
+            ${cpd.facilitator ? `<p style="font-size:13px;color:#00ffcc;margin:4px 0 0;font-weight:600;">Facilitator: ${escapeHtml(cpd.facilitator)}</p>` : ''}
+          </div>
           <button id="btn-export-session" class="csv-btn" style="flex-shrink:0">📥 ${t('download_this')}</button>
         </div>
         <p style="font-size:13px;color:#94a3b8;margin:0 0 20px">${escapeHtml(cpd.venueName)} · ${fmtDateTime(cpd.startTime)}</p>
@@ -2233,26 +2089,14 @@
           <div style="overflow-x:auto">
             <table class="detail-table">
               <thead><tr><th>${t('t_teacher')}</th><th>${t('t_attended')}</th><th>${t('t_ended')}</th><th>${t('t_status')}</th><th></th></tr></thead>
-              <tbody>${state.cpdAttendances.length === 0
-                ? `<tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">${t('no_att')}</td></tr>`
-                : state.cpdAttendances.map(a => {
-                  const schoolT = findSchoolTeacher(a.teacherName);
-                  let status = '';
-                  if (!a.endedAt) status = `<span class="badge badge-live">${t('live')}</span>`;
-                  else if (a.verified) status = `<span class="badge badge-verified">✓ ${t('verified')}</span>`;
-                  else status = `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
-                  const approveBtn = (a.state === 'ended' && !a.verified)
-                    ? `<button class="btn btn-primary" style="width:auto;padding:6px 10px;font-size:11px;min-height:auto" onclick="approveAtt('${a.id}')">${t('approve')}</button>`
-                    : '';
-                  return `<tr>
-                    <td><div class="att-name">${avatarImgTag(a.teacherPhotoURL, a.teacherName || 'User', 32)}<div style="min-width:0"><div style="color:#fff;font-size:13px;font-weight:700">${escapeHtml(a.teacherName || 'Unknown')}</div><div style="color:#94a3b8;font-size:11px">${schoolT ? schoolT.category : escapeHtml(a.teacherEmail || '')}</div></div></div></td>
-                    <td style="font-size:12px">${fmtTime(a.attendedAt)}</td>
-                    <td style="font-size:12px">${fmtTime(a.endedAt)}</td>
-                    <td>${status}</td>
-                    <td>${approveBtn}</td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
+              <tbody>${state.cpdAttendances.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">${t('no_att')}</td></tr>` : state.cpdAttendances.map(a => {
+                const schoolT = findSchoolTeacher(a.teacherName); let status = '';
+                if (!a.endedAt) status = `<span class="badge badge-live">${t('live')}</span>`;
+                else if (a.verified) status = `<span class="badge badge-verified">✓ ${t('verified')}</span>`;
+                else status = `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+                const approveBtn = (a.state === 'ended' && !a.verified) ? `<button class="btn btn-primary" style="width:auto;padding:6px 10px;font-size:11px;min-height:auto" onclick="approveAtt('${a.id}')">${t('approve')}</button>` : '';
+                return `<tr><td><div class="att-name">${avatarImgTag(a.teacherPhotoURL, a.teacherName || 'User', 32)}<div style="min-width:0"><div style="color:#fff;font-size:13px;font-weight:700">${escapeHtml(a.teacherName || 'Unknown')}</div><div style="color:#94a3b8;font-size:11px">${schoolT ? schoolT.category : escapeHtml(a.teacherEmail || '')}</div></div></div></td><td style="font-size:12px">${fmtTime(a.attendedAt)}</td><td style="font-size:12px">${fmtTime(a.endedAt)}</td><td>${status}</td><td>${approveBtn}</td></tr>`;
+              }).join('')}</tbody>
             </table>
           </div>
         </div>
@@ -2260,20 +2104,8 @@
         <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 12px;padding-left:4px;">${t('attendance_breakdown')}</h3>
 
         <div class="cpd-split">
-          <div class="cpd-col attended">
-            <div class="cpd-col-head">
-              <h3>✓ ${t('currently_in_cpd')}</h3>
-              <span class="cnt">${inCpdList.length}/${colTotal}</span>
-            </div>
-            ${colHtml(inCpdGrouped, true)}
-          </div>
-          <div class="cpd-col not-attended">
-            <div class="cpd-col-head">
-              <h3>○ ${t('not_in_cpd_yet')}</h3>
-              <span class="cnt">${notInCpdList.length}/${colTotal}</span>
-            </div>
-            ${colHtml(notInCpdGrouped, false)}
-          </div>
+          <div class="cpd-col attended"><div class="cpd-col-head"><h3>✓ ${t('currently_in_cpd')}</h3><span class="cnt">${inCpdList.length}/${colTotal}</span></div>${colHtml(inCpdGrouped, true)}</div>
+          <div class="cpd-col not-attended"><div class="cpd-col-head"><h3>○ ${t('not_in_cpd_yet')}</h3><span class="cnt">${notInCpdList.length}/${colTotal}</span></div>${colHtml(notInCpdGrouped, false)}</div>
         </div>
       </main>`;
 
@@ -2298,8 +2130,7 @@
         L.circle([cpd.venueLat, cpd.venueLng], { radius: cpd.radiusMeters, color: '#00ffcc', fillColor: '#00ffcc', fillOpacity: 0.15, weight: 2 }).addTo(state.liveMap);
         const venueIcon = L.divIcon({ className: '', html: `<div style="background:#00ffcc;width:24px;height:24px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [24,24], iconAnchor: [12,12] });
         L.marker([cpd.venueLat, cpd.venueLng], { icon: venueIcon }).addTo(state.liveMap);
-        state.liveMapCpdId = cpd.id;
-        setTimeout(() => state.liveMap.invalidateSize(), 100);
+        state.liveMapCpdId = cpd.id; setTimeout(() => state.liveMap.invalidateSize(), 100);
       }
       state.cpdAttendances.forEach(a => {
         let lat, lng, color;
@@ -2308,10 +2139,18 @@
         else if (a.attendedLat != null) { lat = a.attendedLat; lng = a.attendedLng; color = '#ef4444'; }
         else return;
         const icon = L.divIcon({ className: '', html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`, iconSize: [16,16], iconAnchor: [8,8] });
-        const marker = L.marker([lat, lng], { icon }).addTo(state.liveMap);
-        marker._isTeacherMarker = true;
+        const marker = L.marker([lat, lng], { icon }).addTo(state.liveMap); marker._isTeacherMarker = true;
       });
     }
+
+    // ADDED GLOBAL FUNCTION FOR PHOTO VIEWING
+    window.showFullPhoto = (base64) => {
+      const modal = document.createElement('div');
+      modal.className = 'profile-modal open';
+      modal.innerHTML = `<div style="position:relative; max-width:90vw; max-height:90vh; display:flex; align-items:center; justify-content:center;"><img src="${base64}" style="max-width:100%; max-height:90vh; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.5);"/></div>`;
+      document.body.appendChild(modal);
+      modal.onclick = () => modal.remove();
+    };
 
     /* ==================== BOOT ==================== */
     document.getElementById('app').innerHTML = `
