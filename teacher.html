@@ -7,7 +7,10 @@
   <title>iMENA Smart Attendance — Teacher</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
+  
+  <!-- FACE API SCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+
   <style>
     /* ── CSS base ── */
     :root{--bg:#070b13;--ink:#edf6ff;--muted:#8b9caf;--line:rgba(185,220,255,.15);--cyan:#68e4e0;--lime:#d4ff69;--orange:#ff9d68;--purple:#a88cff;--ease:cubic-bezier(.2,.8,.2,1)}
@@ -178,6 +181,20 @@
     .loader { position: fixed; inset: 0; background: #070b13; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
     .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(104,228,224,0.2); border-top-color: var(--cyan); animation: spin 1s linear infinite; }
 
+    /* FACE SCAN MODAL */
+    .face-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .face-modal.open { opacity: 1; pointer-events: auto; }
+    .face-scan-container { position: relative; width: 100%; max-width: 400px; aspect-ratio: 3/4; border-radius: 24px; overflow: hidden; border: 2px solid var(--cyan); box-shadow: 0 0 30px rgba(104,228,224,0.3); background: #000; }
+    .face-scan-container video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .face-scan-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+    .face-oval { width: 65%; height: 55%; border: 3px dashed rgba(104,228,224,0.6); border-radius: 50%; transition: all 0.3s; }
+    .face-oval.detected { border-color: #10b981; border-style: solid; box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+    .face-status { margin-top: 20px; text-align: center; }
+    .face-status h3 { font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 8px; }
+    .face-status p { font-size: 13px; color: var(--muted); margin: 0 0 20px; max-width: 300px; line-height: 1.5; }
+    .face-actions { display: flex; gap: 12px; width: 100%; max-width: 400px; }
+    .face-actions button { flex: 1; }
+
     @media (min-width: 768px) {
       .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
       .header { padding: 14px 32px; }
@@ -228,7 +245,12 @@
     const LOGO_URL = 'https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png';
     const SCHOOL_LAT = -2.129565168007717;
     const SCHOOL_LNG = 29.77740799677921;
-    const SCHOOL_RADIUS = 150; // 150 meters for school bounds
+    const SCHOOL_RADIUS = 150;
+
+    // Face API Config
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+    let modelsLoaded = false;
+    let faceMatcher = null;
 
     const state = {
       user: null, profile: null, view: 'boot',
@@ -344,19 +366,12 @@
       const p = n => String(n).padStart(2, '0');
       return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
     }
-    function shiftDateKey(dateKey, deltaDays) {
-      const d = new Date(dateKey + 'T00:00:00');
-      d.setDate(d.getDate() + deltaDays);
-      const p = n => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-    }
     function distanceMeters(lat1, lng1, lat2, lng2) {
       const R = 6371000, toRad = d => d * Math.PI / 180;
       const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
       const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
-    function classify(m, r) { return m <= r ? 'near' : 'far'; }
     function avatarUrlFor(photoURL, name, size = 64) {
       if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
       const q = encodeURIComponent((name || 'User').trim());
@@ -378,7 +393,7 @@
       document.getElementById('toast-root').appendChild(el);
       setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 4000);
     }
-    function clearWatch() { if (state.watchId != null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; state.watchingFor = null; } }
+    function getMinutesSinceMidnight(dateObj) { return dateObj.getHours() * 60 + dateObj.getMinutes(); }
     function cpdStatus(cpd) {
       const s = toDate(cpd.startTime)?.getTime(), e = toDate(cpd.endTime)?.getTime(), n = Date.now();
       if (!s || !e) return 'unknown';
@@ -386,8 +401,147 @@
       if (n > e) return 'ended';
       return 'ongoing';
     }
-    function getMinutesSinceMidnight(dateObj) {
-      return dateObj.getHours() * 60 + dateObj.getMinutes();
+
+    /* ==================== FACE API LOGIC ==================== */
+    async function loadFaceModels() {
+      if (modelsLoaded) return;
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        modelsLoaded = true;
+      } catch (err) {
+        console.error('Face models failed to load:', err);
+        toast('Failed to load facial recognition engine. Check internet connection.', 'error');
+      }
+    }
+
+    async function startCamera() {
+      const video = document.getElementById('face-video');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      video.srcObject = stream;
+      return stream;
+    }
+
+    function stopCamera(stream) {
+      if (stream) stream.getTracks().forEach(track => track.stop());
+    }
+
+    // Returns { descriptor: Float32Array, selfie: base64 } or null
+    async function scanFaceUI(isEnrollment = false) {
+      if (!modelsLoaded) {
+        toast('Loading AI models... please wait.', 'info');
+        await loadFaceModels();
+        if (!modelsLoaded) return null;
+      }
+
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'face-modal open';
+        modal.innerHTML = `
+          <div class="face-scan-container">
+            <video id="face-video" autoplay playsinline muted></video>
+            <div class="face-scan-overlay"><div class="face-oval" id="face-oval"></div></div>
+          </div>
+          <div class="face-status">
+            <h3>${isEnrollment ? 'Enroll Your Face' : 'Scanning...'}</h3>
+            <p>${isEnrollment ? 'Please look directly at the camera to register your biometric profile.' : 'Align your face within the oval to verify your identity.'}</p>
+            <div id="face-detection-status" style="font-size:12px; font-weight:bold; color:var(--cyan)">Starting camera...</div>
+          </div>
+          <div class="face-actions">
+            <button class="btn btn-ghost" id="btn-face-cancel">Cancel</button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        let stream = null;
+        let isProcessing = false;
+
+        startCamera().then(s => {
+          stream = s;
+          document.getElementById('face-detection-status').innerText = 'Look at the camera...';
+          
+          const video = document.getElementById('face-video');
+          const oval = document.getElementById('face-oval');
+
+          const interval = setInterval(async () => {
+            if (isProcessing || video.paused || video.ended) return;
+            
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                           .withFaceLandmarks()
+                                           .withFaceDescriptor();
+
+            if (detection) {
+              oval.classList.add('detected');
+              isProcessing = true;
+              clearInterval(interval);
+
+              // Draw to canvas for selfie
+              const canvas = document.createElement('canvas');
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              canvas.getContext('2d').drawImage(video, 0, 0);
+              const selfie = canvas.toDataURL('image/jpeg', 0.6);
+
+              stopCamera(stream);
+              modal.remove();
+              resolve({ descriptor: detection.descriptor, selfie });
+            }
+          }, 500);
+        }).catch(err => {
+          document.getElementById('face-detection-status').innerText = 'Camera access denied.';
+          document.getElementById('face-detection-status').style.color = '#ef4444';
+        });
+
+        document.getElementById('btn-face-cancel').onclick = () => {
+          stopCamera(stream);
+          modal.remove();
+          resolve(null);
+        };
+      });
+    }
+
+    async function ensureFaceEnrollment() {
+      if (state.profile.faceDescriptor) return true; // Already enrolled
+
+      toast('Face enrollment required.', 'info');
+      const result = await scanFaceUI(true);
+      if (!result) return false;
+
+      try {
+        await updateDoc(doc(db, 'users', state.user.uid), {
+          faceDescriptor: Array.from(result.descriptor), // Save as array
+          faceSelfie: result.selfie,
+          faceEnrolledAt: serverTimestamp()
+        });
+        state.profile.faceDescriptor = Array.from(result.descriptor);
+        toast('Face enrolled successfully!', 'success');
+        return true;
+      } catch (err) {
+        toast('Failed to save face data.', 'error');
+        return false;
+      }
+    }
+
+    async function verifyFace() {
+      if (!state.profile.faceDescriptor) {
+        toast('No face enrolled. Please refresh or contact admin.', 'error');
+        return false;
+      }
+
+      const result = await scanFaceUI(false);
+      if (!result) return false; // Cancelled
+
+      const storedDescriptor = new Float32Array(state.profile.faceDescriptor);
+      const distance = faceapi.euclideanDistance(storedDescriptor, result.descriptor);
+      
+      // 0.6 is the standard threshold for face-api.js. Lower is stricter.
+      if (distance < 0.6) {
+        return result.selfie; // Return selfie to save alongside attendance
+      } else {
+        toast('Face does not match. Access denied.', 'error');
+        return false;
+      }
     }
 
     /* ==================== GREETINGS ==================== */
@@ -476,8 +630,22 @@
         console.error('[profile]', err); window.location.replace('index.html'); return;
       }
       if (state.profile.role === 'admin') { window.location.replace('admin.html'); return; }
+      
+      // Load Face Models early so they are ready
+      loadFaceModels(); 
+
       state.loading = false;
       goTeacher();
+
+      // Prompt for Face Enrollment on first login
+      if (!state.profile.faceDescriptor) {
+        setTimeout(async () => {
+          const enrolled = await ensureFaceEnrollment();
+          if (!enrolled) {
+            toast('You must enroll your face to use daily attendance.', 'warn');
+          }
+        }, 1500);
+      }
     });
 
     /* ==================== HEADER ==================== */
@@ -538,17 +706,14 @@
           err => console.error(err));
       }
       
-      // Daily Attendance Listener for Today + History
       const todayKey = todayLocalDateKey();
       const dailyId = `${state.user.uid}_${todayKey}`;
       if (!state.subDaily) {
-        // Listen to today's doc for quick UI updates
         onSnapshot(doc(db, 'daily_attendance', dailyId), snap => {
           state.todayDaily = snap.exists() ? { id: snap.id, ...snap.data() } : null;
           if (state.view === 'teacher') renderTeacher();
         });
 
-        // Listen to all user's daily records for stats (can be optimized later with date queries)
         const q = query(collection(db, 'daily_attendance'), where('teacherId', '==', state.user.uid));
         state.subDaily = onSnapshot(q, snap => {
           state.myDailyRecords = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date.localeCompare(a.date));
@@ -583,16 +748,7 @@
       document.querySelectorAll('[data-ttab]').forEach(b => b.onclick = () => { state.teacherTab = b.dataset.ttab; renderTeacher(); });
       document.querySelectorAll('[data-attend]').forEach(b => { b.onclick = () => handleAttend(b.dataset.attend, b); });
       document.querySelectorAll('[data-end]').forEach(b => { b.onclick = () => handleEnd(b.dataset.end, b); });
-      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = parseInt(b.dataset.calday); renderTeacher(); });
-      document.querySelectorAll('[data-calnav]').forEach(b => b.onclick = () => {
-        const delta = parseInt(b.dataset.calnav);
-        let m = state.calMonth + delta, y = state.calYear;
-        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
-        state.calMonth = m; state.calYear = y; state.calSelectedDay = null;
-        renderTeacher();
-      });
       
-      // Daily buttons
       const btnDailyIn = document.getElementById('btn-daily-in');
       if (btnDailyIn) btnDailyIn.onclick = () => handleDailySignIn(btnDailyIn);
       const btnDailyOut = document.getElementById('btn-daily-out');
@@ -655,7 +811,6 @@
       const daily = state.todayDaily;
       const now = new Date();
 
-      // 1. Today's Action Card
       let todayCard = '';
       if (!daily) {
         todayCard = `<div class="daily-card">
@@ -698,8 +853,6 @@
         </div>`;
       }
 
-      // 2. Data Analytics
-      // Calculate stats for the current month
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthRecords = state.myDailyRecords.filter(r => new Date(r.date + 'T00:00:00') >= monthStart);
       
@@ -756,9 +909,7 @@
         </div>
       `;
 
-      // 3. Weekly Chart
-      // Generate last 7 days (Mon-Sun layout)
-      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // 1=Mon, 7=Sun
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
       const monday = new Date(now);
       monday.setDate(now.getDate() - currentDay + 1);
       
@@ -800,7 +951,6 @@
         </div>
       `;
 
-      // 4. Recent History List
       const recentHistory = state.myDailyRecords.slice(0, 10).map(r => {
         const isLate = r.lateMinutes > 0;
         const isEarly = r.earlyLeaveMinutes > 0;
@@ -965,7 +1115,17 @@
 
     /* ==================== HANDLERS ==================== */
     async function handleDailySignIn(btn) {
+      // 1. Verify Face
       btn.disabled = true;
+      btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
+      
+      const selfieBase64 = await verifyFace();
+      if (!selfieBase64) {
+        btn.disabled = false; btn.innerHTML = `📍 ${t('daily_sign_in')}`;
+        return; // Face mismatch or cancelled
+      }
+
+      // 2. Verify GPS
       btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> ${t('daily_wait')}`;
       
       try {
@@ -981,9 +1141,8 @@
         const todayKey = todayLocalDateKey();
         const dailyId = `${state.user.uid}_${todayKey}`;
         
-        // Calculate Lateness (Standard 8:00 AM)
         const now = new Date();
-        const standardArrivalMins = 8 * 60; // 08:00
+        const standardArrivalMins = 8 * 60;
         const currentMins = getMinutesSinceMidnight(now);
         const lateMinutes = Math.max(0, currentMins - standardArrivalMins);
 
@@ -1004,6 +1163,7 @@
           earlyLeaveMinutes: 0,
           state: 'in',
           verified: true,
+          selfieIn: selfieBase64, // Save selfie!
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
@@ -1017,7 +1177,17 @@
     }
 
     async function handleDailySignOut(btn) {
+      // 1. Verify Face
       btn.disabled = true;
+      btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
+      
+      const selfieBase64 = await verifyFace();
+      if (!selfieBase64) {
+        btn.disabled = false; btn.innerHTML = `🚪 ${t('daily_sign_out')}`;
+        return;
+      }
+
+      // 2. Verify GPS
       btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> ${t('daily_wait')}`;
       
       try {
@@ -1033,9 +1203,8 @@
         const todayKey = todayLocalDateKey();
         const dailyId = `${state.user.uid}_${todayKey}`;
         
-        // Calculate Early Leave (Standard 17:00 PM)
         const now = new Date();
-        const standardDepartureMins = 17 * 60; // 17:00
+        const standardDepartureMins = 17 * 60;
         const currentMins = getMinutesSinceMidnight(now);
         const earlyLeaveMinutes = Math.max(0, standardDepartureMins - currentMins);
 
@@ -1046,6 +1215,7 @@
           signOutDistanceMeters: dist,
           earlyLeaveMinutes: earlyLeaveMinutes,
           state: 'out',
+          selfieOut: selfieBase64, // Save selfie!
           updatedAt: serverTimestamp()
         });
         
