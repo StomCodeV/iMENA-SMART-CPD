@@ -228,7 +228,7 @@
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc,
-      onSnapshot, query, where, serverTimestamp
+      onSnapshot, query, where, serverTimestamp, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
@@ -477,9 +477,43 @@
 
     async function ensureFaceEnrollment() {
       if (state.profile.faceDescriptor) return true;
+
       toast('Face enrollment required.', 'info');
       const result = await scanFaceUI(true);
       if (!result) return false;
+
+      // --- GLOBAL UNIQUENESS CHECK ---
+      toast('Checking face uniqueness...', 'info');
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        let isDuplicate = false;
+
+        for (const docSnap of usersSnap.docs) {
+          if (docSnap.id === state.user.uid) continue; // Skip checking against our own account
+          
+          const data = docSnap.data();
+          if (data.faceDescriptor && Array.isArray(data.faceDescriptor)) {
+            const existingDescriptor = new Float32Array(data.faceDescriptor);
+            const distance = faceapi.euclideanDistance(existingDescriptor, result.descriptor);
+            
+            // Strict threshold for unique faces
+            if (distance < 0.55) {
+              isDuplicate = true;
+              break; 
+            }
+          }
+        }
+
+        if (isDuplicate) {
+          toast('This face is already registered to another account. Access denied.', 'error');
+          return false; 
+        }
+      } catch (err) {
+        console.error('Error checking face uniqueness:', err);
+        toast('Could not verify face uniqueness. Check your connection.', 'error');
+        return false;
+      }
+      // ------------------------------
 
       try {
         await updateDoc(doc(db, 'users', state.user.uid), {
@@ -503,7 +537,6 @@
       const storedDescriptor = new Float32Array(state.profile.faceDescriptor);
       const distance = faceapi.euclideanDistance(storedDescriptor, result.descriptor);
       
-      // Strict threshold for distinct faces (0.55 instead of 0.6)
       if (distance < 0.55) { return result.selfie; } 
       else { toast('Face does not match. Access denied.', 'error'); return false; }
     }
