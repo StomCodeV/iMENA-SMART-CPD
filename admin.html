@@ -96,6 +96,7 @@
     .badge-out { background: rgba(56,189,248,0.18); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); }
     .badge-late { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
     .badge-missing { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+    .badge-type { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.35); }
 
     .past-stats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .past-stat { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.08); }
@@ -301,23 +302,28 @@
     .chart-val { position: absolute; top: -20px; font-size: 10px; font-weight: 800; color: #00ffcc; opacity: 0; transition: opacity 0.2s; }
     .chart-col:hover .chart-val { opacity: 1; }
 
-    .daily-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 6px; }
-    .daily-row:last-child { margin-bottom: 0; }
-    .daily-row.in-school { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06); }
-    .daily-row.signed-out { border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.04); }
-    .daily-row.absent { border-color: rgba(239,68,68,0.28); background: rgba(239,68,68,0.04); }
-    .daily-row.missing-out { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.04); }
-    .daily-row .daily-info { flex: 1; min-width: 0; }
-    .daily-row .daily-name { font-size: 12.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
-    .daily-row .daily-times { font-size: 10.5px; color: #94a3b8; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; gap: 8px;}
-    .daily-row .daily-times strong { color: #cbd5e1; font-weight: 700; }
-    .daily-row .daily-badges { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    /* ADVANCED DAILY ROW */
+    .daily-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; transition: all 0.2s; }
+    .daily-row:hover { background: rgba(15,23,42,0.8); }
+    .daily-row.in-school { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+    .daily-row.signed-out { border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.02); }
+    .daily-row.absent { border-color: rgba(239,68,68,0.28); background: rgba(239,68,68,0.02); }
+    .daily-row.missing-out { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.02); }
     
-    /* PHOTO THUMBNAIL STYLES */
-    .photo-thumb { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--cyan); cursor: pointer; flex-shrink: 0; }
+    .daily-avatar-block { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .daily-avatar-img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; border: 2px solid var(--cyan); cursor: pointer; }
+    .daily-avatar-init { width: 36px; height: 36px; border-radius: 8px; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; }
+    
+    .daily-info { flex: 1; min-width: 0; }
+    .daily-name { font-size: 13px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; margin-bottom: 4px; }
+    .daily-times { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: #94a3b8; }
+    .daily-times strong { color: #e2e8f0; }
+    .daily-times span { display: inline-flex; align-items: center; gap: 4px; }
+    
+    .daily-badges { display: flex; gap: 4px; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+    .photo-thumb { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--cyan); cursor: pointer; flex-shrink: 0; transition: transform 0.1s; }
     .photo-thumb:hover { transform: scale(1.1); }
 
-    /* ✅ NEW: touch-friendly per-teacher action buttons (Edit + Delete) */
     .teacher-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: auto; padding-left: 4px; }
     .teacher-action-btn { background: rgba(0,255,204,0.12); color: #00ffcc; border: 1px solid rgba(0,255,204,0.3); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; opacity: 0.75; transition: opacity 0.2s, background 0.2s, transform 0.1s; flex-shrink: 0; }
     .teacher-action-btn:hover, .teacher-action-btn:active { opacity: 1; transform: scale(0.95); }
@@ -453,7 +459,7 @@
       adminTab: 'overview', adminSessionFilter: 'all',
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
       cpds: [], allAttendances: [], teachers: [], dailyRecords: [],
-      settings: { startTime: '08:00', endTime: '17:00' },
+      settings: { startTime: '08:00', endTime: '17:00', schoolRadius: 150 },
       subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null, subTeachers: null,
       subDaily: null, subSettings: null,
       dailyDate: todayKeyInit,
@@ -480,10 +486,10 @@
         admin_title: 'Admin Dashboard', stat_total: 'Total', stat_ongoing: 'Ongoing', stat_upcoming: 'Upcoming', stat_ended: 'Ended',
         stat_live_now: 'Live Now', stat_next_session: 'Next Session',
         open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
-        create_title: 'Plan a Session', create_sub: 'Just fill the title — everything else has sensible defaults.',
-        form_title: 'Title *', form_theme: 'Theme', form_start: 'Start Time *', form_end: 'End Time *', form_facilitator: 'Facilitator',
+        create_title: 'Plan an Event', create_sub: 'Fill in the details for the upcoming session.',
+        form_title: 'Title *', form_theme: 'Theme', form_start: 'Start Time *', form_end: 'End Time *', form_facilitator: 'Facilitator', form_type: 'Event Type',
         form_venue: 'Venue', form_map: 'Location & Map',
-        btn_create: 'Create Session', btn_creating: 'Creating...',
+        btn_create: 'Create Event', btn_creating: 'Creating...',
         attendees: 'Attendees', record: 'Attendance Record', map: 'Map',
         t_teacher: 'Teacher', t_attended: 'Checked In', t_ended: 'Ended', t_status: 'Status',
         no_att: 'No attendance yet.', msg_sign_out: 'Sign out?', msg_delete: 'Delete this session?', msg_create: 'Session created!',
@@ -518,18 +524,19 @@
         daily_stat_present: 'Present', daily_stat_absent: 'Absent',
         weekly_trend: '7-Day Attendance Trend',
         today_status: 'Today', total_staff: 'staff',
-        school_settings: 'School Hours Settings'
+        school_settings: 'School Hours & Radius',
+        radius_label: 'Geofence Radius (m)'
       },
       rw: {
         home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', daily: 'Buri Munsi', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
         admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
         stat_live_now: 'Kuri ubu', stat_next_session: 'Isomo rikurikira',
         open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
-        create_title: 'Tegura Isomo', create_sub: 'Uzuza umutwe gusa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_facilitator: 'Umuyobozi',
-        form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Isomo', btn_creating: 'Turifungura...',
-        attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Isomo ryafunguwe!',
-        duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Amasomo yaheruka', all_sessions: 'Amasomo yose', no_sessions_day: 'Nta masomo kuri uyu munsi',
-        teachers_title: 'Abarimu · GS St Etienne', stat_in_cpd: 'Mu CPD', stat_in_school: 'Mu ishuri', all_categories: 'Bose', nursery: 'Incuke', primary: 'P1–P6', secondary: 'S1–S6', no_teachers_match: 'Nta mwarimu uhuye n\'ubushakashatsi', download_current: 'Kuramo CPD y\'ubu', download_history: 'Kuramo Amateka Yose', download_this: 'Kuramo CSV y\'isomo',
+        create_title: 'Tegura Igikorwa', create_sub: 'Uzuza amakuru y\'igikorwa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_facilitator: 'Umuyobozi', form_type: 'Ubwoko',
+        form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Igikorwa', btn_creating: 'Turifungura...',
+        attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Igikorwa cyafunguwe!',
+        duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Ibyakozwe', all_sessions: 'Ibyose', no_sessions_day: 'Nta gikorwa kuri uyu munsi',
+        teachers_title: 'Abarimu · GS St Etienne', stat_in_cpd: 'Mu CPD', stat_in_school: 'Mu ishuri', all_categories: 'Bose', nursery: 'Incuke', primary: 'P1–P6', secondary: 'S1–S6', no_teachers_match: 'Nta mwarimu uhuye n\'ubushakashatsi', download_current: 'Kuramo CPD y\'ubu', download_history: 'Kuramo Amateka Yose', download_this: 'Kuramo CSV',
         male: 'Gabo', female: 'Gore',
         search_teacher_placeholder: '🔍 Shakisha umwarimu ku izina…',
         just_now: 'ubu', min_ago: 'min', hour_ago: 'h', day_ago: 'd',
@@ -538,9 +545,9 @@
         attended_label: 'Yitabiriye', not_attended_label: 'Ntiyitabiriye',
         attendance_breakdown: 'Uko bitabiriye',
         currently_in_cpd: 'Kuri ubu muri CPD', not_in_cpd_yet: 'Batarinjiye muri CPD',
-        teacher_report: 'Raporo y\'Umwarimu', total_cpds: 'CPD', total_hours: 'Amasaha',
+        teacher_report: 'Raporo', total_cpds: 'CPD', total_hours: 'Amasaha',
         verified_pct: 'Byemejwe %', this_month: 'Uku kwezi',
-        sessions_history: 'Amateka y\'Amasomo', no_sessions_yet: 'Nta masomo yitabiriye',
+        sessions_history: 'Amateka', no_sessions_yet: 'Nta byakozwe',
         back_to_teachers: 'Subira ku Barimu',
         daily_title: 'Kujya ku Ishuri Buri Munsi', daily_sub: 'Kurikirana uko abarimu binjira bakava ku ishuri',
         daily_today: 'Uyu munsi', daily_prev: 'Umunsi ushize', daily_next: 'Umunsi utaha',
@@ -552,14 +559,15 @@
         daily_stat_present: 'Baje', daily_stat_absent: 'Bataje',
         weekly_trend: 'Iminsi 7 y\'ishuri',
         today_status: 'Uyu munsi', total_staff: 'abarimu',
-        school_settings: 'Igihe Ishuri Ritangira'
+        school_settings: 'Igihe & Intera',
+        radius_label: 'Intera y\'ishuri (m)'
       },
       fr: {
         home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', daily: 'Quotidien', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau', teachers: 'Enseignants',
         admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées',
         stat_live_now: 'En direct', stat_next_session: 'Prochaine session',
         open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver',
-        create_title: 'Créer un CPD', create_sub: 'Remplissez le titre.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_facilitator: 'Facilitateur',
+        create_title: 'Créer un événement', create_sub: 'Remplissez les détails.', form_title: 'Titre *', form_theme: 'Thème', form_start: 'Début *', form_end: 'Fin *', form_facilitator: 'Facilitateur', form_type: 'Type d\'événement',
         form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...',
         attendees: 'Participants', record: 'Registre', map: 'Carte', t_teacher: 'Enseignant', t_attended: 'Arrivée', t_ended: 'Départ', t_status: 'Statut', no_att: 'Aucune présence.', msg_sign_out: 'Déconnexion ?', msg_delete: 'Supprimer ?', msg_create: 'Session créée !',
         duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', past_sessions: 'Sessions récentes', all_sessions: 'Toutes les sessions', no_sessions_day: 'Aucune session ce jour',
@@ -574,7 +582,7 @@
         currently_in_cpd: 'Actuellement en CPD', not_in_cpd_yet: 'Pas encore en CPD',
         teacher_report: 'Rapport enseignant', total_cpds: 'CPD', total_hours: 'Heures',
         verified_pct: 'Vérifié %', this_month: 'Ce mois',
-        sessions_history: 'Historique des sessions', no_sessions_yet: 'Aucune session suivie',
+        sessions_history: 'Historique', no_sessions_yet: 'Aucune session suivie',
         back_to_teachers: 'Retour aux enseignants',
         daily_title: 'Présence Quotidienne', daily_sub: 'Suivi des arrivées et départs des enseignants',
         daily_today: 'Aujourd\'hui', daily_prev: 'Jour précédent', daily_next: 'Jour suivant',
@@ -586,12 +594,12 @@
         daily_stat_present: 'Présents', daily_stat_absent: 'Absents',
         weekly_trend: 'Tendance sur 7 jours',
         today_status: 'Aujourd\'hui', total_staff: 'enseignants',
-        school_settings: 'Heures de l\'école'
+        school_settings: 'Heures & Rayon',
+        radius_label: 'Rayon de l\'école (m)'
       }
     };
     function t(k) { return (I18N[state.lang])[k] || I18N.en[k] || k; }
 
-    // Format minutes to h m (e.g., 90 -> 1h 30m)
     function formatMins(mins) {
       if (mins <= 0) return '0m';
       const h = Math.floor(mins / 60);
@@ -877,7 +885,7 @@
     }
     function downloadCurrentCpdCSV() {
       const statusMap = buildTeacherStatusMap();
-      const rows = [['#', 'Teacher', 'Gender', 'Category', 'CPD Title', 'Facilitator', 'Attended At', 'Distance (m)', 'Verified']];
+      const rows = [['#', 'Teacher', 'Gender', 'Category', 'Event Title', 'Type', 'Facilitator', 'Attended At', 'Distance (m)', 'Verified']];
       let n = 0;
       (state.teachers || []).forEach(tc => {
         const entry = statusMap.get(normalizeName(tc.name));
@@ -885,27 +893,27 @@
           n++;
           const a = entry.active;
           const cpd = state.cpds.find(c => c.id === a.cpdId);
-          rows.push([n, tc.name, tc.gender, tc.category, a.cpdTitle || '', cpd?.facilitator || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
+          rows.push([n, tc.name, tc.gender, tc.category, a.cpdTitle || '', cpd?.type || 'CPD', cpd?.facilitator || '', toDate(a.attendedAt)?.toLocaleString() || '', a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Yes' : 'No']);
         }
       });
-      if (n === 0) { toast('No teachers currently in CPD.', 'warn'); return; }
+      if (n === 0) { toast('No teachers currently in an event.', 'warn'); return; }
       const date = new Date().toISOString().slice(0, 10);
-      downloadCSV(`CPD-Attendees-${date}.csv`, rows);
+      downloadCSV(`Event-Attendees-${date}.csv`, rows);
       toast(`Downloaded ${n} attendees`, 'success');
     }
     function downloadHistoricCSV() {
       if (state.allAttendances.length === 0) { toast('No attendance history yet.', 'warn'); return; }
-      const rows = [['#', 'Teacher', 'Email', 'Category', 'CPD Title', 'Facilitator', 'Date', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'Event Title', 'Type', 'Facilitator', 'Date', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Status']];
       state.allAttendances.slice().sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0)).forEach((a, i) => {
         const schoolT = findSchoolTeacher(a.teacherName);
         const cpd = state.cpds.find(c => c.id === a.cpdId);
         const start = toDate(a.attendedAt);
         const end = toDate(a.endedAt);
         const dur = (start && end) ? Math.round((end - start) / 60000) : '';
-        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', a.cpdTitle || '', cpd?.facilitator || '', start?.toLocaleDateString() || '', start?.toLocaleTimeString() || '', end?.toLocaleTimeString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
+        rows.push([i + 1, a.teacherName || '', a.teacherEmail || '', schoolT?.category || '—', a.cpdTitle || '', cpd?.type || 'CPD', cpd?.facilitator || '', start?.toLocaleDateString() || '', start?.toLocaleTimeString() || '', end?.toLocaleTimeString() || '', dur, a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '', a.verified ? 'Verified' : (a.state === 'active' ? 'Live' : 'Flagged')]);
       });
       const date = new Date().toISOString().slice(0, 10);
-      downloadCSV(`CPD-History-${date}.csv`, rows);
+      downloadCSV(`Event-History-${date}.csv`, rows);
       toast(`Downloaded ${state.allAttendances.length} records`, 'success');
     }
     function downloadSessionCSV(cpd) {
@@ -917,7 +925,7 @@
         if (!existing || (a.state === 'active' && existing.state !== 'active')) attByKey.set(key, a);
       });
 
-      const rows = [['#', 'Teacher', 'Email', 'Category', 'Facilitator', 'Status', 'Color', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Verified']];
+      const rows = [['#', 'Teacher', 'Email', 'Category', 'Type', 'Facilitator', 'Status', 'Color', 'Attended At', 'Ended At', 'Duration (min)', 'Distance (m)', 'Verified']];
 
       let n = 0;
       (state.teachers || []).forEach(tc => {
@@ -928,7 +936,7 @@
         const end = toDate(a.endedAt);
         const dur = (start && end) ? Math.round((end - start) / 60000) : '';
         rows.push([
-          n, tc.name, a.teacherEmail || '', tc.category, cpd.facilitator || '',
+          n, tc.name, a.teacherEmail || '', tc.category, cpd.type || 'CPD', cpd.facilitator || '',
           'Attended', 'Green',
           start?.toLocaleString() || '', end?.toLocaleString() || '', dur,
           a.attendedDistanceMeters != null ? a.attendedDistanceMeters.toFixed(0) : '',
@@ -941,13 +949,13 @@
         if (attByKey.has(normalizeName(tc.name))) return;
         absentCount++;
         n++;
-        rows.push([n, tc.name, '', tc.category, cpd.facilitator || '', 'Did Not Attend', 'Red', '', '', '', '', '']);
+        rows.push([n, tc.name, '', tc.category, cpd.type || 'CPD', cpd.facilitator || '', 'Did Not Attend', 'Red', '', '', '', '', '']);
       });
 
       if (n === 0) { toast('No teachers to export.', 'warn'); return; }
       const safeTitle = (cpd.title || 'session').replace(/[^a-z0-9]/gi, '_').slice(0, 40);
       const date = (toDate(cpd.startTime) || new Date()).toISOString().slice(0, 10);
-      downloadCSV(`CPD-${safeTitle}-${date}.csv`, rows);
+      downloadCSV(`Event-${safeTitle}-${date}.csv`, rows);
       toast(`Downloaded ${n} records`, 'success');
     }
     function downloadDailyCSV() {
@@ -1126,7 +1134,11 @@
       if (!state.subSettings) state.subSettings = onSnapshot(doc(db, 'settings', 'attendance'), snap => {
         if (snap.exists()) {
           const d = snap.data();
-          state.settings = { startTime: d.startTime || '08:00', endTime: d.endTime || '17:00' };
+          state.settings = { 
+            startTime: d.startTime || '08:00', 
+            endTime: d.endTime || '17:00',
+            schoolRadius: d.schoolRadius || 150
+          };
         }
         handleDataUpdate();
       });
@@ -1205,12 +1217,12 @@
       }
       const ongoingCards = ongoing.map(c => `
         <div class="a-session-card"><div class="row">
-          <div style="flex:1;min-width:0"><div><span class="badge badge-live">● ${t('live')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtTime(c.startTime)} – ${fmtTime(c.endTime)} · ${escapeHtml(c.venueName)}</p></div>
+          <div style="flex:1;min-width:0"><div><span class="badge badge-live">● ${t('live')}</span><span class="badge badge-type">${c.type || 'CPD'}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtTime(c.startTime)} – ${fmtTime(c.endTime)} · ${escapeHtml(c.venueName)}</p></div>
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
         </div></div>`).join('');
       const upcomingCards = upcoming.slice(0, 4).map(c => `
         <div class="a-session-card"><div class="row">
-          <div style="flex:1;min-width:0"><div><span class="badge badge-upcoming">${t('upcoming')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
+          <div style="flex:1;min-width:0"><div><span class="badge badge-upcoming">${t('upcoming')}</span><span class="badge badge-type">${c.type || 'CPD'}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
         </div></div>`).join('');
       const endedList = list.filter(c => cpdStatus(c) === 'ended').sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0)).slice(0, 4);
@@ -1220,7 +1232,7 @@
         const verified = atts.filter(a => a.verified).length;
         return `
         <div class="a-session-card"><div class="row">
-          <div style="flex:1;min-width:0"><div><span class="badge badge-ended">${t('ended')}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p>
+          <div style="flex:1;min-width:0"><div><span class="badge badge-ended">${t('ended')}</span><span class="badge badge-type">${c.type || 'CPD'}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p>
             <div class="past-stats"><span class="past-stat">👥 ${total} ${t('attendees')}</span><span class="past-stat ok">✓ ${verified} ${t('verified')}</span></div>
           </div>
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button></div>
@@ -1326,7 +1338,7 @@
         let statusClass = 'absent';
         let badgeHtml = `<span class="badge badge-absent">${t('daily_absent')}</span>`;
         let timesLine = '';
-        let photoIn = '', photoOut = '';
+        let avatarHtml = `<div class="daily-avatar-init">${initialsOf(teacher.name)}</div>`;
 
         if (record && record.signInAt) {
           const signIn = toDate(record.signInAt);
@@ -1334,11 +1346,14 @@
           const isLate = record.lateMinutes > 0;
           const isEarly = record.earlyLeaveMinutes > 0;
 
-          if (record.selfieIn) photoIn = `<img src="${record.selfieIn}" class="photo-thumb" title="Arrival Selfie" onclick="showFullPhoto('${record.selfieIn}')" />`;
-          if (record.selfieOut) photoOut = `<img src="${record.selfieOut}" class="photo-thumb" title="Departure Selfie" onclick="showFullPhoto('${record.selfieOut}')" />`;
+          if (record.selfieIn) {
+            avatarHtml = `<img src="${record.selfieIn}" class="daily-avatar-img" title="Arrival Selfie" onclick="showFullPhoto('${record.selfieIn}')" />`;
+          }
 
-          timesLine = `<span><strong>In:</strong> ${signIn ? signIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</span>`;
-          if (signOut) timesLine += `<span><strong>Out:</strong> ${signOut.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+          timesLine = `<span>In: <strong>${signIn ? signIn.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</strong> ${record.signInDistanceMeters ? `(📍${Math.round(record.signInDistanceMeters)}m)` : ''}</span>`;
+          if (signOut) {
+            timesLine += `<span>Out: <strong>${signOut.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong> ${record.signOutDistanceMeters ? `(📍${Math.round(record.signOutDistanceMeters)}m)` : ''}</span>`;
+          }
 
           if (record.state === 'in') {
             if (isPast) { statusClass = 'missing-out'; badgeHtml = `<span class="badge badge-missing">${t('daily_missing_out')}</span>`; }
@@ -1350,15 +1365,12 @@
         }
 
         return `<div class="daily-row ${statusClass}">
-          <span class="status-dot ${statusClass}"></span>
+          <div class="daily-avatar-block">${avatarHtml}</div>
           <div class="daily-info">
             <div class="daily-name">${escapeHtml(teacher.name)}</div>
             <div class="daily-times">${timesLine || 'No check-in'}</div>
           </div>
-          <div class="daily-badges">
-            ${photoIn} ${photoOut}
-            ${badgeHtml}
-          </div>
+          <div class="daily-badges">${badgeHtml}</div>
         </div>`;
       };
 
@@ -1424,12 +1436,20 @@
           modal.className = 'profile-modal open';
           modal.innerHTML = `
             <div class="profile-card" style="text-align:left; max-width: 340px;">
-              <h2 style="font-size:20px;font-weight:900;margin-bottom:16px;">School Hours Settings</h2>
+              <h2 style="font-size:20px;font-weight:900;margin-bottom:16px;">School Settings</h2>
               <form id="settings-form">
                 <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Official Start Time</label>
                 <input type="time" name="startTime" required class="input" style="margin-bottom:16px;" value="${state.settings.startTime}" />
+                
                 <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Official End Time</label>
-                <input type="time" name="endTime" required class="input" style="margin-bottom:20px;" value="${state.settings.endTime}" />
+                <input type="time" name="endTime" required class="input" style="margin-bottom:16px;" value="${state.settings.endTime}" />
+                
+                <label style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">${t('radius_label')}</label>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                  <input type="range" name="schoolRadius" min="50" max="500" step="10" value="${state.settings.schoolRadius || 150}" style="flex:1; accent-color:#00ffcc; cursor:pointer;" oninput="this.nextElementSibling.innerText = this.value + 'm'" />
+                  <span style="font-weight:800; font-size:14px; color:#00ffcc; min-width:45px; text-align:right;">${state.settings.schoolRadius || 150}m</span>
+                </div>
+
                 <div style="display:flex; gap:10px;">
                   <button type="button" class="btn btn-ghost" id="cancel-settings" style="flex:1">Cancel</button>
                   <button type="submit" class="btn btn-primary" id="save-settings" style="flex:1">Save</button>
@@ -1446,9 +1466,10 @@
             try {
               await setDoc(doc(db, 'settings', 'attendance'), {
                 startTime: form.elements.startTime.value,
-                endTime: form.elements.endTime.value
+                endTime: form.elements.endTime.value,
+                schoolRadius: parseInt(form.elements.schoolRadius.value)
               }, { merge: true });
-              modal.remove(); toast('School hours updated!', 'success');
+              modal.remove(); toast('School settings updated!', 'success');
             } catch (err) { toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Save'; }
           };
         };
@@ -1804,7 +1825,7 @@
         const st = cpdStatus(c);
         const badge = st === 'ongoing' ? `<span class="badge badge-live">● ${t('ongoing')}</span>` : st === 'upcoming' ? `<span class="badge badge-upcoming">${t('upcoming')}</span>` : `<span class="badge badge-ended">${t('ended')}</span>`;
         return `<div class="a-session-card"><div class="row">
-          <div style="flex:1;min-width:0"><div>${badge}</div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
+          <div style="flex:1;min-width:0"><div>${badge}<span class="badge badge-type">${c.type || 'CPD'}</span></div><h3>${escapeHtml(c.title)}</h3><p>${fmtDateTime(c.startTime)} · ${escapeHtml(c.venueName)}</p></div>
           <div class="actions"><button data-open-cpd="${c.id}" class="btn btn-primary">${t('open')}</button><button data-del-cpd="${c.id}" class="btn btn-danger">🗑</button></div>
         </div></div>`;
       }).join('');
@@ -1872,7 +1893,7 @@
       const st = cpdStatus(cpd);
       let badge = ''; if (st === 'ongoing') badge = `<span class="badge badge-live">● ${t('live')}</span>`; else if (st === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`; else badge = `<span class="badge badge-ended">${t('ended')}</span>`;
       return `<div class="a-session-card"><div class="row">
-        <div style="flex:1;min-width:0"><div>${badge}</div><h3>${escapeHtml(cpd.title)}</h3><p>${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)}</p>
+        <div style="flex:1;min-width:0"><div>${badge}<span class="badge badge-type">${cpd.type || 'CPD'}</span></div><h3>${escapeHtml(cpd.title)}</h3><p>${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)}</p>
           <div class="past-stats"><span class="past-stat">👥 ${total} ${t('attendees')}</span><span class="past-stat ok">✓ ${verified} ${t('verified')}</span></div>
         </div>
         <div class="actions"><button data-open-cpd="${cpd.id}" class="btn btn-primary">${t('open')}</button></div>
@@ -1891,9 +1912,19 @@
           <p class="sub">${t('create_sub')}</p>
           <form id="cpd-form">
             <div id="form-error" style="display:none;margin-bottom:14px;padding:12px;background:rgba(239,68,68,0.25);color:#fca5a5;border-radius:12px;font-size:13px;font-weight:600"></div>
+            
+            <label>${t('form_type')}</label>
+            <select name="eventType" class="input" style="margin-bottom:16px;">
+              <option value="CPD">CPD Session</option>
+              <option value="Meeting">Staff Meeting</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Other">Other</option>
+            </select>
+
             <label>${t('form_title')}</label>
             <input name="title" required class="input" placeholder="e.g. Teaching Methodologies 2025" list="recent-titles" autocomplete="off" />
             <datalist id="recent-titles">${[...new Set(state.cpds.map(c => c.title).filter(Boolean))].slice(0, 8).map(tl => `<option value="${escapeHtml(tl)}">`).join('')}</datalist>
+            
             <label>${t('form_theme')}</label>
             <input name="theme" class="input" placeholder="e.g. Modern classroom practices" />
             
@@ -1905,6 +1936,7 @@
               <input type="datetime-local" name="startTime" value="${startStr}" required class="input" style="color-scheme:dark;margin-bottom:0" />
               <button type="button" id="btn-now" class="chip chip-neutral" style="flex-shrink:0">${t('quick_now')}</button>
             </div>
+            
             <label style="margin-top:12px">${t('duration')} / ${t('form_end')}</label>
             <div class="chip-row" id="duration-chips">
               <button type="button" class="chip" data-duration="30">30 min</button>
@@ -1914,7 +1946,9 @@
               <button type="button" class="chip" data-duration="480">Full day</button>
             </div>
             <input type="datetime-local" name="endTime" value="${endStr}" required class="input" style="color-scheme:dark" />
+            
             <div class="summary-line" id="summary"><strong id="sum-title">—</strong> · <span id="sum-time">—</span> · <span id="sum-venue">GS St Etienne</span></div>
+            
             <details style="margin-bottom:16px;background:rgba(0,0,0,0.35);padding:12px;border-radius:12px;border:1px solid rgba(0,255,204,0.15)">
               <summary style="font-size:13px;font-weight:700;color:#00ffcc;cursor:pointer">${t('form_map')}</summary>
               <div style="margin-top:12px">
@@ -1994,6 +2028,7 @@
         try {
           const fd = new FormData(form);
           const data = {
+            type: String(fd.get('eventType') || 'CPD'),
             title: String(fd.get('title') || '').trim(),
             theme: String(fd.get('theme') || '').trim(),
             facilitator: String(fd.get('facilitator') || '').trim(),
@@ -2069,6 +2104,9 @@
         <button id="btn-back-admin" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px">← ${t('back')}</button>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap">
           <div>
+            <div style="display:flex; gap:6px; margin-bottom:4px;">
+              <span class="badge badge-type">${cpd.type || 'CPD'}</span>
+            </div>
             <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3);">${escapeHtml(cpd.title)}</h1>
             ${cpd.facilitator ? `<p style="font-size:13px;color:#00ffcc;margin:4px 0 0;font-weight:600;">Facilitator: ${escapeHtml(cpd.facilitator)}</p>` : ''}
           </div>
@@ -2143,7 +2181,6 @@
       });
     }
 
-    // ADDED GLOBAL FUNCTION FOR PHOTO VIEWING
     window.showFullPhoto = (base64) => {
       const modal = document.createElement('div');
       modal.className = 'profile-modal open';
