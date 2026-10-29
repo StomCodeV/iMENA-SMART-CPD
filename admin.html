@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#071B33" />
-  <title>iMENA Smart Attendance — Admin</title>
+  <title>Admin Portal — iMENA Smart Attendance</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -482,7 +482,7 @@
     const I18N = {
       en: {
         home: 'Home', logout: 'Sign Out', admin: 'Admin',
-        overview: 'Overview', daily: 'Daily', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New CPD', teachers: 'Teachers',
+        overview: 'Overview', daily: 'Daily', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New', teachers: 'Teachers',
         admin_title: 'Admin Dashboard', stat_total: 'Total', stat_ongoing: 'Ongoing', stat_upcoming: 'Upcoming', stat_ended: 'Ended',
         stat_live_now: 'Live Now', stat_next_session: 'Next Session',
         open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
@@ -1242,7 +1242,7 @@
         ${greetingCardHtml()}
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
           <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('admin_title')}</h1>
-          <button id="btn-top-new" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">+ ${t('new_cpd')}</button>
+          <button id="btn-top-new" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">+ ${t('New')}</button>
         </div>
         <div class="a-stat-grid">
           <div class="a-stat"><div class="val" style="color:#00ffcc">${liveNow}</div><div class="lbl">${t('stat_live_now')}</div></div>
@@ -2196,5 +2196,43 @@
         <div class="loader-ring"></div>
       </div>`;
   </script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 </body>
 </html>
