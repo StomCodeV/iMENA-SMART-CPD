@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#071B33" />
-  <title>Admin Portal - iMENA Smart Attendance</title>
+  <title>iMENA Smart Attendance — Admin</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -14,7 +14,7 @@
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: #e2e8f0; -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; background: #0a0f1e; }
-    button, input, select { font-family: inherit; }
+    button, input, select, textarea { font-family: inherit; }
     button { cursor: pointer; border: none; background: none; color: inherit; }
     a { color: inherit; text-decoration: none; }
 
@@ -330,6 +330,26 @@
     .teacher-action-btn.danger:hover, .teacher-action-btn.danger:active { background: rgba(239,68,68,0.3); }
     @media (hover: none) { .teacher-action-btn { opacity: 1; } }
 
+    /* LESSON PLAN STYLES */
+    .lp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .lp-card { background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.15s, border-color 0.15s; cursor: pointer; position: relative; }
+    .lp-card:hover { transform: translateY(-2px); border-color: rgba(0,255,204,0.3); }
+    .lp-card.submitted { border-left: 4px solid #10b981; }
+    .lp-card.missing { border-left: 4px solid #ef4444; background: rgba(239,68,68,0.02); }
+    .lp-card h4 { font-size: 14px; color: #fff; margin: 0; font-weight: 700; }
+    .lp-card p { font-size: 12px; color: #94a3b8; margin: 0; }
+    .lp-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b; margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .lp-preview-modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .lp-preview-modal.open { opacity: 1; pointer-events: auto; }
+    .lp-preview-container { width: 100%; max-width: 900px; height: 85vh; background: #fff; border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .lp-preview-header { position: absolute; top: 0; left: 0; right: 0; height: 48px; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
+    .lp-preview-header h3 { font-size: 14px; margin: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lp-preview-close { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .lp-preview-close:hover { background: rgba(239,68,68,0.8); }
+    .lp-preview-body { width: 100%; height: 100%; padding-top: 48px; background: #e2e8f0; }
+    .lp-preview-body iframe, .lp-preview-body embed { width: 100%; height: 100%; border: none; display: block; }
+    .lp-preview-body .fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #475569; text-align: center; padding: 20px; }
+
     @media (min-width: 768px) {
       .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
       .header { padding: 14px 32px; }
@@ -457,15 +477,15 @@
       user: null, profile: null, view: 'boot', lang: 'en',
       adminTab: 'overview', adminSessionFilter: 'all',
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
-      cpds: [], allAttendances: [], teachers: [], dailyRecords: [],
+      cpds: [], allAttendances: [], teachers: [], dailyRecords: [], lessonPlans: [],
       settings: { startTime: '08:00', endTime: '17:00', schoolRadius: 150 },
       subCpds: null, subDetail: null, subDetailAtt: null, subAllAtt: null, subTeachers: null,
-      subDaily: null, subSettings: null,
+      subDaily: null, subSettings: null, subLessonPlans: null,
       dailyDate: todayKeyInit,
       selectedCpdId: null, selectedCpd: null, cpdAttendances: [],
       liveMap: null, liveMapCpdId: null,
       teacherSearch: '', teacherCatFilter: 'all',
-      teacherDetailName: null,
+      teacherDetailName: null, lpFilter: 'all',
       loading: true,
     };
     state.lang = 'en';
@@ -481,7 +501,7 @@
     const I18N = {
       en: {
         home: 'Home', logout: 'Sign Out', admin: 'Admin',
-        overview: 'Overview', daily: 'Daily', sessions: 'Sessions', calendar: 'Calendar', new_cpd: 'New', teachers: 'Teachers',
+        overview: 'Overview', daily: 'Daily', sessions: 'Sessions', lesson_plans: 'Lesson Plans', new_cpd: 'New', teachers: 'Teachers',
         admin_title: 'Admin Dashboard', stat_total: 'Total', stat_ongoing: 'Ongoing', stat_upcoming: 'Upcoming', stat_ended: 'Ended',
         stat_live_now: 'Live Now', stat_next_session: 'Next Session',
         open: 'Open', back: 'Back', delete: 'Delete', approve: 'Approve',
@@ -524,10 +544,15 @@
         weekly_trend: '7-Day Attendance Trend',
         today_status: 'Today', total_staff: 'staff',
         school_settings: 'School Hours & Radius',
-        radius_label: 'Geofence Radius (m)'
+        radius_label: 'Geofence Radius (m)',
+        lp_title: 'Lesson Plans', lp_sub: 'Manage and preview submitted teacher lesson plans.',
+        lp_all: 'All', lp_submitted: 'Submitted', lp_missing: 'Not Submitted',
+        lp_not_submitted: 'No lesson plan submitted yet.', lp_submitted_on: 'Submitted on',
+        lp_preview: 'Preview Plan', lp_no_file: 'No file attached',
+        lp_download: 'Download', lp_close: 'Close'
       },
       rw: {
-        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', daily: 'Buri Munsi', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
+        home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', daily: 'Buri Munsi', sessions: 'Amasomo', lesson_plans: 'Gahunda y\'Ishuri', new_cpd: 'Gishya', teachers: 'Abarimu',
         admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
         stat_live_now: 'Kuri ubu', stat_next_session: 'Igikorwa gikurikira',
         open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
@@ -558,11 +583,15 @@
         daily_stat_present: 'Baje', daily_stat_absent: 'Bataje',
         weekly_trend: 'Iminsi 7 y\'ishuri',
         today_status: 'Uyu munsi', total_staff: 'abarimu',
-        school_settings: 'Igihe & Intera',
-        radius_label: 'Intera y\'ishuri (m)'
+        school_settings: 'Igihe & Intera', radius_label: 'Intera y\'ishuri (m)',
+        lp_title: 'Gahunda y\'Ishuri', lp_sub: 'Genzura gahunda z\'ishuri zatanzwe n\'abarimu.',
+        lp_all: 'Byose', lp_submitted: 'Byatanzwe', lp_missing: 'Ntibitanze',
+        lp_not_submitted: 'Nta gahunda yatanzwe.', lp_submitted_on: 'Byatanzwe ku',
+        lp_preview: 'Reba Gahunda', lp_no_file: 'Nta dosiye ihari',
+        lp_download: 'Kuramo', lp_close: 'Funga'
       },
       fr: {
-        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', daily: 'Quotidien', sessions: 'Sessions', calendar: 'Calendrier', new_cpd: 'Nouveau', teachers: 'Enseignants',
+        home: 'Accueil', logout: 'Déconnexion', admin: 'Admin', overview: 'Aperçu', daily: 'Quotidien', sessions: 'Sessions', lesson_plans: 'Fiches de Prep', new_cpd: 'Nouveau', teachers: 'Enseignants',
         admin_title: 'Admin', stat_total: 'Total', stat_ongoing: 'En cours', stat_upcoming: 'À venir', stat_ended: 'Terminées',
         stat_live_now: 'En direct', stat_next_session: 'Prochaine session',
         open: 'Ouvrir', back: 'Retour', delete: 'Supprimer', approve: 'Approuver',
@@ -593,8 +622,12 @@
         daily_stat_present: 'Présents', daily_stat_absent: 'Absents',
         weekly_trend: 'Tendance sur 7 jours',
         today_status: 'Aujourd\'hui', total_staff: 'enseignants',
-        school_settings: 'Heures & Rayon',
-        radius_label: 'Rayon de l\'école (m)'
+        school_settings: 'Heures & Rayon', radius_label: 'Rayon de l\'école (m)',
+        lp_title: 'Fiches de Préparation', lp_sub: 'Gérez et consultez les fiches des enseignants.',
+        lp_all: 'Tous', lp_submitted: 'Soumis', lp_missing: 'Non soumis',
+        lp_not_submitted: 'Aucune fiche soumise.', lp_submitted_on: 'Soumis le',
+        lp_preview: 'Aperçu', lp_no_file: 'Aucun fichier joint',
+        lp_download: 'Télécharger', lp_close: 'Fermer'
       }
     };
     function t(k) { return (I18N[state.lang])[k] || I18N.en[k] || k; }
@@ -773,17 +806,7 @@
     function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
     function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
     function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
-    function todayLocalDateKey() {
-      const d = new Date();
-      const p = n => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-    }
-    function shiftDateKey(dateKey, deltaDays) {
-      const d = new Date(dateKey + 'T00:00:00');
-      d.setDate(d.getDate() + deltaDays);
-      const p = n => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-    }
+    function todayLocalDateKey() { const d = new Date(); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
     function avatarUrlFor(photoURL, name, size = 64) {
       if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
       const q = encodeURIComponent((name || 'User').trim());
@@ -794,23 +817,11 @@
       const fallback = avatarUrlFor(null, name, size * 2);
       return `<img class="att-avatar" src="${escapeHtml(initial)}" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" alt="${escapeHtml(name || 'User')}" loading="lazy" />`;
     }
-    function getPositionOnce() {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) return reject(new Error('Geolocation not supported.'));
-        navigator.geolocation.getCurrentPosition(
-          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-          err => reject(new Error(err.code === 1 ? 'Location denied.' : 'GPS error.')),
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-        );
-      });
-    }
     function toast(msg, type = 'info') {
-      const el = document.createElement('div');
-      el.className = `toast ${type}`; el.textContent = msg;
+      const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
       document.getElementById('toast-root').appendChild(el);
       setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 4000);
     }
-    function toLocalInputValue(d) { const pad = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
     function cpdStatus(cpd) {
       const s = toDate(cpd.startTime)?.getTime(), e = toDate(cpd.endTime)?.getTime(), n = Date.now();
       if (!s || !e) return 'unknown';
@@ -823,15 +834,6 @@
       const parts = String(name || '').trim().split(/\s+/);
       if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    function timeAgo(ts) {
-      const d = toDate(ts);
-      if (!d) return '';
-      const diff = Math.floor((Date.now() - d.getTime()) / 60000);
-      if (diff < 1) return t('just_now');
-      if (diff < 60) return `${diff}${t('min_ago')}`;
-      if (diff < 1440) return `${Math.floor(diff / 60)}${t('hour_ago')}`;
-      return `${Math.floor(diff / 1440)}${t('day_ago')}`;
     }
     function findSchoolTeacher(name) {
       const key = normalizeName(name);
@@ -1141,6 +1143,9 @@
         }
         handleDataUpdate();
       });
+      if (!state.subLessonPlans) state.subLessonPlans = onSnapshot(collection(db, 'lesson_plans'),
+        snap => { state.lessonPlans = snap.docs.map(d => ({ id: d.id, ...d.data() })); handleDataUpdate(); },
+        err => console.error(err));
       renderAdmin();
     }
 
@@ -1150,7 +1155,7 @@
         { id: 'daily', icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
         { id: 'teachers', icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>' },
         { id: 'sessions', icon: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>' },
-        { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
+        { id: 'lesson_plans', icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>' },
         { id: 'new_cpd', icon: '<path d="M12 5v14M5 12h14"/>' }
       ];
       return `<nav class="tab-bar">${tabs.map(tb => `<button class="tab-btn ${state.adminTab === tb.id ? 'active' : ''}" data-atab="${tb.id}"><svg viewBox="0 0 24 24">${tb.icon}</svg>${t(tb.id)}</button>`).join('')}</nav>`;
@@ -1159,12 +1164,12 @@
     function renderAdmin() {
       let body = '';
       if (state.adminTab === 'sessions') body = renderAdminSessions();
-      else if (state.adminTab === 'calendar') body = renderAdminCalendar();
+      else if (state.adminTab === 'lesson_plans') body = renderAdminLessonPlans();
       else if (state.adminTab === 'new_cpd') body = renderAdminNew();
       else if (state.adminTab === 'teachers') body = renderAdminTeachers();
       else if (state.adminTab === 'daily') body = renderAdminDaily();
       else body = renderAdminOverview();
-      const mainClass = state.adminTab === 'teachers' || state.adminTab === 'daily' ? 'main main-wide' : 'main';
+      const mainClass = state.adminTab === 'teachers' || state.adminTab === 'daily' || state.adminTab === 'lesson_plans' ? 'main main-wide' : 'main';
       document.getElementById('app').innerHTML = `${headerHtml()}<main class="${mainClass}">${body}</main>${state.adminTab === 'new_cpd' ? '' : adminTabBar()}`;
       bindHeaderEvents();
       document.querySelectorAll('[data-atab]').forEach(b => b.onclick = () => {
@@ -1184,17 +1189,10 @@
         };
       });
       document.querySelectorAll('[data-filter]').forEach(b => { b.onclick = () => { state.adminSessionFilter = b.dataset.filter; renderAdmin(); }; });
-      document.querySelectorAll('[data-calday]').forEach(b => b.onclick = () => { state.calSelectedDay = parseInt(b.dataset.calday); renderAdmin(); });
-      document.querySelectorAll('[data-calnav]').forEach(b => b.onclick = () => {
-        const delta = parseInt(b.dataset.calnav);
-        let m = state.calMonth + delta, y = state.calYear;
-        if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
-        state.calMonth = m; state.calYear = y; state.calSelectedDay = null;
-        renderAdmin();
-      });
       if (state.adminTab === 'teachers') bindTeachersEvents();
       if (state.adminTab === 'new_cpd') bindAdminNewEvents();
       if (state.adminTab === 'daily') bindDailyEvents();
+      if (state.adminTab === 'lesson_plans') bindLessonPlanEvents();
     }
 
     function renderAdminOverview() {
@@ -1815,6 +1813,100 @@
       document.getElementById('btn-back-teacher').onclick = () => { state.view = 'admin'; state.teacherDetailName = null; state.adminTab = 'teachers'; renderAdmin(); };
     }
 
+    /* ==================== LESSON PLANS TAB ==================== */
+    function renderAdminLessonPlans() {
+      const filter = state.lpFilter;
+      // Filter lesson plans into latest per teacher
+      const latestPlans = new Map();
+      state.lessonPlans.forEach(lp => {
+        const key = normalizeName(lp.teacherName);
+        if (!latestPlans.has(key) || toDate(lp.submittedAt) > toDate(latestPlans.get(key).submittedAt)) {
+          latestPlans.set(key, lp);
+        }
+      });
+
+      const submittedList = [];
+      const missingList = [];
+
+      (state.teachers || []).forEach(tc => {
+        const key = normalizeName(tc.name);
+        const plan = latestPlans.get(key);
+        if (plan) submittedList.push({ teacher: tc, plan });
+        else missingList.push({ teacher: tc });
+      });
+
+      const filteredSubmitted = (filter === 'all' || filter === 'submitted') ? submittedList : [];
+      const filteredMissing = (filter === 'all' || filter === 'missing') ? missingList : [];
+
+      const renderSubmittedCard = (item) => {
+        const { teacher, plan } = item;
+        return `<div class="lp-card submitted" onclick="openLessonPlanPreview('${plan.id}', '${escapeHtml(teacher.name)}')">
+          <h4>${escapeHtml(teacher.name)}</h4>
+          <p>${escapeHtml(plan.title)}</p>
+          <div class="lp-meta">
+            <span>${fmtDateTime(plan.submittedAt)}</span>
+            <span class="badge badge-verified" style="font-size:9px">Submitted</span>
+          </div>
+        </div>`;
+      };
+
+      const renderMissingCard = (item) => {
+        const { teacher } = item;
+        return `<div class="lp-card missing">
+          <h4>${escapeHtml(teacher.name)}</h4>
+          <p>${t('lp_not_submitted')}</p>
+          <div class="lp-meta">
+            <span>${teacher.category}</span>
+            <span class="badge badge-absent" style="font-size:9px">Missing</span>
+          </div>
+        </div>`;
+      };
+
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('lp_title')}</h1>
+        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${t('lp_sub')}</p>
+
+        <div class="filter-tabs">
+          <button class="filter-tab ${filter === 'all' ? 'active' : ''}" data-lpfilter="all">${t('lp_all')} · ${(state.teachers||[]).length}</button>
+          <button class="filter-tab ${filter === 'submitted' ? 'active' : ''}" data-lpfilter="submitted">${t('lp_submitted')} · ${submittedList.length}</button>
+          <button class="filter-tab ${filter === 'missing' ? 'active' : ''}" data-lpfilter="missing">${t('lp_missing')} · ${missingList.length}</button>
+        </div>
+
+        <div class="lp-grid">
+          ${filteredSubmitted.map(renderSubmittedCard).join('')}
+          ${filteredMissing.map(renderMissingCard).join('')}
+        </div>
+        ${filteredSubmitted.length === 0 && filteredMissing.length === 0 ? `<div class="empty"><strong>No records</strong></div>` : ''}
+      `;
+    }
+
+    function bindLessonPlanEvents() {
+      document.querySelectorAll('[data-lpfilter]').forEach(b => {
+        b.onclick = () => { state.lpFilter = b.dataset.lpfilter; renderAdminLessonPlans(); };
+      });
+    }
+
+    window.openLessonPlanPreview = (planId, teacherName) => {
+      const plan = state.lessonPlans.find(lp => lp.id === planId);
+      if (!plan || !plan.fileBase64) { toast('No file attached.', 'warn'); return; }
+
+      const modal = document.createElement('div');
+      modal.className = 'lp-preview-modal open';
+      modal.innerHTML = `
+        <div class="lp-preview-container">
+          <div class="lp-preview-header">
+            <h3>${escapeHtml(teacherName)} - ${escapeHtml(plan.title)}</h3>
+            <button class="lp-preview-close" onclick="this.closest('.lp-preview-modal').remove()">✕</button>
+          </div>
+          <div class="lp-preview-body">
+            <iframe src="${plan.fileBase64}" type="${plan.fileType}"></iframe>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.onclick = e => { if (e.target === modal) modal.remove(); };
+    };
+
     /* ==================== SESSIONS ==================== */
     function renderAdminSessions() {
       const filter = state.adminSessionFilter;
@@ -1840,66 +1932,7 @@
       `;
     }
 
-    /* ==================== CALENDAR ==================== */
-    function renderAdminCalendar() {
-      const year = state.calYear, month = state.calMonth;
-      const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
-      const startWeekday = (firstDay.getDay() + 6) % 7; const daysInMonth = lastDay.getDate();
-      const sessionsByDay = {};
-      state.cpds.forEach(c => {
-        const d = toDate(c.startTime); if (!d) return;
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          const key = d.getDate(); if (!sessionsByDay[key]) sessionsByDay[key] = []; sessionsByDay[key].push(c);
-        }
-      });
-      const today = new Date();
-      const isToday = (day) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
-      let grid = '';
-      for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
-      for (let day = 1; day <= daysInMonth; day++) {
-        const sessions = sessionsByDay[day] || []; const classes = ['cal-day'];
-        if (sessions.length > 0) {
-          classes.push('has-cpd');
-          const statuses = sessions.map(c => cpdStatus(c));
-          if (statuses.some(s => s === 'ongoing')) classes.push('live-day');
-          else if (statuses.every(s => s === 'ended')) classes.push('past-only');
-        }
-        if (isToday(day)) classes.push('today');
-        if (state.calSelectedDay === day) classes.push('selected');
-        grid += `<div class="${classes.join(' ')}" data-calday="${day}">${day}</div>`;
-      }
-      const monthName = firstDay.toLocaleString('en', { month: 'long', year: 'numeric' });
-      let dayDetail = '';
-      if (state.calSelectedDay) {
-        const list = sessionsByDay[state.calSelectedDay] || [];
-        const dayDate = new Date(year, month, state.calSelectedDay).toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
-        dayDetail = `<div class="section-title">${dayDate}</div>`;
-        if (list.length === 0) dayDetail += `<div class="empty"><strong>${t('no_sessions_day')}</strong></div>`;
-        else dayDetail += list.map(c => adminSessionDayCard(c)).join('');
-      }
-      return `
-        <h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('calendar')}</h1>
-        <div class="cal-wrap">
-          <div class="cal-header"><div class="cal-title">${monthName}</div><div class="cal-nav"><button data-calnav="-1">‹</button><button data-calnav="1">›</button></div></div>
-          <div class="cal-grid">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow">${d}</div>`).join('')}${grid}</div>
-          <div class="cal-legend"><span><i class="dot-ended"></i> ${t('ended')}</span><span><i class="dot-live"></i> ${t('live')}</span><span><i class="dot-upcoming"></i> ${t('upcoming')}</span></div>
-        </div>
-        ${dayDetail}`;
-    }
-    function adminSessionDayCard(cpd) {
-      const atts = state.allAttendances.filter(a => a.cpdId === cpd.id);
-      const total = atts.length; const verified = atts.filter(a => a.verified).length;
-      const st = cpdStatus(cpd);
-      let badge = ''; if (st === 'ongoing') badge = `<span class="badge badge-live">● ${t('live')}</span>`; else if (st === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`; else badge = `<span class="badge badge-ended">${t('ended')}</span>`;
-      return `<div class="a-session-card"><div class="row">
-        <div style="flex:1;min-width:0"><div>${badge}<span class="badge badge-type">${cpd.type || 'CPD'}</span></div><h3>${escapeHtml(cpd.title)}</h3><p>${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)} · ${escapeHtml(cpd.venueName)}</p>
-          <div class="past-stats"><span class="past-stat">👥 ${total} ${t('attendees')}</span><span class="past-stat ok">✓ ${verified} ${t('verified')}</span></div>
-        </div>
-        <div class="actions"><button data-open-cpd="${cpd.id}" class="btn btn-primary">${t('open')}</button></div>
-      </div></div>`;
-    }
-
-    /* ==================== NEW CPD (DYNAMIC) ==================== */
+    /* ==================== NEW CPD ==================== */
     function renderAdminNew() {
       const now = new Date(); now.setSeconds(0, 0); now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5);
       const startStr = toLocalInputValue(now);
@@ -1972,21 +2005,13 @@
       const sub = document.getElementById('form-sub-heading');
       
       if (type === 'CPD') {
-        btn.textContent = 'Create CPD Session';
-        title.textContent = 'Plan a CPD Session';
-        sub.textContent = 'Fill in the details for the upcoming CPD session.';
+        btn.textContent = 'Create CPD Session'; title.textContent = 'Plan a CPD Session'; sub.textContent = 'Fill in the details for the upcoming CPD session.';
       } else if (type === 'Meeting') {
-        btn.textContent = 'Create Staff Meeting';
-        title.textContent = 'Plan a Staff Meeting';
-        sub.textContent = 'Fill in the details for the upcoming staff meeting.';
+        btn.textContent = 'Create Staff Meeting'; title.textContent = 'Plan a Staff Meeting'; sub.textContent = 'Fill in the details for the upcoming staff meeting.';
       } else if (type === 'Workshop') {
-        btn.textContent = 'Create Workshop';
-        title.textContent = 'Plan a Workshop';
-        sub.textContent = 'Fill in the details for the upcoming workshop.';
+        btn.textContent = 'Create Workshop'; title.textContent = 'Plan a Workshop'; sub.textContent = 'Fill in the details for the upcoming workshop.';
       } else {
-        btn.textContent = 'Create Event';
-        title.textContent = 'Plan an Event';
-        sub.textContent = 'Fill in the details for the upcoming event.';
+        btn.textContent = 'Create Event'; title.textContent = 'Plan an Event'; sub.textContent = 'Fill in the details for the upcoming event.';
       }
     };
 
@@ -2073,7 +2098,7 @@
       };
     }
 
-    /* ==================== CPD DETAIL (DYNAMIC) ==================== */
+    /* ==================== CPD DETAIL ==================== */
     function goCpdDetail(cpdId) {
       state.view = 'cpd-detail'; state.selectedCpdId = cpdId;
       state.selectedCpd = null; state.cpdAttendances = [];
