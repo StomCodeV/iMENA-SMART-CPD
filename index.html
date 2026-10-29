@@ -2,715 +2,233 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <meta name="theme-color" content="#071B33" />
-  <title>iMENA SMART ATTENDANCE</title>
-  
-  <!-- New Favicon -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b13" />
+  <title>iMENA Smart Attendance — Teacher</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
-  <link rel="apple-touch-icon" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-    }
-  }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
   <style>
+    /* ── CSS base ── */
+    :root{--bg:#070b13;--ink:#edf6ff;--muted:#8b9caf;--line:rgba(185,220,255,.15);--cyan:#68e4e0;--lime:#d4ff69;--orange:#ff9d68;--purple:#a88cff;--ease:cubic-bezier(.2,.8,.2,1)}
     *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
-    body {
-      margin: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #0f172a;
-      -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
-      overflow-x: hidden;
-      width: 100%;
-    }
-    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; background: var(--bg); }
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; line-height: 1.5; background: var(--bg); }
+    button, input { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; color: inherit; }
     a { color: inherit; text-decoration: none; }
 
-    /* ============ OCEAN BACKGROUND ============ */
-    .landing-canvas-fixed {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 1;
-      pointer-events: none;
-    }
-    #ocean-canvas { display: block; width: 100%; height: 100%; }
-    #droplet-canvas { display: block; width: 100%; height: 100%; z-index: 2; }
+    /* ── Background Engine CSS ── */
+    .noise,.aurora,.stars{position:fixed;inset:0;pointer-events:none}
+    .noise{z-index:4;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");mix-blend-mode:screen}
+    .aurora{z-index:0;background:radial-gradient(ellipse at 15% 10%,rgba(104,228,224,.16),transparent 38%),radial-gradient(ellipse at 85% 52%,rgba(168,140,255,.15),transparent 42%),radial-gradient(ellipse at 45% 100%,rgba(212,255,105,.1),transparent 40%);filter:blur(32px);animation:aurora 18s ease-in-out infinite alternate}
+    .stars{z-index:0;background-image:radial-gradient(rgba(255,255,255,.7) 1px,transparent 1px),radial-gradient(rgba(104,228,224,.5) 1px,transparent 1px);background-size:77px 77px,137px 137px;background-position:10px 20px,40px 80px;opacity:.25;animation:drift 40s linear infinite}
+    #space{position:fixed;z-index:1;inset:0;width:100%;height:100%;pointer-events:none}
+    @keyframes aurora{to{transform:scale(1.15) rotate(4deg)}}
+    @keyframes drift{to{background-position:100px 120px,0 0}}
 
-    /* ============ NAVIGATION BAR ============ */
-    .nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: linear-gradient(to bottom, rgba(7,27,51,0.9) 0%, rgba(7,27,51,0) 100%);
-      border-bottom: none;
-      transition: all 0.3s ease;
-    }
-    .nav.scrolled {
-      background: rgba(7, 27, 51, 0.98);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: none;
-      padding: 10px 16px;
-    }
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-    .nav-logo {
-      width: 34px; height: 34px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .nav-logo img {
-      width: 100%; height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 8px rgba(0, 217, 255, 0.4));
-    }
-    .nav-brand {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #F8FAFC;
-      white-space: nowrap;
-    }
-    .nav-brand span {
-      background: linear-gradient(135deg, #00D9FF, #10B981);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .nav-links {
-      display: none; /* Hidden on mobile by default */
-      align-items: center;
-      gap: 4px;
-      margin-left: 24px;
-    }
-    .nav-links a {
-      padding: 8px 14px;
-      border-radius: 8px;
-      color: rgba(248, 250, 252, 0.75);
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    .nav-links a:hover {
-      color: #F8FAFC;
-      background: rgba(255, 255, 255, 0.08);
-    }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .nav-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      background: #F8FAFC;
-      color: #071B33;
-      font-size: 12px;
-      font-weight: 700;
-      box-shadow: 0 4px 16px rgba(0, 217, 255, 0.25);
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-    .nav-cta.dashboard-mode {
-      background: linear-gradient(135deg, #00D9FF, #10B981);
-    }
-    .nav-cta svg { flex-shrink: 0; }
+    #app { position: relative; z-index: 5; min-height: 100vh; display: flex; flex-direction: column; }
 
-    .mobile-menu-btn {
-      display: block;
-      color: #F8FAFC;
-      font-size: 24px;
-      padding: 4px;
-      line-height: 1;
-    }
+    /* Header */
+    .header { position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 8px; background: rgba(7,11,19,0.72); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-bottom: 1px solid var(--line); padding-top: max(10px, env(safe-area-inset-top)); }
+    .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .header-logo { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 0 8px rgba(104,228,224,.4)); }
+    .header-title { font-size: 14px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+    .header-title span { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; color: var(--cyan); }
+    .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 2px solid var(--purple); padding: 0; background: #fff; flex-shrink: 0; }
+    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* Mobile Menu Drawer */
-    .mobile-menu {
-      position: fixed;
-      inset: 0;
-      background: rgba(7, 27, 51, 0.98);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-    .mobile-menu.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .mobile-menu a {
-      color: #F8FAFC;
-      font-size: 20px;
-      font-weight: 600;
-      transition: color 0.2s;
-    }
-    .mobile-menu a:hover { color: #00D9FF; }
-    .mobile-close-btn {
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      color: #F8FAFC;
-      font-size: 28px;
-    }
+    /* Profile modal */
+    .profile-modal { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .profile-modal.open { opacity: 1; pointer-events: auto; }
+    .profile-card { background: #0f172a; color: #fff; border-radius: 24px; padding: 24px; width: 100%; max-width: 340px; text-align: center; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); border: 1px solid var(--line); }
+    .profile-modal.open .profile-card { transform: translateY(0); }
+    .profile-img { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px; border: 3px solid var(--purple); object-fit: cover; }
+    .profile-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: var(--muted); margin-bottom: 12px; word-break: break-all; }
+    .profile-role { display: inline-block; padding: 6px 12px; border-radius: 99px; background: rgba(168,140,255,0.15); color: var(--purple); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
+    .profile-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-home, .btn-logout, .btn-face { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; }
+    .btn-home { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn-logout { background: rgba(239,68,68,0.15); color: #f87171; }
+    .btn-face { background: rgba(104,228,224,0.15); color: var(--cyan); border: 1px solid rgba(104,228,224,0.3); }
 
-    /* ============ LANGUAGE SWITCHER ============ */
-    .lang-switcher {
-      position: fixed;
-      bottom: 20px;
-      right: 16px;
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-    }
-    .lang-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: rgba(7, 27, 51, 0.9);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #F8FAFC;
-      font-size: 11px;
-      font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      transition: all 0.2s ease;
-    }
-    .lang-menu {
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      padding: 6px;
-      border-radius: 12px;
-      background: rgba(7, 27, 51, 0.98);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-      min-width: 140px;
-    }
-    .lang-menu.open { display: flex; }
-    .lang-menu button {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      color: rgba(248, 250, 252, 0.8);
-      font-size: 13px;
-      font-weight: 500;
-      text-align: left;
-    }
-    .lang-menu button.active {
-      background: rgba(0, 217, 255, 0.18);
-      color: #00D9FF;
-      font-weight: 600;
-    }
+    /* Buttons */
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px 20px; border-radius: 14px; font-size: 15px; font-weight: 800; transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s; min-height: 48px; }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--lime); color: #111a13; box-shadow: 0 6px 24px rgba(212,255,105,0.3); }
+    .btn-danger { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,0.35); }
+    .btn-ghost { background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-present { background: linear-gradient(135deg,#10b981,#06b6d4); color: #fff; box-shadow: 0 6px 20px rgba(16,185,129,0.35); font-size: 17px; padding: 20px; }
+    .btn-departure { background: linear-gradient(135deg,#f59e0b,#ef4444); color: #fff; box-shadow: 0 6px 20px rgba(245,158,11,0.35); font-size: 17px; padding: 20px; }
 
-    /* ============ SCROLLING CONTENT ============ */
-    .landing-scroll {
-      position: relative;
-      z-index: 3;
-      pointer-events: none;
-    }
-    .section {
-      position: relative;
-      min-height: 100vh;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 80px 16px;
-      pointer-events: auto;
-    }
-    .section-inner {
-      max-width: 1100px;
-      width: 100%;
-      text-align: center;
-      color: #F8FAFC;
-    }
+    /* Main + tab bar */
+    .main { flex: 1; padding: 18px 14px calc(80px + env(safe-area-inset-bottom)); max-width: 800px; margin: 0 auto; width: 100%; }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; z-index: 90; background: rgba(7,11,19,0.85); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+    .tab-btn { flex: 1; padding: 10px 2px; color: var(--muted); font-size: 9.5px; font-weight: 700; text-align: center; transition: color 0.2s; text-transform: uppercase; letter-spacing: 0.03em; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+    .tab-btn.active { color: #fff; }
+    .tab-btn.active svg { filter: drop-shadow(0 0 8px rgba(104,228,224,0.6)); stroke: var(--cyan); }
 
-    /* ============ HERO ============ */
-    .hero-logo {
-      width: 80px; height: 80px;
-      margin: 0 auto 24px;
-      filter: drop-shadow(0 12px 40px rgba(0, 217, 255, 0.5));
-    }
-    .hero-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .hero-h1 {
-      font-size: clamp(28px, 8vw, 64px);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      margin: 0 0 16px;
-      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
-      color: #F8FAFC;
-      word-break: break-word;
-    }
-    .hero-h1 span.accent {
-      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero-sub {
-      font-size: 15px;
-      color: rgba(248, 250, 252, 0.85);
-      line-height: 1.6;
-      margin: 0 auto;
-      font-weight: 400;
-      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
-    }
+    /* Cards & Hero */
+    .t-hero { border-radius: 24px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.6); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); border: 1px solid var(--line); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .t-hero::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,var(--cyan),var(--purple),var(--lime)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.5; }
+    .t-hero-active::before { background: linear-gradient(135deg,#10b981,#06b6d4); opacity: 1; }
+    .t-hero h1 { font-size: 22px; font-weight: 900; margin: 0 0 8px; line-height: 1.2; color: #fff; }
+    .t-hero p { font-size: 14px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
+    .t-hero .status-pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; margin-right: 6px; animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.5); } 50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(16,185,129,0); } }
 
-    /* ============ SECTION HEADINGS ============ */
-    .section-h2 {
-      font-size: clamp(24px, 6vw, 48px);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      margin: 0 0 16px;
-      text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
-      color: #F8FAFC;
-      word-break: break-word;
-    }
-    .section-h2 .accent {
-      background: linear-gradient(135deg, #00D9FF 0%, #10B981 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .section-sub {
-      font-size: 14px;
-      color: rgba(248, 250, 252, 0.75);
-      line-height: 1.6;
-      margin: 0 auto 32px;
-      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
-    }
+    .t-session-card { border-radius: 20px; padding: 18px; margin-bottom: 12px; background: rgba(15,23,42,0.6); backdrop-filter: blur(20px); border: 1px solid var(--line); position: relative; overflow: hidden; transition: transform 0.15s; }
+    .t-session-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg,var(--cyan),var(--purple)); border-radius: 3px 0 0 3px; }
+    .t-session-card.live::before { background: linear-gradient(180deg,#10b981,#06b6d4); }
+    .t-session-card.ended::before { background: rgba(148,163,184,0.3); }
+    .t-session-card h3 { font-size: 17px; font-weight: 800; color: #fff; margin: 0 0 8px; line-height: 1.3; }
+    .t-session-meta { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 
-    /* ============ INNOVATION GRID ============ */
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: 1fr; /* Stack on mobile */
-      gap: 16px;
-      margin: 0 auto;
-    }
-    .benefit-card {
-      padding: 20px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(24px);
-      text-align: left;
-      color: #F8FAFC;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    }
-    .benefit-icon {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      background: rgba(0, 217, 255, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 14px;
-      color: #00D9FF;
-    }
-    .benefit-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-    .benefit-text {
-      font-size: 13px;
-      color: rgba(248, 250, 252, 0.7);
-      line-height: 1.6;
-    }
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-live { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.35); }
+    .badge-upcoming { background: rgba(148,163,184,0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
+    .badge-ended { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.15); }
+    .badge-verified { background: rgba(14,165,233,0.18); color: #38bdf8; border: 1px solid rgba(14,165,233,0.35); }
+    .badge-flagged { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+    .badge-absent { background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.35); }
+    .badge-late { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+    .badge-out { background: rgba(56,189,248,0.18); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); }
 
-    /* ============ FOUNDER ============ */
-    .founder-card {
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 24px 20px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(24px);
-      text-align: center;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .founder-avatar {
-      width: 90px;
-      height: 115px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .founder-avatar img {
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 8px 20px rgba(0, 217, 255, 0.25));
-    }
-    .founder-name {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    .founder-role {
-      font-size: 12px;
-      color: #00D9FF;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-    .founder-quote {
-      font-size: 14px;
-      color: rgba(248, 250, 252, 0.85);
-      line-height: 1.7;
-      margin: 0 0 16px;
-      font-style: italic;
-      border-left: 3px solid rgba(0, 217, 255, 0.5);
-      padding-left: 16px;
-      text-align: left;
-    }
-    .founder-body {
-      font-size: 13px;
-      color: rgba(248, 250, 252, 0.75);
-      line-height: 1.7;
-      text-align: left;
-    }
+    /* Daily Tab - Premium Look */
+    .daily-card { border-radius: 24px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.6); backdrop-filter: blur(24px); border: 1px solid var(--line); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .daily-card::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,#10b981,#06b6d4); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.7; }
+    .daily-card.signed-out::before { background: linear-gradient(135deg,#f59e0b,#ef4444); }
+    .daily-card h2 { font-size: 20px; font-weight: 900; margin: 0 0 6px; line-height: 1.2; color: #fff; }
+    .daily-card p { font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
+    .daily-times { display: flex; gap: 12px; margin-bottom: 16px; }
+    .daily-time-box { flex: 1; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 14px; border: 1px dashed rgba(255,255,255,0.15); text-align: center; position: relative; }
+    .daily-time-box .lbl { font-size: 10px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.05em; }
+    .daily-time-box .val { font-size: 18px; font-weight: 800; color: #fff; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .daily-time-box .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); }
 
-    /* ============ DEVELOPERS ============ */
-    .dev-grid {
-      display: grid;
-      grid-template-columns: 1fr; /* Stack on mobile */
-      gap: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .dev-card {
-      padding: 24px 20px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(24px);
-      text-align: center;
-      color: #F8FAFC;
-    }
-    .dev-photo {
-      width: 90px; height: 90px;
-      border-radius: 50%;
-      margin: 0 auto 16px;
-      overflow: hidden;
-      border: 3px solid rgba(0, 217, 255, 0.4);
-    }
-    .dev-photo img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-    }
-    .dev-name {
-      font-size: 17px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    .dev-role {
-      font-size: 11px;
-      color: #00D9FF;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    .dev-bio {
-      font-size: 13px;
-      color: rgba(248, 250, 252, 0.7);
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-    .dev-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 10px;
-      background: rgba(0, 217, 255, 0.15);
-      border: 1px solid rgba(0, 217, 255, 0.3);
-      color: #00D9FF;
-      font-size: 12px;
-      font-weight: 600;
-    }
+    .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .analytics-card { background: rgba(15,23,42,0.6); backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 16px; padding: 16px; text-align: center; }
+    .analytics-card .val { font-size: 24px; font-weight: 900; color: #fff; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(104,228,224,0.2); }
+    .analytics-card .lbl { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-top: 6px; letter-spacing: 0.05em; }
+    
+    .chart-container { background: rgba(15,23,42,0.6); backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
+    .chart-container h3 { font-size: 14px; font-weight: 800; color: #fff; margin: 0 0 20px; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-bottom: 24px; position: relative; }
+    .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative; }
+    .chart-bar { width: 100%; max-width: 40px; background: rgba(104,228,224,0.2); border-radius: 6px 6px 0 0; transition: height 0.3s; position: relative; min-height: 4px; }
+    .chart-bar.active { background: linear-gradient(180deg, var(--cyan), var(--purple)); box-shadow: 0 0 10px rgba(104,228,224,0.4); }
+    .chart-bar.absent { background: rgba(239,68,68,0.2); }
+    .chart-bar:hover { background: rgba(104,228,224,0.5); }
+    .chart-label { position: absolute; bottom: -24px; font-size: 10px; font-weight: 700; color: var(--muted); }
+    .chart-val { position: absolute; top: -20px; font-size: 10px; font-weight: 800; color: var(--cyan); opacity: 0; transition: opacity 0.2s; }
+    .chart-col:hover .chart-val { opacity: 1; }
 
-    /* ============ CONTACT ============ */
-    .contact-grid {
-      display: grid;
-      grid-template-columns: 1fr; /* Stack on mobile */
-      gap: 16px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .contact-card {
-      padding: 20px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(24px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-    .contact-icon {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: rgba(0, 217, 255, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #00D9FF;
-    }
-    .contact-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: #F8FAFC;
-    }
+    /* History */
+    .hist-month { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 8px; padding-left: 4px; }
+    .hist-month:first-child { margin-top: 0; }
+    .hist-item { background: rgba(15,23,42,0.6); backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .hist-item .hist-info { flex: 1; min-width: 0; }
+    .hist-item h4 { font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 4px; }
+    .hist-item p { font-size: 12px; color: var(--muted); margin: 0; }
 
-    /* ============ PROFESSIONAL FOOTER ============ */
-    .footer {
-      position: relative;
-      z-index: 4;
-      padding: 40px 16px 24px;
-      background: rgba(7, 27, 51, 0.98);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      color: #F8FAFC;
-    }
-    .footer-top {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr; /* Stack on mobile */
-      gap: 32px;
-      text-align: center;
-    }
-    .footer-brand-col {
-      max-width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .footer-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .footer-logo img {
-      width: 32px; height: 32px;
-      object-fit: contain;
-    }
-    .footer-logo-text {
-      font-size: 18px;
-      font-weight: 800;
-    }
-    .footer-logo-text span {
-      background: linear-gradient(135deg, #00D9FF, #10B981);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .footer-desc {
-      font-size: 13px;
-      color: rgba(248, 250, 252, 0.6);
-      line-height: 1.6;
-    }
-    .footer-heading {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(248, 250, 252, 0.4);
-      margin-bottom: 16px;
-    }
-    .footer-links-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .footer-links-list a {
-      font-size: 13px;
-      color: rgba(248, 250, 252, 0.75);
-    }
-    .footer-contact-item {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 12px;
-    }
-    .footer-contact-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      color: rgba(248, 250, 252, 0.4);
-      margin-bottom: 2px;
-    }
-    .footer-contact-value {
-      font-size: 13px;
-      color: #F8FAFC;
-    }
-    .footer-bottom {
-      max-width: 1200px;
-      margin: 32px auto 0;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      text-align: center;
-    }
-    .footer-copy {
-      font-size: 12px;
-      color: rgba(248, 250, 252, 0.5);
-    }
-    .footer-lab {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #F8FAFC;
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-    }
-    .footer-lab img { width: 16px; height: 16px; }
+    .section-title { font-size: 13px; font-weight: 800; color: var(--muted); margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; padding-left: 4px; }
+    .section-title:first-child { margin-top: 0; }
 
-    /* ============ SCROLL HINT & TOAST ============ */
-    .scroll-hint {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(248, 250, 252, 0.6);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      animation: floatDown 2s ease-in-out infinite;
-    }
-    @keyframes floatDown {
-      0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
-      50% { transform: translate(-50%, 6px); opacity: 1; }
-    }
-    .toast {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 500;
-      max-width: 300px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-    }
-    .toast.success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-    .toast.error   { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-    .spin { animation: spin 0.9s linear infinite; display: inline-block; }
+    /* Empty states */
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; background: rgba(15,23,42,0.55); border-radius: 16px; border: 1px dashed var(--line); }
+    .empty strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 6px; }
+
+    .pro-empty { text-align: center; padding: 32px 22px; margin: 16px 0; border-radius: 20px; background: rgba(15,23,42,0.6); border: 1px solid var(--line); backdrop-filter: blur(20px); position: relative; overflow: hidden; }
+    .pro-empty-icon { font-size: 40px; line-height: 1; margin-bottom: 14px; display: inline-block; position: relative; filter: drop-shadow(0 4px 12px rgba(104,228,224,0.35)); }
+    .pro-empty strong { display: block; color: #fff; font-size: 16px; font-weight: 800; margin-bottom: 8px; position: relative; }
+    .pro-empty p { font-size: 13px; color: var(--muted); margin: 0 auto; line-height: 1.6; max-width: 340px; position: relative; }
+
+    /* Greeting card */
+    .greet-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-bottom: 16px; border-radius: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.6); backdrop-filter: blur(22px); border: 1px solid var(--line); }
+    .greet-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(135deg, rgba(104,228,224,0.05), rgba(168,140,255,0.05)); }
+    .greet-emoji { font-size: 34px; line-height: 1; flex-shrink: 0; animation: greetFloat 4s ease-in-out infinite; }
+    @keyframes greetFloat { 50% { transform: translateY(-4px) rotate(5deg); } }
+    .greet-text { min-width: 0; }
+    .greet-text h2 { font-size: 18px; font-weight: 900; margin: 0 0 4px; color: #fff; letter-spacing: -0.02em; line-height: 1.25; }
+    .greet-text p { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+    /* Thank-you modal */
+    .thank-modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.72); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.25s; }
+    .thank-modal.open { opacity: 1; }
+    .thank-card { max-width: 360px; width: 100%; text-align: center; background: linear-gradient(160deg,#0f172a,#070b13); border: 1px solid var(--line); border-radius: 24px; padding: 30px 22px; transform: translateY(20px) scale(0.95); transition: transform 0.35s var(--ease); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .thank-modal.open .thank-card { transform: translateY(0) scale(1); }
+    .thank-emoji { font-size: 54px; line-height: 1; margin-bottom: 12px; display: inline-block; animation: greetFloat 3s ease-in-out infinite; }
+    .thank-card h2 { font-size: 20px; font-weight: 900; color: #fff; margin: 0 0 10px; line-height: 1.3; }
+    .thank-card p { font-size: 14px; color: #cbd5e1; margin: 0 0 6px; line-height: 1.55; }
+
+    /* Toasts */
+    #toast-root { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+    .toast { padding: 14px 16px; border-radius: 14px; font-weight: 700; text-align: center; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.35); animation: slideUp 0.3s ease; }
+    .toast.success { background: linear-gradient(135deg,#10b981,#06b6d4); }
+    .toast.error { background: linear-gradient(135deg,#ef4444,#dc2626); }
+    .toast.warn { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .spin { animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ============ DESKTOP UPGRADES (Tablets & PCs) ============ */
+    .loader { position: fixed; inset: 0; background: #070b13; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
+    .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(104,228,224,0.2); border-top-color: var(--cyan); animation: spin 1s linear infinite; }
+
+    /* FACE SCAN MODAL */
+    .face-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .face-modal.open { opacity: 1; pointer-events: auto; }
+    .face-scan-container { position: relative; width: 100%; max-width: 380px; aspect-ratio: 3/4; border-radius: 24px; overflow: hidden; border: 2px solid rgba(104,228,224,0.3); box-shadow: 0 0 40px rgba(104,228,224,0.15); background: #000; }
+    .face-scan-container video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .face-scan-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%); }
+    .face-oval { width: 60%; height: 50%; border: 2px dashed rgba(104,228,224,0.5); border-radius: 50%; transition: all 0.3s; }
+    .face-oval.detected { border-color: #10b981; border-style: solid; box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+    
+    /* HIGH-TECH SCANNING LINE */
+    .scan-line { position: absolute; left: 0; width: 100%; height: 4px; background: rgba(16,185,129,0.8); box-shadow: 0 0 15px rgba(16,185,129,1), 0 0 5px rgba(16,185,129,1); animation: scanAnim 2s infinite linear; z-index: 10; }
+    @keyframes scanAnim { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+    .face-status { margin-top: 24px; text-align: center; }
+    .face-status h3 { font-size: 20px; font-weight: 800; color: #fff; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .face-status p { font-size: 13px; color: var(--muted); margin: 0 0 24px; max-width: 320px; line-height: 1.6; }
+    .face-status .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); margin-right: 6px; animation: pulse 1.5s infinite; }
+    .face-actions { display: flex; gap: 12px; width: 100%; max-width: 380px; }
+    .face-actions button { flex: 1; }
+
     @media (min-width: 768px) {
-      .nav { padding: 16px 28px; }
-      .nav-brand { display: block; }
-      .nav-links { display: flex; }
-      .mobile-menu-btn { display: none; }
-      .nav-cta { padding: 10px 20px; font-size: 13px; }
-      
-      .section { padding: 100px 24px; }
-      .hero-logo { width: 110px; height: 110px; }
-      .hero-h1 { font-size: clamp(32px, 6vw, 72px); }
-      .hero-sub { font-size: 20px; max-width: 680px; }
-      .section-sub { font-size: 17px; max-width: 680px; }
-      
-      .benefits-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-      .benefit-card { padding: 24px; }
-      .benefit-icon { width: 40px; height: 40px; }
-      
-      .founder-card { padding: 36px 32px; text-align: left; align-items: flex-start; }
-      .founder-avatar { width: 110px; height: 140px; margin-bottom: 0; margin-right: 20px; }
-      .founder-role { margin-bottom: 24px; }
-      .founder-quote { font-size: 15px; padding-left: 20px; }
-      .founder-body { font-size: 14px; }
-      
-      .dev-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-      .dev-card { padding: 32px 24px; }
-      .dev-photo { width: 110px; height: 110px; }
-      
-      .contact-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-      
-      .footer { padding: 60px 24px 30px; }
-      .footer-top { grid-template-columns: 2fr 1fr 1fr; text-align: left; gap: 40px; }
-      .footer-brand-col { align-items: flex-start; }
-      .footer-logo img { width: 40px; height: 40px; }
-      .footer-logo-text { font-size: 20px; }
-      .footer-bottom { flex-direction: row; justify-content: space-between; text-align: left; }
-      .lang-switcher { bottom: 24px; right: 24px; }
-      .lang-toggle { padding: 10px 16px; font-size: 12px; }
+      .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
+      .header { padding: 14px 32px; }
+      .header-title { font-size: 16px; }
+      .header-logo { width: 38px; height: 38px; }
+      .avatar-btn { width: 42px; height: 42px; }
+      .analytics-grid { grid-template-columns: repeat(4, 1fr); }
+      .t-hero h1 { font-size: 26px; }
+      .tab-btn { font-size: 11px; }
     }
   </style>
 </head>
-<body>
-  <canvas id="ocean-canvas" class="landing-canvas-fixed"></canvas>
-  <canvas id="droplet-canvas" class="landing-canvas-fixed" style="pointer-events:none"></canvas>
+<body class="teacher-mode">
+  <div class="aurora"></div>
+  <div class="stars"></div>
+  <canvas id="space"></canvas>
+  <div class="noise"></div>
 
   <div id="app"></div>
-  <div id="toast-root" style="position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none"></div>
+  <div id="toast-root"></div>
 
   <script type="module">
-    import * as THREE from 'three';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
     import {
-      getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect,
-      getRedirectResult, GoogleAuthProvider, setPersistence,
-      browserLocalPersistence
+      getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import {
-      getFirestore, doc, getDoc, setDoc, serverTimestamp
+      getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc,
+      onSnapshot, query, where, serverTimestamp, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const FIREBASE_CONFIG = {
@@ -722,991 +240,1008 @@
       appId: "1:515464832241:web:9e05a6cc3d4447dfff7550",
       measurementId: "G-NQGDXWN6G8"
     };
-
     const firebaseApp = initializeApp(FIREBASE_CONFIG);
     const auth = getAuth(firebaseApp);
     const db = getFirestore(firebaseApp);
-    
     try { getAnalytics(firebaseApp); } catch {}
     setPersistence(auth, browserLocalPersistence).catch(() => {});
-    const googleProvider = new GoogleAuthProvider();
-    googleProvider.setCustomParameters({ prompt: 'select_account' });
-    getRedirectResult(auth).catch(err => { if (err?.code !== 'auth/no-auth-event') console.warn('[redirect]', err); });
 
-    function dashboardUrlFor(role) {
-      return role === 'admin' ? 'admin.html' : 'teacher.html';
-    }
+    const LOGO_URL = 'https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png';
+    const SCHOOL_LAT = -2.129565168007717;
+    const SCHOOL_LNG = 29.77740799677921;
+    const SCHOOL_RADIUS = 150;
 
-    const state = { user: null, view: 'boot', lang: 'en', userRole: null };
+    // Face API Config
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+    let modelsLoaded = false;
 
+    const state = {
+      user: null, profile: null, view: 'boot',
+      teacherTab: 'home',
+      calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
+      cpds: [], myAttendances: [], myDailyRecords: [], todayDaily: null,
+      subCpds: null, subMine: null, subDaily: null, subSettings: null,
+      settings: { startTime: 480, endTime: 1020 }, // Default 08:00, 17:00
+      watchId: null, watchingFor: null,
+      loading: true,
+    };
+
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+    /* ==================== I18N ==================== */
     const I18N = {
       en: {
-        nav_home: 'Home', nav_innovation: 'Platform', nav_founder: 'Founder',
-        nav_developers: 'Developers', nav_contact: 'Contact',
-        signin: 'Sign In', dashboard: 'Go to Dashboard',
-        hero_sub: 'An intelligent digital platform that simplifies daily teacher attendance and CPD participation through secure check-ins, location verification, real-time monitoring, and organized attendance records.',
-        scroll: 'Scroll to explore',
-        innovation_label: 'The Platform',
-        innovation_title_1: 'Two core services.',
-        innovation_title_2: 'One seamless solution.',
-        innovation_sub: 'iMENA Smart Attendance is designed to simplify, monitor, and verify teachers\' presence. From the moment they step into school, to their participation in professional development activities.',
-        
-        benefit_1_title: 'Daily Teacher Attendance', benefit_1_text: 'Teachers securely sign in upon arrival and sign out when leaving. No more lost paper registers or manual tracking.',
-        benefit_2_title: 'Secure Check-Ins & GPS', benefit_2_text: 'Every arrival and departure is timestamped and verified using GPS to ensure the teacher is physically at the school or venue.',
-        benefit_3_title: 'CPD Session Management', benefit_3_text: 'Administrators can easily create CPD sessions. Teachers register their attendance, and the system verifies their participation.',
-        benefit_4_title: 'Real-Time Admin Monitoring', benefit_4_text: 'Head teachers and directors get a live dashboard showing exactly who is in school, who is in a CPD session, and who is missing.',
-        benefit_5_title: 'Smart Tracking', benefit_5_text: 'The platform automatically tracks late arrivals, early departures, and missing sign-outs, keeping everyone accountable.',
-        benefit_6_title: 'Audit-Ready Reports', benefit_6_text: 'Generate organized daily attendance records and comprehensive CPD history reports with just one click.',
-        
-        founder_label: 'The Visionary',
-        founder_title_1: 'Driven by a deep understanding',
-        founder_title_2: 'of classroom realities.',
-        founder_name: 'MUGISHA Elyse', founder_role: 'Founder & Teacher · GS St Etienne',
-        founder_quote: '"I experienced firsthand how much time paper registers waste. I knew teachers deserved a smarter, faster way to manage attendance so they could focus on what truly matters: educating our students."',
-        founder_body: 'MUGISHA Elyse didn\'t just read about the challenges schools face; he lived them every day as a teacher at GS St Etienne. Witnessing the frustration and inefficiency of manual attendance, he envisioned a digital solution that would bring transparency, fairness, and speed to school administration. His relentless dedication to solving this real-world problem is the foundation of iMENA Smart Attendance.',
-        
-        dev_label: 'The Builders',
-        dev_title_1: 'Turning a powerful vision',
-        dev_title_2: 'into a robust reality.',
-        dev_sub: 'Two passionate student teachers from TTC Muhanga took the founder\'s idea and engineered it into a reliable, modern platform.',
-        dev_1_name: 'TUYISENGE Jean Chrisostom', dev_1_role: 'Lead Developer · Language Education',
-        dev_1_bio: 'A final-year student teacher at TTC Muhanga, Chrisostom is a self-taught developer who builds tools for African classrooms. He leads iMENA Lab and has trained over 44 student teachers in digital skills.',
-        dev_1_link: 'View Portfolio',
-        dev_2_name: 'NKURIKIYINEZA Ghad', dev_2_role: 'Co-Developer · Social Studies Education',
-        dev_2_bio: 'Ghad is a student teacher at TTC Muhanga who believes technology should serve every classroom. He brings a social sciences perspective to the team and helps shape the platform for real school needs.',
-        contact_title: 'Get in Touch',
-        contact_sub: 'Ready to modernize your school\'s attendance? Reach out to our team for inquiries, demos, or partnerships.',
-        footer_desc: 'An intelligent digital platform that simplifies daily teacher attendance and CPD participation through secure check-ins, location verification, and organized records.',
-        footer_explore: 'Explore',
-        footer_contact_title: 'Contact',
-        footer_address_label: 'Address',
-        footer_email_label: 'Email',
-        footer_phone_label: 'Phone',
-        footer_lab: 'Developed by iMENA Lab',
-        footer_copy: '© 2026 iMENA Smart CPD. All rights reserved.',
-      },
-      rw: { /* Keep existing */ },
-      fr: { /* Keep existing */ }
+        home: 'Home', daily: 'Daily', calendar: 'Calendar', stats: 'Stats', history: 'History',
+        logout: 'Sign Out', teacher: 'Teacher',
+        attend: 'ATTEND', end: 'END SESSION', locating: 'Locating...', finalizing: 'Ending...',
+        upcoming: 'Upcoming', ongoing: 'Ongoing', ended: 'Ended', live: 'Live',
+        verified: 'Verified', flagged: 'Flagged', not_started: 'Not Started', finish_current: 'Finish Current First',
+        currently_attending: 'You are currently attending:',
+        msg_sign_out: 'Sign out?',
+        sessions_attended: 'Sessions', total_hours: 'Hours in CPD', verified_rate: 'Verified Rate', this_month: 'This Month',
+        no_sessions_today: 'No sessions today', next_session: 'Next session',
+        sessions_this_month: 'Sessions per Month', attendance_history: 'Your Attendance History',
+        no_history: 'No completed sessions yet',
+        today: 'Today', no_sessions_day: 'No sessions on this day',
+        ready: "You're all caught up.",
+        empty_cpd_title: "You're all caught up",
+        empty_cpd_sub: 'There are no CPD sessions scheduled at the moment. New professional development opportunities will appear on this page as they are added.',
+        empty_cpd_new_title: 'Welcome to your CPD dashboard',
+        empty_cpd_new_sub: "Your professional development journey begins here. Scheduled sessions will appear on this page — you'll be able to check in from the venue when a session is live.",
+        thanks_generic: 'Your CPD attendance has been recorded.', continue_btn: 'Continue',
+        daily_title: 'Daily School Attendance',
+        daily_sub: 'Sign in when you arrive at school and sign out when you leave.',
+        daily_sign_in: 'Present (Arrival)', daily_sign_out: 'Departure',
+        daily_signed_in: 'Signed In', daily_signed_out: 'Signed Out', daily_not_marked: 'Not Marked',
+        daily_verified_in: 'Verified at school', daily_verified_out: 'Verified at school',
+        daily_wait: 'Verifying location...', daily_out_of_range: 'You are too far from the school.',
+        daily_stat_present: 'Days Present', daily_stat_absent: 'Days Absent', 
+        daily_stat_avg_in: 'Avg Arrival', daily_stat_avg_out: 'Avg Departure',
+        daily_weekly_trend: 'This Week',
+        daily_absent: 'Absent', daily_weekend: 'Weekend',
+        daily_late: 'Late', daily_early_leave: 'Early Leave'
+      }
     };
+    function t(k) { return (I18N[state.lang || 'en'])[k] || I18N.en[k] || k; }
+    state.lang = 'en';
 
-    function t(key) { return (I18N[state.lang] || I18N.en)[key] || I18N.en[key] || key; }
-
-    /* ============================================================
-       OCEAN ENGINE (Same as before, no changes needed)
-    ============================================================ */
-    const oceanScene = {
-      // ... [Keep the entire oceanScene object exactly as it is] ...
-      renderer: null, scene: null, camera: null,
-      ocean: null, sky: null, sunDir: null, sunColor: null,
-      clock: null, animationId: null, isActive: false,
-      container: null, dropletCanvas: null, dropletCtx: null, droplets: [],
-      lastScrollY: 0, scrollVelocity: 0,
-      targetProgress: 0, currentProgress: 0,
-      cameraTarget: new THREE.Vector3(0, 8, -100),
-      reducedMotion: false, isMobile: false,
-      oceanTime: 0,
-
-      waveTable: [
-        { dir: [ 0.78,  0.63], len: 110, amp: 0.95, spd: 0.55, steep: 0.42 },
-        { dir: [ 0.92,  0.39], len:  78, amp: 0.62, spd: 0.62, steep: 0.48 },
-        { dir: [ 0.55,  0.83], len:  56, amp: 0.42, spd: 0.72, steep: 0.55 },
-        { dir: [ 0.28,  0.96], len:  40, amp: 0.28, spd: 0.82, steep: 0.60 },
-        { dir: [-0.42,  0.91], len:  30, amp: 0.20, spd: 0.92, steep: 0.66 },
-        { dir: [ 0.87, -0.49], len:  22, amp: 0.13, spd: 1.02, steep: 0.72 },
-        { dir: [-0.72,  0.69], len:  16, amp: 0.09, spd: 1.12, steep: 0.78 },
-        { dir: [ 0.91, -0.30], len:  12, amp: 0.06, spd: 1.22, steep: 0.82 },
-        { dir: [ 0.40, -0.91], len:   9, amp: 0.04, spd: 1.32, steep: 0.86 },
-        { dir: [-0.55, -0.83], len: 6.5, amp: 0.025, spd: 1.42, steep: 0.90 },
-        { dir: [ 0.62,  0.78], len: 4.5, amp: 0.016, spd: 1.52, steep: 0.92 },
-        { dir: [-0.83,  0.42], len: 3.0, amp: 0.010, spd: 1.62, steep: 0.94 },
-      ],
-
-      _buildWaveGLSL() {
-        return this.waveTable.map(w => {
-          const k  = (2 * Math.PI / w.len).toFixed(6);
-          const c  = Math.sqrt(9.81 / (2 * Math.PI / w.len)).toFixed(4);
-          const dx = w.dir[0].toFixed(3);
-          const dz = w.dir[1].toFixed(3);
-          const a  = w.amp.toFixed(3);
-          const st = w.steep.toFixed(3);
-          const spd = w.spd.toFixed(3);
-          return `
-          {
-            float k = ${k};
-            float cw = ${c};
-            vec2 d = normalize(vec2(${dx}, ${dz}));
-            float f = k * (dot(d, p.xz) - cw * ${spd} * uTime);
-            float cf = cos(f);
-            float sf = sin(f);
-            float A = ${a};
-            float st = ${st};
-            float Q = st / (k * max(A, 1e-3) * float(${this.waveTable.length}));
-            p.x += d.x * Q * A * cf;
-            p.z += d.y * Q * A * cf;
-            p.y += A * sf;
-            grad.x += A * k * d.x * cf;
-            grad.z += A * k * d.y * cf;
-            steepAcc += abs(A * k * cf);
-          }`;
-        }).join('\n');
-      },
-
-      _skyGLSL() {
-        return `
-          float hash21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
-          float vnoise(vec2 p){
-            vec2 i = floor(p), f = fract(p);
-            f = f*f*(3.0-2.0*f);
-            float a = hash21(i), b = hash21(i + vec2(1.0, 0.0));
-            float c = hash21(i + vec2(0.0, 1.0)), d = hash21(i + vec2(1.0, 1.0));
-            return mix(mix(a,b,f.x), mix(c,d,f.x), f.y);
-          }
-          float fbm3(vec2 p){
-            float s = 0.0, a = 0.5;
-            for (int i = 0; i < 4; i++) { s += a * vnoise(p); p *= 2.03; a *= 0.5; }
-            return s;
-          }
-          vec3 skyColor(vec3 dir){
-            float y = max(dir.y, 0.0);
-            vec3 zenith  = vec3(0.030, 0.115, 0.335);
-            vec3 mid     = vec3(0.180, 0.380, 0.640);
-            vec3 horizon = vec3(0.680, 0.780, 0.870);
-            vec3 sky = mix(horizon, mid, smoothstep(0.0, 0.35, y));
-            sky = mix(sky, zenith, smoothstep(0.30, 0.85, y));
-            float sunDot = dot(dir, uSunDirection);
-            float disc = smoothstep(0.99965, 0.99990, sunDot);
-            float glow = pow(max(sunDot, 0.0), 60.0) * 0.35;
-            float aureole = pow(max(sunDot, 0.0), 6.0) * 0.06;
-            sky += uSunColor * (disc * 12.0 + glow + aureole);
-            if (dir.y > 0.015) {
-              float t = 1.0 / (dir.y + 0.05);
-              vec2 cp = dir.xz * t * 0.16 + vec2(uTime * 0.0022, uTime * 0.0014);
-              float base = fbm3(cp * 1.4);
-              float detail = fbm3(cp * 4.2 + 7.0);
-              float density = smoothstep(0.50, 0.80, base * 0.72 + detail * 0.28);
-              float shSample = fbm3(cp + uSunDirection.xz * 0.10);
-              float shadow = smoothstep(0.55, 0.85, shSample);
-              float lit = clamp(1.0 - shadow * 0.7, 0.0, 1.0);
-              lit = mix(lit, 1.0, smoothstep(0.0, 0.4, sunDot) * 0.35);
-              vec3 cloudCol = mix(vec3(0.42, 0.47, 0.55), vec3(1.02, 0.99, 0.94), lit);
-              cloudCol += uSunColor * pow(max(sunDot, 0.0), 12.0) * 0.12;
-              float haze = smoothstep(0.015, 0.14, dir.y);
-              sky = mix(sky, cloudCol, density * haze * 0.9);
-            }
-            float hz = exp(-y * 22.0) * 0.55;
-            sky = mix(sky, vec3(0.72, 0.80, 0.88), hz);
-            return sky;
-          }
-        `;
-      },
-
-      init(container) {
-        if (!this.webglSupported()) { this.buildFallback(container); return; }
-        this.container = container;
-        this.isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        this.renderer = new THREE.WebGLRenderer({
-          canvas: document.getElementById('ocean-canvas'),
-          antialias: !this.isMobile,
-          alpha: false,
-          powerPreference: 'high-performance'
-        });
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.02;
-        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x071B33);
-        this.camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 3000);
-        this.camera.position.set(0, 15, 20);
-
-        this.clock = new THREE.Clock();
-        this.sunDir = new THREE.Vector3(0.42, 0.32, -0.85).normalize();
-        this.sunColor = new THREE.Color(1.00, 0.94, 0.84);
-
-        this.sky = this.createSky(this.sunDir);
-        this.scene.add(this.sky);
-        this.ocean = this.createOcean(this.sunDir);
-        this.scene.add(this.ocean);
-
-        const sunLight = new THREE.DirectionalLight(0xfff2dd, 1.1);
-        sunLight.position.copy(this.sunDir).multiplyScalar(100);
-        this.scene.add(sunLight);
-        this.scene.add(new THREE.AmbientLight(0x4a7fa5, 0.35));
-
-        this.dropletCanvas = document.getElementById('droplet-canvas');
-        this.dropletCtx = this.dropletCanvas.getContext('2d');
-        this.resize();
-        window.addEventListener('resize', this.handleResize);
-        this.boundScrollHandler = () => this.onScroll();
-        window.addEventListener('scroll', this.boundScrollHandler, { passive: true });
-
-        const initial = this.getCameraAtProgress(0);
-        this.camera.position.set(initial.pos.x, initial.pos.y, initial.pos.z);
-        this.cameraTarget.set(initial.target.x, initial.target.y, initial.target.z);
-        this.camera.lookAt(this.cameraTarget);
-
-        this.isActive = true;
-        this.animate();
-      },
-
-      webglSupported() {
-        try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch { return false; }
-      },
-      buildFallback(container) {
-        const fb = document.createElement('div');
-        fb.style.cssText = 'position:fixed;inset:0;background:linear-gradient(180deg,#0a2540 0%,#075985 40%,#0c4a6e 70%,#082f49 100%);z-index:1';
-        container.insertBefore(fb, container.firstChild);
-        this.isActive = false;
-      },
-
-      createSky(sunDir) {
-        const geo = new THREE.SphereGeometry(1500, this.isMobile ? 32 : 64, this.isMobile ? 16 : 32);
-        const skyUniforms = {
-          uSunDirection: { value: sunDir.clone() },
-          uSunColor:     { value: this.sunColor.clone() },
-          uTime:         { value: 0 },
-        };
-        const mat = new THREE.ShaderMaterial({
-          side: THREE.BackSide,
-          depthWrite: false,
-          uniforms: skyUniforms,
-          vertexShader: `
-            varying vec3 vWorldPosition;
-            void main() {
-              vec4 wp = modelMatrix * vec4(position, 1.0);
-              vWorldPosition = wp.xyz;
-              gl_Position = projectionMatrix * viewMatrix * wp;
-            }
-          `,
-          fragmentShader: `
-            precision highp float;
-            uniform vec3  uSunDirection;
-            uniform vec3  uSunColor;
-            uniform float uTime;
-            varying vec3 vWorldPosition;
-            ${this._skyGLSL()}
-            void main() {
-              vec3 dir = normalize(vWorldPosition);
-              gl_FragColor = vec4(skyColor(dir), 1.0);
-            }
-          `,
-        });
-        const sky = new THREE.Mesh(geo, mat);
-        sky.userData.uniforms = skyUniforms;
-        return sky;
-      },
-
-      createOcean(sunDir) {
-        const segs = this.isMobile ? 128 : 448;
-        const size = 1200;
-        const geo = new THREE.PlaneGeometry(size, size, segs, segs);
-        geo.rotateX(-Math.PI / 2);
-        const waveBody = this._buildWaveGLSL();
-        const oceanUniforms = {
-          uTime:         { value: 0 },
-          uSunDirection: { value: sunDir.clone() },
-          uSunColor:     { value: this.sunColor.clone() },
-          uCameraPos:    { value: new THREE.Vector3() },
-        };
-        const mat = new THREE.ShaderMaterial({
-          uniforms: oceanUniforms,
-          side: THREE.DoubleSide,
-          vertexShader: `
-            precision highp float;
-            uniform float uTime;
-            varying vec3 vWorldPosition;
-            varying vec3 vNormal;
-            varying float vHeight;
-            varying float vSteep;
-            const float PI = 3.141592653589793;
-            void main() {
-              vec3 p = position; p.y = 0.0;
-              vec3 grad = vec3(0.0);
-              float steepAcc = 0.0;
-              ${waveBody}
-              vec3 n = normalize(vec3(-grad.x, 1.0, -grad.z));
-              vHeight = p.y;
-              vNormal = n;
-              vSteep  = steepAcc;
-              vec4 wp = modelMatrix * vec4(p, 1.0);
-              vWorldPosition = wp.xyz;
-              gl_Position = projectionMatrix * viewMatrix * wp;
-            }
-          `,
-          fragmentShader: `
-            precision highp float;
-            uniform float uTime;
-            uniform vec3  uSunDirection;
-            uniform vec3  uSunColor;
-            uniform vec3  uCameraPos;
-            varying vec3 vWorldPosition;
-            varying vec3 vNormal;
-            varying float vHeight;
-            varying float vSteep;
-            ${this._skyGLSL()}
-            void main() {
-              vec3 N = normalize(vNormal);
-              vec3 V = normalize(uCameraPos - vWorldPosition);
-              vec3 L = normalize(uSunDirection);
-              vec2 q = vWorldPosition.xz;
-              float t = uTime;
-              N.x += cos(q.x * 2.6 + q.y * 1.9 + t * 2.1) * 0.045 + cos(q.x * 6.3 - q.y * 5.1 + t * 3.4) * 0.018;
-              N.z += cos(q.x * 1.8 - q.y * 2.7 + t * 1.7) * 0.045 + cos(q.x * 5.2 + q.y * 6.2 + t * 3.0) * 0.018;
-              N = normalize(N);
-              float NdotV = max(dot(N, V), 0.0);
-              float F = 0.02 + 0.98 * pow(1.0 - NdotV, 5.0);
-              vec3 deepC   = vec3(0.008, 0.035, 0.095);
-              vec3 midC    = vec3(0.020, 0.095, 0.200);
-              vec3 crestC  = vec3(0.050, 0.250, 0.320);
-              float depthF = smoothstep(-1.2, 1.2, vHeight);
-              vec3 water = mix(deepC, midC, depthF);
-              float crestF = smoothstep(0.30, 1.10, vHeight) * smoothstep(0.40, 0.90, vSteep);
-              water = mix(water, crestC, crestF * 0.55);
-              vec3 R = reflect(-V, N);
-              R.y = max(R.y, 0.0);
-              vec3 refl = skyColor(normalize(R));
-              vec3 H = normalize(L + V);
-              float NdotL = max(dot(N, L), 0.0);
-              float NdotH = max(dot(N, H), 0.0);
-              float m = mix(0.05, 0.28, clamp(vSteep * 0.35, 0.0, 1.0));
-              float c2 = max(NdotH * NdotH, 1e-4);
-              float D  = exp(-(1.0 - c2) / (c2 * m * m)) / (3.14159 * m * m * c2 * c2 + 1e-5);
-              float spec = D * NdotL * F * 8.0;
-              float sss = pow(max(dot(-V, L) * 0.5 + 0.5, 0.0), 3.0);
-              sss *= smoothstep(0.20, 1.10, vHeight) * (1.0 - F);
-              vec3 sssCol = vec3(0.08, 0.28, 0.24) * sss * 0.7;
-              vec3 color = mix(water, refl, F);
-              color += uSunColor * spec;
-              color += sssCol;
-              float foamMask = smoothstep(0.95, 1.45, vHeight) * smoothstep(0.55, 0.95, vSteep);
-              float foamNoise = fbm3(q * 1.4 + vec2(t * 0.20, t * 0.10));
-              foamMask *= smoothstep(0.55, 0.85, foamNoise);
-              color = mix(color, vec3(0.93, 0.96, 0.98), clamp(foamMask * 0.85, 0.0, 1.0));
-              float dist = length(uCameraPos - vWorldPosition);
-              float fog = 1.0 - exp(-dist * 0.00085);
-              color = mix(color, vec3(0.68, 0.78, 0.86), clamp(fog * 0.7, 0.0, 1.0));
-              gl_FragColor = vec4(color, 1.0);
-            }
-          `,
-        });
-        const ocean = new THREE.Mesh(geo, mat);
-        ocean.frustumCulled = false;
-        ocean.userData.uniforms = oceanUniforms;
-        return ocean;
-      },
-
-      getCameraAtProgress(p) {
-        const keyframes = [
-          { p: 0.00, pos: { x:  0, y: 14, z:  20 }, target: { x:  0, y:  7, z: -100 } },
-          { p: 0.25, pos: { x:  2, y:  9, z:  -5 }, target: { x:  1, y:  4, z: -130 } },
-          { p: 0.50, pos: { x: -3, y:  4, z: -40 }, target: { x: -1, y:  2, z: -170 } },
-          { p: 0.75, pos: { x:  4, y:  7, z: -75 }, target: { x:  2, y:  3, z: -210 } },
-          { p: 1.00, pos: { x:  0, y: 24, z:-110 }, target: { x:  0, y:  6, z: -260 } },
-        ];
-        let i = 0;
-        while (i < keyframes.length - 1 && keyframes[i + 1].p < p) i++;
-        const a = keyframes[i], b = keyframes[Math.min(i + 1, keyframes.length - 1)];
-        const t = b.p === a.p ? 0 : (p - a.p) / (b.p - a.p);
-        const e = t * t * (3 - 2 * t);
-        const L = (av, bv) => av + (bv - av) * e;
-        return {
-          pos:    { x: L(a.pos.x, b.pos.x),    y: L(a.pos.y, b.pos.y),    z: L(a.pos.z, b.pos.z) },
-          target: { x: L(a.target.x, b.target.x), y: L(a.target.y, b.target.y), z: L(a.target.z, b.target.z) },
-        };
-      },
-
-      onScroll() {
-        const sy = window.scrollY;
-        const d = Math.abs(sy - this.lastScrollY);
-        this.scrollVelocity = d;
-        this.lastScrollY = sy;
-        const max = document.documentElement.scrollHeight - window.innerHeight;
-        this.targetProgress = max > 0 ? Math.min(1, Math.max(0, sy / max)) : 0;
-      },
-
-      updateCamera(dt) {
-        this.currentProgress += (this.targetProgress - this.currentProgress) * Math.min(1, dt * 3.5);
-        const cam = this.getCameraAtProgress(this.currentProgress);
-        const k = Math.min(1, dt * 5.5);
-        this.camera.position.x += (cam.pos.x - this.camera.position.x) * k;
-        this.camera.position.y += (cam.pos.y - this.camera.position.y) * k;
-        this.camera.position.z += (cam.pos.z - this.camera.position.z) * k;
-        this.cameraTarget.x += (cam.target.x - this.cameraTarget.x) * k;
-        this.cameraTarget.y += (cam.target.y - this.cameraTarget.y) * k;
-        this.cameraTarget.z += (cam.target.z - this.cameraTarget.z) * k;
-        this.camera.lookAt(this.cameraTarget);
-      },
-
-      spawnDroplet() {
-        const w = window.innerWidth;
-        const s = 3 + Math.random() * 12;
-        this.droplets.push({
-          x: Math.random() * w, y: -s,
-          vx: (Math.random() - 0.5) * 0.3, vy: 0.5 + Math.random() * 2.5,
-          size: s, life: 1,
-          wobble: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.02 + Math.random() * 0.05,
-        });
-      },
-
-      updateDroplets(dt) {
-        const ctx = this.dropletCtx; if (!ctx) return;
-        const dpr = window.devicePixelRatio || 1;
-        const w = this.dropletCanvas.width / dpr;
-        const h = this.dropletCanvas.height / dpr;
-        ctx.clearRect(0, 0, w, h);
-        const inWater = this.currentProgress > 0.30 && this.currentProgress < 0.72;
-        const fast = this.scrollVelocity > 25;
-        if (!this.reducedMotion && (inWater || fast)) {
-          const chance = this.isMobile ? 0.025 : 0.05;
-          const boost = fast ? 0.14 : 0;
-          if (Math.random() < chance + boost) this.spawnDroplet();
-        }
-        for (let i = this.droplets.length - 1; i >= 0; i--) {
-          const d = this.droplets[i];
-          d.wobble += d.wobbleSpeed;
-          d.x += d.vx + Math.sin(d.wobble) * 0.4;
-          d.y += d.vy; d.vy += 0.08;
-          if (d.y > h + d.size) d.life -= 0.15; else d.life = Math.min(1, d.life + 0.05);
-          if (d.life <= 0) { this.droplets.splice(i, 1); continue; }
-          const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.size);
-          g.addColorStop(0,    `rgba(180,220,255,${0.08 * d.life})`);
-          g.addColorStop(0.55, `rgba(120,180,230,${0.15 * d.life})`);
-          g.addColorStop(0.90, `rgba(60,120,180,${0.25 * d.life})`);
-          g.addColorStop(1,    `rgba(60,120,180,0)`);
-          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2); ctx.fill();
-          const hl = ctx.createRadialGradient(d.x - d.size * .3, d.y - d.size * .35, 0, d.x - d.size * .3, d.y - d.size * .35, d.size * .35);
-          hl.addColorStop(0, `rgba(255,255,255,${0.7 * d.life})`);
-          hl.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = hl; ctx.beginPath(); ctx.arc(d.x - d.size * .3, d.y - d.size * .35, d.size * .35, 0, Math.PI * 2); ctx.fill();
-        }
-      },
-
-      animate() {
-        if (!this.isActive) return;
-        this.animationId = requestAnimationFrame(() => this.animate());
-        if (document.hidden) return;
-        const dt = Math.min(this.clock.getDelta(), 0.1);
-        this.oceanTime += dt;
-        if (this.sky?.userData.uniforms)  this.sky.userData.uniforms.uTime.value = this.oceanTime;
-        if (this.ocean?.userData.uniforms) {
-          this.ocean.userData.uniforms.uTime.value = this.oceanTime;
-          this.ocean.userData.uniforms.uCameraPos.value.copy(this.camera.position);
-        }
-        this.updateCamera(dt);
-        this.updateDroplets(dt);
-        this.renderer.render(this.scene, this.camera);
-        this.scrollVelocity *= 0.92;
-      },
-
-      handleResize() {
-        if (!this.renderer) return;
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2));
-        this.resize();
-      },
-
-      resize() {
-        if (!this.dropletCanvas) return;
-        const dpr = window.devicePixelRatio || 1;
-        this.dropletCanvas.width = window.innerWidth * dpr;
-        this.dropletCanvas.height = window.innerHeight * dpr;
-        this.dropletCanvas.style.width = window.innerWidth + 'px';
-        this.dropletCanvas.style.height = window.innerHeight + 'px';
-        this.dropletCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      },
-
-      dispose() {
-        this.isActive = false;
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        if (this.boundScrollHandler) window.removeEventListener('scroll', this.boundScrollHandler);
-        window.removeEventListener('resize', this.handleResize);
-        if (this.ocean) { this.ocean.geometry.dispose(); this.ocean.material.dispose(); }
-        if (this.sky)   { this.sky.geometry.dispose();   this.sky.material.dispose();   }
-        if (this.renderer) {
-          this.renderer.dispose();
-          const c = this.renderer.domElement;
-          if (c && c.parentNode) c.parentNode.removeChild(c);
-        }
-        this.droplets = [];
-        this.renderer = null; this.scene = null; this.camera = null;
-        this.ocean = null; this.sky = null;
-        this.dropletCanvas = null; this.dropletCtx = null;
-      },
-    };
-
-    /* ============================================================
-       RENDER LANDING
-    ============================================================ */
-    function renderLanding() {
-      state.view = 'landing';
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-
-      const signedIn = !!state.user;
-      const app = document.getElementById('app');
-
-      app.innerHTML = `
-        <!-- NAV -->
-        <nav class="nav" id="nav">
-          <div class="nav-left">
-            <div class="nav-logo">
-             <img src="https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD" /> </div>
-            <div class="nav-brand">iMENA <span>Smart CPD</span></div>
-          </div>
-          <div class="nav-links">
-            <a href="#home" data-i18n="nav_home">${t('nav_home')}</a>
-            <a href="#innovation" data-i18n="nav_innovation">${t('nav_innovation')}</a>
-            <a href="#founder" data-i18n="nav_founder">${t('nav_founder')}</a>
-            <a href="#developers" data-i18n="nav_developers">${t('nav_developers')}</a>
-            <a href="#contact" data-i18n="nav_contact">${t('nav_contact')}</a>
-          </div>
-          <div class="nav-right">
-            <button class="nav-cta ${signedIn ? 'dashboard-mode' : ''}" data-cta>
-              ${signedIn ? dashboardButtonContent() : signinButtonContent()}
-            </button>
-            <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
-          </div>
-        </nav>
-
-        <!-- MOBILE MENU -->
-        <div class="mobile-menu" id="mobile-menu">
-          <div class="mobile-close-btn" id="mobile-close">✕</div>
-          <a href="#home" data-i18n="nav_home">${t('nav_home')}</a>
-          <a href="#innovation" data-i18n="nav_innovation">${t('nav_innovation')}</a>
-          <a href="#founder" data-i18n="nav_founder">${t('nav_founder')}</a>
-          <a href="#developers" data-i18n="nav_developers">${t('nav_developers')}</a>
-          <a href="#contact" data-i18n="nav_contact">${t('nav_contact')}</a>
-        </div>
-
-        <!-- LANGUAGE SWITCHER -->
-        <div class="lang-switcher" id="lang-switcher">
-          <div class="lang-menu" id="lang-menu">
-            <button data-lang="en" class="${state.lang === 'en' ? 'active' : ''}"><span class="lang-flag">🇬🇧</span> English</button>
-            <button data-lang="rw" class="${state.lang === 'rw' ? 'active' : ''}"><span class="lang-flag">🇷🇼</span> Kinyarwanda</button>
-            <button data-lang="fr" class="${state.lang === 'fr' ? 'active' : ''}"><span class="lang-flag">🇫🇷</span> Français</button>
-          </div>
-          <button class="lang-toggle" id="lang-toggle">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20 15.3 15.3 0 010-20z"/></svg>
-            <span id="lang-current">${state.lang === 'rw' ? 'Kinyarwanda' : state.lang === 'fr' ? 'Français' : 'English'}</span>
-          </button>
-        </div>
-
-        <!-- SCROLLING CONTENT -->
-        <div class="landing-scroll" id="landing-scroll">
-
-          <!-- HERO -->
-          <section class="section" id="home">
-            <div class="section-inner">
-              <div class="hero-logo">
-                <img src="https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA Smart CPD" />
-              </div>
-              <h1 class="hero-h1">
-                <span class="accent">Smarter Attendance.</span><br />Better Schools.
-              </h1>
-              <p class="hero-sub" data-i18n="hero_sub">${t('hero_sub')}</p>
-              <div class="scroll-hint">
-                <span data-i18n="scroll">${t('scroll')}</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-              </div>
-            </div>
-          </section>
-
-          <!-- INNOVATION -->
-          <section class="section" id="innovation">
-            <div class="section-inner">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="innovation_label">${t('innovation_label')}</div>
-              <h2 class="section-h2">
-                <span data-i18n="innovation_title_1">${t('innovation_title_1')}</span><br/>
-                <span class="accent" data-i18n="innovation_title_2">${t('innovation_title_2')}</span>
-              </h2>
-              <p class="section-sub" data-i18n="innovation_sub">${t('innovation_sub')}</p>
-
-              <div class="benefits-grid">
-                <div class="benefit-card">
-                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-                  <div class="benefit-title" data-i18n="benefit_1_title">${t('benefit_1_title')}</div>
-                  <div class="benefit-text" data-i18n="benefit_1_text">${t('benefit_1_text')}</div>
-                </div>
-                <div class="benefit-card">
-                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-                  <div class="benefit-title" data-i18n="benefit_2_title">${t('benefit_2_title')}</div>
-                  <div class="benefit-text" data-i18n="benefit_2_text">${t('benefit_2_text')}</div>
-                </div>
-                <div class="benefit-card">
-                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
-                  <div class="benefit-title" data-i18n="benefit_3_title">${t('benefit_3_title')}</div>
-                  <div class="benefit-text" data-i18n="benefit_3_text">${t('benefit_3_text')}</div>
-                </div>
-                <div class="benefit-card">
-                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
-                  <div class="benefit-title" data-i18n="benefit_4_title">${t('benefit_4_title')}</div>
-                  <div class="benefit-text" data-i18n="benefit_4_text">${t('benefit_4_text')}</div>
-                </div>
-                <div class="benefit-card">
-                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
-                  <div class="benefit-title" data-i18n="benefit_5_title">${t('benefit_5_title')}</div>
-                  <div class="benefit-text" data-i18n="benefit_5_text">${t('benefit_5_text')}</div>
-                </div>
-                <div class="benefit-card">
-                  <div class="benefit-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                  <div class="benefit-title" data-i18n="benefit_6_title">${t('benefit_6_title')}</div>
-                  <div class="benefit-text" data-i18n="benefit_6_text">${t('benefit_6_text')}</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- FOUNDER -->
-          <section class="section" id="founder">
-            <div class="section-inner">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="founder_label">${t('founder_label')}</div>
-              <h2 class="section-h2">
-                <span data-i18n="founder_title_1">${t('founder_title_1')}</span><br/>
-                <span class="accent" data-i18n="founder_title_2">${t('founder_title_2')}</span>
-              </h2>
-
-              <div class="founder-card">
-                <div class="founder-avatar">
-                  <img src="https://i.postimg.cc/d14X5444/Founder-MUGISHA-Elyse-photo.png" alt="MUGISHA Elyse" />
-                </div>
-                <div class="founder-name" data-i18n="founder_name">${t('founder_name')}</div>
-                <div class="founder-role" data-i18n="founder_role">${t('founder_role')}</div>
-                <p class="founder-quote" data-i18n="founder_quote">${t('founder_quote')}</p>
-                <p class="founder-body" data-i18n="founder_body">${t('founder_body')}</p>
-              </div>
-            </div>
-          </section>
-
-          <!-- DEVELOPERS -->
-          <section class="section" id="developers">
-            <div class="section-inner">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="dev_label">${t('dev_label')}</div>
-              <h2 class="section-h2">
-                <span data-i18n="dev_title_1">${t('dev_title_1')}</span><br/>
-                <span class="accent" data-i18n="dev_title_2">${t('dev_title_2')}</span>
-              </h2>
-              <p class="section-sub" data-i18n="dev_sub">${t('dev_sub')}</p>
-
-              <div class="dev-grid">
-                <div class="dev-card">
-                  <div class="dev-photo">
-                    <img src="https://i.postimg.cc/0NDn0HhJ/chrisostom.png" alt="TUYISENGE Jean Chrisostom" />
-                  </div>
-                  <div class="dev-name" data-i18n="dev_1_name">${t('dev_1_name')}</div>
-                  <div class="dev-role" data-i18n="dev_1_role">${t('dev_1_role')}</div>
-                  <p class="dev-bio" data-i18n="dev_1_bio">${t('dev_1_bio')}</p>
-                  <a href="https://chrisostom.vercel.app/" target="_blank" rel="noopener" class="dev-link">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
-                    <span data-i18n="dev_1_link">${t('dev_1_link')}</span>
-                  </a>
-                </div>
-                <div class="dev-card">
-                  <div class="dev-photo">
-                    <img src="https://i.postimg.cc/rpxjNY7R/gad-founder-2.png" alt="NKURIKIYINEZA Ghad" />
-                  </div>
-                  <div class="dev-name" data-i18n="dev_2_name">${t('dev_2_name')}</div>
-                  <div class="dev-role" data-i18n="dev_2_role">${t('dev_2_role')}</div>
-                  <p class="dev-bio" data-i18n="dev_2_bio">${t('dev_2_bio')}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- CONTACT -->
-          <section class="section" id="contact">
-            <div class="section-inner">
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#00D9FF;font-weight:700;margin-bottom:12px" data-i18n="nav_contact">${t('nav_contact')}</div>
-              <h2 class="section-h2 accent" data-i18n="contact_title">${t('contact_title')}</h2>
-              <p class="section-sub" data-i18n="contact_sub">${t('contact_sub')}</p>
-
-              <div class="contact-grid">
-                <div class="contact-card">
-                  <div class="contact-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-                  <div class="contact-text">Muhanga, Shyogwe, Rwanda</div>
-                </div>
-                <div class="contact-card">
-                  <div class="contact-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg></div>
-                  <div class="contact-text">elysemugisha58@gmail.com</div>
-                </div>
-                <div class="contact-card">
-                  <div class="contact-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
-                  <div class="contact-text">0787993928</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-        </div>
-
-        <!-- FOOTER -->
-        <footer class="footer">
-          <div class="footer-top">
-            <!-- Col 1: Brand -->
-            <div class="footer-brand-col">
-              <div class="footer-logo">
-                <img src="https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" />
-                <div class="footer-logo-text">iMENA <span>Smart CPD</span></div>
-              </div>
-              <p class="footer-desc" data-i18n="footer_desc">${t('footer_desc')}</p>
-            </div>
-
-            <!-- Col 2: Links -->
-            <div class="footer-links-col">
-              <div class="footer-heading" data-i18n="footer_explore">${t('footer_explore')}</div>
-              <div class="footer-links-list">
-                <a href="#home" data-i18n="footer_home">${t('footer_home')}</a>
-                <a href="#innovation" data-i18n="footer_innovation">${t('footer_innovation')}</a>
-                <a href="#founder" data-i18n="footer_founder">${t('footer_founder')}</a>
-                <a href="#developers" data-i18n="footer_developers">${t('footer_developers')}</a>
-              </div>
-            </div>
-
-            <!-- Col 3: Contact Info -->
-            <div class="footer-contact-col">
-              <div class="footer-heading" data-i18n="footer_contact_title">${t('footer_contact_title')}</div>
-              <div class="footer-contact-item">
-                <div class="footer-contact-label" data-i18n="footer_address_label">${t('footer_address_label')}</div>
-                <div class="footer-contact-value">Muhanga, Shyogwe, Rwanda</div>
-              </div>
-              <div class="footer-contact-item">
-                <div class="footer-contact-label" data-i18n="footer_email_label">${t('footer_email_label')}</div>
-                <div class="footer-contact-value">elysemugisha58@gmail.com</div>
-              </div>
-              <div class="footer-contact-item">
-                <div class="footer-contact-label" data-i18n="footer_phone_label">${t('footer_phone_label')}</div>
-                <div class="footer-contact-value">0796717230</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="footer-bottom">
-            <div class="footer-copy" data-i18n="footer_copy">${t('footer_copy')}</div>
-            <a href="https://imena-lab.vercel.app" target="_blank" rel="noopener" class="footer-lab">
-              <img src="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" alt="iMENA Lab" />
-              <span data-i18n="footer_lab">${t('footer_lab')}</span>
-            </a>
-          </div>
-        </footer>
-      `;
-
-      // CTA handlers
-      document.querySelectorAll('[data-cta]').forEach(btn => {
-        btn.onclick = signedIn
-          ? () => { goToDashboard(); }
-          : () => handleGoogleSignIn(btn);
+    /* ==================== 3D BACKGROUND SCRIPT ==================== */
+    const canvas = document.getElementById('space'), ctx = canvas.getContext('2d');
+    let W, H, dpr, particles = [], mx = .5, my = .5, scrollY = 0;
+    function resize() {
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      W = innerWidth; H = innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      particles = Array.from({ length: Math.min(115, Math.floor(W / 10)) }, () => ({
+        x: Math.random() * W, y: Math.random() * H, z: Math.random(), r: Math.random() * 1.7 + .25, s: Math.random() * .35 + .06
+      }));
+    }
+    resize();
+    addEventListener('resize', resize);
+    addEventListener('pointermove', e => { mx = e.clientX / W; my = e.clientY / H });
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      const cx = W * (.5 + (mx - .5) * .08), cy = H * (.52 + (my - .5) * .08);
+      particles.forEach(p => {
+        p.y -= p.s; if (p.y < 0) p.y = H;
+        const x = p.x + (mx - .5) * p.z * 70, y = p.y + (my - .5) * p.z * 40 + scrollY * p.z * .04, a = .16 + p.z * .55;
+        ctx.beginPath(); ctx.fillStyle = `rgba(104,228,224,${a})`; ctx.arc(x, y, p.r * p.z * 1.8, 0, Math.PI * 2); ctx.fill();
       });
-
-      // Mobile Menu
-      const mobileMenu = document.getElementById('mobile-menu');
-      document.getElementById('mobile-menu-btn').onclick = () => mobileMenu.classList.add('open');
-      document.getElementById('mobile-close').onclick = () => mobileMenu.classList.remove('open');
-      mobileMenu.querySelectorAll('a').forEach(a => {
-        a.onclick = () => mobileMenu.classList.remove('open');
-      });
-
-      // Language Switcher
-      const langToggle = document.getElementById('lang-toggle');
-      const langMenu = document.getElementById('lang-menu');
-      langToggle.onclick = (e) => {
-        e.stopPropagation();
-        langMenu.classList.toggle('open');
-      };
-      document.querySelectorAll('[data-lang]').forEach(btn => {
-        btn.onclick = () => {
-          const lang = btn.dataset.lang;
-          if (lang === state.lang) return;
-          state.lang = lang;
-          langMenu.classList.remove('open');
-          updateLanguage(lang);
-        };
-      });
-      document.addEventListener('click', () => langMenu.classList.remove('open'));
-
-      // Nav scroll effect
-      window.addEventListener('scroll', () => {
-        const nav = document.getElementById('nav');
-        if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
-      }, { passive: true });
-
-      // Initialize ocean if not already running
-      if (!oceanScene.isActive) {
-        initOcean();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * .00008);
+      ctx.strokeStyle = 'rgba(104,228,224,.09)'; ctx.lineWidth = 1;
+      for (let i = 0; i < 7; i++) {
+        ctx.beginPath(); ctx.ellipse(0, 0, 150 + i * 45, 45 + i * 17, i * .3, 0, Math.PI * 2); ctx.stroke();
       }
+      ctx.restore(); requestAnimationFrame(draw);
     }
+    requestAnimationFrame(draw);
+    addEventListener('scroll', () => { scrollY = pageYOffset; });
 
-    function initOcean() {
-      requestAnimationFrame(() => {
-        try {
-          const root = document.querySelector('.landing-scroll');
-          if (root) oceanScene.init(root.parentElement || document.body);
-        } catch (e) {
-          console.warn('[ocean init failed]', e);
-        }
+    /* ==================== UTILS ==================== */
+    function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+    function toDate(ts) { if (!ts) return null; if (ts.toDate) return ts.toDate(); if (ts instanceof Date) return ts; return new Date(ts); }
+    function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
+    function todayLocalDateKey() { const d = new Date(); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+    function distanceMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000, toRad = d => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    function avatarUrlFor(photoURL, name, size = 64) {
+      if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
+      const q = encodeURIComponent((name || 'User').trim());
+      return `https://ui-avatars.com/api/?name=${q}&background=8b5cf6&color=fff&size=${size}&bold=true`;
+    }
+    function getPositionOnce() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported.'));
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+          err => reject(new Error(err.code === 1 ? 'Location denied.' : 'GPS error.')),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
       });
     }
-
-    function updateLanguage(lang) {
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.dataset.i18n;
-        if (I18N[lang][key]) {
-          const span = el.querySelector('span:not(.lang-flag)');
-          if (span && el.tagName === 'BUTTON') {
-            span.innerText = I18N[lang][key];
-          } else {
-            el.innerText = I18N[lang][key];
-          }
-        }
-      });
-
-      const currentLangText = document.getElementById('lang-current');
-      if (currentLangText) {
-        currentLangText.innerText = lang === 'rw' ? 'Kinyarwanda' : lang === 'fr' ? 'Français' : 'English';
-      }
-
-      document.querySelectorAll('[data-lang]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-      });
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
+      document.getElementById('toast-root').appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 4000);
+    }
+    function getMinutesSinceMidnight(dateObj) { return dateObj.getHours() * 60 + dateObj.getMinutes(); }
+    function cpdStatus(cpd) {
+      const s = toDate(cpd.startTime)?.getTime(), e = toDate(cpd.endTime)?.getTime(), n = Date.now();
+      if (!s || !e) return 'unknown';
+      if (n < s - 15 * 60 * 1000) return 'upcoming';
+      if (n > e) return 'ended';
+      return 'ongoing';
+    }
+    function clearWatch() {
+      if (state.watchId != null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; state.watchingFor = null; }
+    }
+    
+    // Format minutes to h m (e.g., 90 -> 1h 30m)
+    function formatMins(mins) {
+      if (mins <= 0) return '0m';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
 
-    function signinButtonContent() {
-      return `
-        <svg width="16" height="16" viewBox="0 0 48 48">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.4-11.2-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2c-.4.4 6.7-4.9 6.7-14.9 0-1.2-.1-2.4-.4-3.5z"/>
-        </svg>
-        <span data-i18n="signin">${t('signin')}</span>`;
-    }
-
-    function dashboardButtonContent() {
-      return `
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/>
-        </svg>
-        <span data-i18n="dashboard">${t('dashboard')}</span>`;
-    }
-
-    async function goToDashboard() {
-      let role = state.userRole;
-      if (!role && state.user) {
-        try {
-          const snap = await getDoc(doc(db, 'users', state.user.uid));
-          role = snap.exists() ? (snap.data().role || 'teacher') : 'teacher';
-          state.userRole = role;
-        } catch { role = 'teacher'; }
-      }
-      window.location.href = dashboardUrlFor(role || 'teacher');
-    }
-
-    async function handleGoogleSignIn(btn) {
-      btn.disabled = true;
-      const original = btn.innerHTML;
-      btn.innerHTML = '<span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,27,51,.25);border-top-color:#071B33;border-radius:50%"></span>';
+    /* ==================== FACE API LOGIC ==================== */
+    async function loadFaceModels() {
+      if (modelsLoaded) return;
       try {
-        const result = await signInWithPopup(auth, googleProvider);
-        if (result?.user) {
-          const role = await ensureProfile(result.user);
-          state.userRole = role;
-          btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px">✓</span>';
-          window.location.href = dashboardUrlFor(role);
-          return;
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        modelsLoaded = true;
+      } catch (err) { console.error('Face models failed to load:', err); toast('Failed to load facial recognition engine.', 'error'); }
+    }
+    async function startCamera() {
+      const video = document.getElementById('face-video');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      video.srcObject = stream; return stream;
+    }
+    function stopCamera(stream) { if (stream) stream.getTracks().forEach(track => track.stop()); }
+
+    async function scanFaceUI(isEnrollment = false) {
+      if (!modelsLoaded) {
+        toast('Loading AI models... please wait.', 'info');
+        await loadFaceModels();
+        if (!modelsLoaded) return null;
+      }
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'face-modal open';
+        modal.innerHTML = `
+          <div class="face-scan-container">
+            <video id="face-video" autoplay playsinline muted></video>
+            <div class="face-scan-overlay">
+              <div class="face-oval" id="face-oval"></div>
+              <div class="scan-line"></div>
+            </div>
+          </div>
+          <div class="face-status">
+            <h3>${isEnrollment ? 'Face Enrollment' : 'Identity Verification'}</h3>
+            <p>${isEnrollment ? 'Align your face within the oval and look directly at the camera.' : 'Hold still while we verify your identity.'}</p>
+            <div id="face-detection-status" style="font-size:12px; font-weight:bold; color:var(--cyan); letter-spacing:0.05em; text-transform:uppercase">
+              <span class="status-dot"></span> Initializing camera...
+            </div>
+          </div>
+          <div class="face-actions">
+            <button class="btn btn-ghost" id="btn-face-cancel">Cancel</button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        let stream = null;
+        let isProcessing = false;
+
+        startCamera().then(s => {
+          stream = s;
+          document.getElementById('face-detection-status').innerHTML = '<span class="status-dot"></span> Scanning face...';
+          const video = document.getElementById('face-video');
+          const oval = document.getElementById('face-oval');
+
+          const interval = setInterval(async () => {
+            if (isProcessing || video.paused || video.ended) return;
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+
+            if (detection) {
+              oval.classList.add('detected');
+              document.getElementById('face-detection-status').innerHTML = '<span class="status-dot" style="background:#10b981"></span> Face captured!';
+              isProcessing = true;
+              clearInterval(interval);
+
+              const canvas = document.createElement('canvas');
+              canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+              canvas.getContext('2d').drawImage(video, 0, 0);
+              const selfie = canvas.toDataURL('image/jpeg', 0.6);
+
+              stopCamera(stream); modal.remove();
+              resolve({ descriptor: detection.descriptor, selfie });
+            }
+          }, 500);
+        }).catch(err => {
+          document.getElementById('face-detection-status').innerText = 'Camera access denied.';
+          document.getElementById('face-detection-status').style.color = '#ef4444';
+        });
+
+        document.getElementById('btn-face-cancel').onclick = () => { stopCamera(stream); modal.remove(); resolve(null); };
+      });
+    }
+
+    async function ensureFaceEnrollment() {
+      if (state.profile.faceDescriptor) return true;
+
+      toast('Face enrollment required.', 'info');
+      const result = await scanFaceUI(true);
+      if (!result) return false;
+
+      // --- GLOBAL UNIQUENESS CHECK ---
+      toast('Checking face uniqueness...', 'info');
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        let isDuplicate = false;
+
+        for (const docSnap of usersSnap.docs) {
+          if (docSnap.id === state.user.uid) continue; // Skip checking against our own account
+          
+          const data = docSnap.data();
+          if (data.faceDescriptor && Array.isArray(data.faceDescriptor)) {
+            const existingDescriptor = new Float32Array(data.faceDescriptor);
+            const distance = faceapi.euclideanDistance(existingDescriptor, result.descriptor);
+            
+            // Strict threshold for unique faces
+            if (distance < 0.55) {
+              isDuplicate = true;
+              break; 
+            }
+          }
+        }
+
+        if (isDuplicate) {
+          toast('This face is already registered to another account. Access denied.', 'error');
+          return false; 
         }
       } catch (err) {
-        if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
-          try {
-            await signInWithRedirect(auth, googleProvider);
-            return;
-          } catch (e2) {
-            toast('Sign-in failed: ' + e2.message, 'error');
+        console.error('Error checking face uniqueness:', err);
+        toast('Could not verify face uniqueness. Check your connection.', 'error');
+        return false;
+      }
+      // ------------------------------
+
+      try {
+        await updateDoc(doc(db, 'users', state.user.uid), {
+          faceDescriptor: Array.from(result.descriptor),
+          faceSelfie: result.selfie,
+          faceEnrolledAt: serverTimestamp()
+        });
+        state.profile.faceDescriptor = Array.from(result.descriptor);
+        state.profile.faceSelfie = result.selfie;
+        toast('Face enrolled successfully!', 'success');
+        renderTeacher(); // refresh UI
+        return true;
+      } catch (err) { toast('Failed to save face data.', 'error'); return false; }
+    }
+
+    async function verifyFace() {
+      if (!state.profile.faceDescriptor) { toast('No face enrolled. Please enroll first.', 'error'); return false; }
+      const result = await scanFaceUI(false);
+      if (!result) return false; // Cancelled
+      
+      const storedDescriptor = new Float32Array(state.profile.faceDescriptor);
+      const distance = faceapi.euclideanDistance(storedDescriptor, result.descriptor);
+      
+      if (distance < 0.55) { return result.selfie; } 
+      else { toast('Face does not match. Access denied.', 'error'); return false; }
+    }
+
+    async function deleteFace() {
+      if (!confirm('Are you sure you want to delete your registered face? You will need to scan it again before your next attendance.')) return;
+      try {
+        await updateDoc(doc(db, 'users', state.user.uid), {
+          faceDescriptor: null, faceSelfie: null
+        });
+        state.profile.faceDescriptor = null; state.profile.faceSelfie = null;
+        toast('Face deleted. Please enroll again.', 'success');
+        setTimeout(() => ensureFaceEnrollment(), 1000);
+        renderTeacher(); // refresh UI
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    /* ==================== GREETINGS ==================== */
+    const GREET_SUBLINES = {
+      morning: ['Ready to make today count?', 'Fresh day, fresh ideas.', 'A bright start makes a bright day.'],
+      lunch: ['Take a real break — you earned it.', 'Fuel up and keep going.', 'A little pause goes a long way.'],
+      afternoon: ['Keep the momentum going.', "You're doing great — keep it up.", 'One step at a time.'],
+      evening: ['Time to wind down a little.', 'Nice work today.', 'Evenings are for reflecting and recharging.'],
+      night: ['Rest well — tomorrow is another day.', 'Late-night effort noted. Rest soon.', 'Sleep is part of the process.']
+    };
+    function dayHash(salt) {
+      const d = new Date(); const uid = state.user?.uid || 'guest';
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}|${uid}|${salt || ''}`;
+      let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0; return h;
+    }
+    function pickDaily(list, salt) { return list[dayHash(salt) % list.length]; }
+    function getGreetingInfo() {
+      const h = new Date().getHours();
+      const fullName = state.profile?.fullName || state.user?.displayName || state.user?.email || 'Friend';
+      const name = (fullName.split(/[\s@]/)[0] || 'Friend');
+      let slot, greetings, emoji;
+      if (h >= 5 && h < 11) { slot = 'morning'; emoji = '☀️'; greetings = ['Good morning','Hello','Hey','Welcome back','Rise and shine','Top of the morning']; }
+      else if (h >= 11 && h < 14) { slot = 'lunch'; emoji = '🍽️'; greetings = ['Have a good lunch','Hello','Hey','Good day','Enjoy your lunch']; }
+      else if (h >= 14 && h < 18) { slot = 'afternoon'; emoji = '🌤️'; greetings = ['Good afternoon','Hello','Hey','Welcome back','Good day']; }
+      else if (h >= 18 && h < 22) { slot = 'evening'; emoji = '🌆'; greetings = ['Good evening','Hello','Hey','Welcome','Nice to see you']; }
+      else { slot = 'night'; emoji = '🌙'; greetings = ['Good night','Hello','Hey','Working late','Welcome']; }
+      return { name, slot, emoji, greeting: pickDaily(greetings, 'greet'), sub: pickDaily(GREET_SUBLINES[slot], 'sub') };
+    }
+    function greetingCardHtml() {
+      const g = getGreetingInfo();
+      return `<div class="greet-card"><div class="greet-emoji">${g.emoji}</div><div class="greet-text"><h2>${escapeHtml(g.greeting)}, ${escapeHtml(g.name)}</h2><p>${escapeHtml(g.sub)}</p></div></div>`;
+    }
+    function proEmptyHtml() {
+      const isNew = state.myAttendances.length === 0;
+      const title = isNew ? t('empty_cpd_new_title') : t('empty_cpd_title');
+      const sub = isNew ? t('empty_cpd_new_sub') : t('empty_cpd_sub');
+      return `<div class="pro-empty"><div class="pro-empty-icon">📅</div><strong>${escapeHtml(title)}</strong><p>${escapeHtml(sub)}</p></div>`;
+    }
+    function showThankYouModal(isDaily = false) {
+      const g = getGreetingInfo();
+      const closings = { morning: ['Have a great morning','Enjoy your morning'], lunch: ['Have a good lunch','Enjoy your lunch'], afternoon: ['Have a great afternoon','Enjoy the rest of your day'], evening: ['Have a good evening','Enjoy your evening'], night: ['Have a good night','Sleep well'] };
+      let closing = pickDaily(closings[g.slot] || closings.afternoon, 'close');
+      if ([0, 6].includes(new Date().getDay())) closing += ' and a lovely weekend';
+      let title, msg;
+      if (isDaily) { title = pickDaily(['Have a great day at school!','You are marked present.','Ready for a great day?'], 'thank_daily'); msg = 'Your arrival has been recorded.'; }
+      else { title = pickDaily(['I hope you enjoyed your CPD!','Thanks for attending — your growth matters.','Another session complete — proud of you!','Great job showing up today.','Your dedication is inspiring.','Every CPD makes you a stronger teacher.'], 'thank'); msg = t('thanks_generic'); }
+      const emoji = pickDaily(['🎉','🌟','🙌','💪','✨','🎓'], 'emoji');
+      const modal = document.createElement('div');
+      modal.className = 'thank-modal';
+      modal.innerHTML = `<div class="thank-card"><div class="thank-emoji">${emoji}</div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(msg)}</p><p class="closing">${escapeHtml(closing)}, ${escapeHtml(g.name)}.</p><button class="btn btn-primary" id="thank-close">${escapeHtml(t('continue_btn'))}</button></div>`;
+      document.body.appendChild(modal);
+      requestAnimationFrame(() => modal.classList.add('open'));
+      const close = () => { modal.classList.remove('open'); setTimeout(() => modal.remove(), 320); };
+      modal.querySelector('#thank-close').onclick = close;
+      modal.onclick = e => { if (e.target === modal) close(); };
+      setTimeout(close, 9000);
+    }
+
+    /* ==================== AUTH ==================== */
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.replace('index.html'); return; }
+      state.user = user;
+      try {
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          state.profile = snap.data();
+          if (user.photoURL && state.profile.photoURL !== user.photoURL) {
+            updateDoc(ref, { photoURL: user.photoURL }).catch(() => {});
+            state.profile.photoURL = user.photoURL;
           }
-        } else if (err.code !== 'auth/popup-closed-by-user') {
-          toast('Sign-in failed: ' + err.message, 'error');
-        }
-      }
-      btn.disabled = false;
-      btn.innerHTML = original;
-    }
-
-    async function ensureProfile(user) {
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        await setDoc(ref, {
-          email: user.email,
-          fullName: user.displayName || user.email,
-          role: 'teacher',
-          createdAt: serverTimestamp(),
-        });
-        return 'teacher';
-      }
-      return snap.data().role || 'teacher';
-    }
-
-    function toast(message, type = 'info') {
-      const el = document.createElement('div');
-      el.className = `toast ${type}`;
-      el.textContent = message;
-      el.style.pointerEvents = 'auto';
-      document.getElementById('toast-root').appendChild(el);
-      setTimeout(() => {
-        el.style.transition = 'opacity .3s, transform .3s';
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(40px)';
-        setTimeout(() => el.remove(), 320);
-      }, 4500);
-    }
-
-    onAuthStateChanged(auth, user => {
-      const wasSignedIn = !!state.user;
-      state.user = user || null;
+        } else { window.location.replace('index.html'); return; }
+      } catch (err) { console.error('[profile]', err); window.location.replace('index.html'); return; }
+      if (state.profile.role === 'admin') { window.location.replace('admin.html'); return; }
+      
+      loadFaceModels(); 
       state.loading = false;
+      goTeacher();
 
-      if (state.user) {
-        getDoc(doc(db, 'users', state.user.uid))
-          .then(snap => {
-            state.userRole = snap.exists() ? (snap.data().role || 'teacher') : 'teacher';
-          })
-          .catch(() => { state.userRole = 'teacher'; });
-      } else {
-        state.userRole = null;
-      }
-
-      if (state.view === 'landing' && wasSignedIn !== !!state.user) {
-        document.querySelectorAll('[data-cta]').forEach(btn => {
-          btn.innerHTML = state.user ? dashboardButtonContent() : signinButtonContent();
-          btn.classList.toggle('dashboard-mode', !!state.user);
-          btn.onclick = state.user
-            ? () => { goToDashboard(); }
-            : () => handleGoogleSignIn(btn);
-        });
+      // Check enrollment after slight delay
+      if (!state.profile.faceDescriptor) {
+        setTimeout(async () => {
+          const enrolled = await ensureFaceEnrollment();
+          if (!enrolled) toast('You must enroll your face to use daily attendance.', 'warn');
+        }, 1500);
       }
     });
 
-    function boot() {
-      document.getElementById('app').innerHTML = `
-        <div style="position:fixed;inset:0;background:linear-gradient(135deg,#071B33 0%,#0a2540 50%,#075985 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;color:#F8FAFC;font-family:Inter,sans-serif;z-index:9999">
-          <img src="https://i.postimg.cc/sgYGjJ4S/i-MENA-Smart-CPD-Attendance-Logo.png" alt="iMENA" style="width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 12px 40px rgba(0,217,255,.5))" />
-          <div style="font-size:12px;opacity:.6;letter-spacing:.15em;text-transform:uppercase;">OPENING iMENA SMART CPD...</div>
-          <div style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(0,217,255,0.15);border-top-color:#00D9FF;animation:spin .9s linear infinite"></div>
-        </div>
-        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>`;
+    /* ==================== HEADER ==================== */
+    function headerHtml() {
+      const name = state.profile?.fullName || state.user?.displayName || 'User';
+      const src = avatarUrlFor(state.user?.photoURL || state.profile?.photoURL, name, 128);
+      const fallback = avatarUrlFor(null, name, 128);
+      
+      const faceStatusHtml = state.profile?.faceDescriptor 
+        ? `<div style="margin-top:16px; text-align:center;">
+             <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; margin-bottom:6px; font-weight:700">Registered Face</div>
+             <img src="${state.profile.faceSelfie}" style="width:80px; height:80px; border-radius:12px; object-fit:cover; border:2px solid var(--cyan); margin-bottom:8px;" />
+             <br/><button id="btn-delete-face" style="color:#f87171; font-size:12px; font-weight:700; text-decoration:underline;">Delete & Re-scan</button>
+           </div>`
+        : `<div style="margin-top:16px; text-align:center;">
+             <div style="font-size:12px; color:#f87171; font-weight:700;">Face Not Enrolled</div>
+           </div>`;
+
+      return `
+        <header class="header">
+          <div class="header-left">
+            <img src="${LOGO_URL}" class="header-logo" alt="Logo" />
+            <div class="header-title">iMENA SMART ATTENDANCE<span>${t('teacher')} Portal</span></div>
+          </div>
+          <div class="header-right">
+            <button class="avatar-btn" id="btn-profile" aria-label="Profile">
+              <img src="${escapeHtml(src)}" alt="Profile" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" />
+            </button>
+          </div>
+        </header>
+        <div class="profile-modal" id="profile-modal">
+          <div class="profile-card">
+            <img src="${escapeHtml(src)}" class="profile-img" alt="Profile" onerror="this.onerror=null;this.src='${escapeHtml(fallback)}';" />
+            <div class="profile-name">${escapeHtml(name)}</div>
+            <div class="profile-email">${escapeHtml(state.user?.email || '')}</div>
+            <div class="profile-role">${t('teacher')}</div>
+            
+            ${faceStatusHtml}
+
+            <div class="profile-actions" style="margin-top:20px;">
+              <a href="index.html" class="btn-home">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
+                ${t('home')}
+              </a>
+              <button class="btn-logout" id="btn-logout">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                ${t('logout')}
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+    function bindHeaderEvents() {
+      const modal = document.getElementById('profile-modal');
+      const btnProfile = document.getElementById('btn-profile');
+      const btnLogout = document.getElementById('btn-logout');
+      const btnDeleteFace = document.getElementById('btn-delete-face');
+      
+      if (btnProfile) btnProfile.onclick = () => modal.classList.add('open');
+      if (modal) modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('open'); };
+      if (btnLogout) btnLogout.onclick = () => { if (confirm(t('msg_sign_out'))) signOut(auth); };
+      if (btnDeleteFace) btnDeleteFace.onclick = () => { modal.classList.remove('open'); deleteFace(); };
     }
 
-    boot();
-    setTimeout(() => {
-      if (state.view === 'boot') {
-        state.loading = false;
-        renderLanding();
+    /* ==================== TEACHER ==================== */
+    function goTeacher() {
+      state.view = 'teacher';
+      if (!state.subCpds) state.subCpds = onSnapshot(collection(db, 'cpds'),
+        snap => { state.cpds = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (state.view === 'teacher') renderTeacher(); },
+        err => console.error(err));
+      
+      if (!state.subMine && state.user) {
+        const q = query(collection(db, 'attendance'), where('teacherId', '==', state.user.uid));
+        state.subMine = onSnapshot(q,
+          snap => { state.myAttendances = snap.docs.map(d => ({ id: d.id, ...d.data() })); ensureWatchForActive(); if (state.view === 'teacher') renderTeacher(); },
+          err => console.error(err));
       }
-    }, 700);
+      
+      // Settings Listener for school times
+      if (!state.subSettings) {
+        state.subSettings = onSnapshot(doc(db, 'settings', 'attendance'), snap => {
+          if (snap.exists()) {
+            const d = snap.data();
+            state.settings = { 
+              startTime: d.startTime ? parseInt(d.startTime.split(':')[0])*60 + parseInt(d.startTime.split(':')[1]) : 480,
+              endTime: d.endTime ? parseInt(d.endTime.split(':')[0])*60 + parseInt(d.endTime.split(':')[1]) : 1020
+            };
+          }
+          if (state.view === 'teacher') renderTeacher();
+        });
+      }
+
+      const todayKey = todayLocalDateKey();
+      const dailyId = `${state.user.uid}_${todayKey}`;
+      if (!state.subDaily) {
+        onSnapshot(doc(db, 'daily_attendance', dailyId), snap => {
+          state.todayDaily = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+          if (state.view === 'teacher') renderTeacher();
+        }, err => console.error(err));
+
+        const q = query(collection(db, 'daily_attendance'), where('teacherId', '==', state.user.uid));
+        state.subDaily = onSnapshot(q, snap => {
+          state.myDailyRecords = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date.localeCompare(a.date));
+          if (state.view === 'teacher') renderTeacher();
+        }, err => console.error(err));
+      }
+
+      renderTeacher();
+    }
+
+    function teacherTabBar() {
+      const tabs = [
+        { id: 'home', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>' },
+        { id: 'daily', icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
+        { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
+        { id: 'stats', icon: '<path d="M18 20V10M12 20V4M6 20v-6"/>' },
+        { id: 'history', icon: '<path d="M12 8v4l3 3M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/>' }
+      ];
+      return `<nav class="tab-bar">${tabs.map(tb => `<button class="tab-btn ${state.teacherTab === tb.id ? 'active' : ''}" data-ttab="${tb.id}"><svg viewBox="0 0 24 24">${tb.icon}</svg>${t(tb.id)}</button>`).join('')}</nav>`;
+    }
+
+    function renderTeacher() {
+      const active = state.myAttendances.find(a => a.state === 'active');
+      let body = '';
+      if (state.teacherTab === 'calendar') body = renderTeacherCalendar();
+      else if (state.teacherTab === 'stats') body = renderTeacherStats();
+      else if (state.teacherTab === 'history') body = renderTeacherHistory();
+      else if (state.teacherTab === 'daily') body = renderTeacherDaily();
+      else body = renderTeacherHome(active);
+      document.getElementById('app').innerHTML = `${headerHtml()}<main class="main">${body}</main>${teacherTabBar()}`;
+      bindHeaderEvents();
+      document.querySelectorAll('[data-ttab]').forEach(b => b.onclick = () => { state.teacherTab = b.dataset.ttab; renderTeacher(); });
+      document.querySelectorAll('[data-attend]').forEach(b => { b.onclick = () => handleAttend(b.dataset.attend, b); });
+      document.querySelectorAll('[data-end]').forEach(b => { b.onclick = () => handleEnd(b.dataset.end, b); });
+      
+      const btnDailyIn = document.getElementById('btn-daily-in');
+      if (btnDailyIn) btnDailyIn.onclick = () => handleDailySignIn(btnDailyIn);
+      const btnDailyOut = document.getElementById('btn-daily-out');
+      if (btnDailyOut) btnDailyOut.onclick = () => handleDailySignOut(btnDailyOut);
+    }
+
+    function renderTeacherHome(active) {
+      const now = Date.now();
+      const todaySessions = state.cpds.filter(c => {
+        const d = toDate(c.startTime); if (!d) return false;
+        const s = new Date(d); s.setHours(0,0,0,0);
+        const e = new Date(d); e.setHours(23,59,59,999);
+        return now >= s.getTime() && now <= e.getTime();
+      }).sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0));
+      const upcomingSessions = state.cpds.filter(c => cpdStatus(c) === 'upcoming' || cpdStatus(c) === 'ongoing').sort((a, b) => (toDate(a.startTime)?.getTime() || 0) - (toDate(b.startTime)?.getTime() || 0));
+      const nextUpcoming = upcomingSessions[0];
+
+      let hero;
+      if (active) {
+        const liveCpd = state.cpds.find(c => c.id === active.cpdId);
+        let distanceLine = '';
+        if (active.liveLat != null && liveCpd) {
+          const d = distanceMeters(active.liveLat, active.liveLng, liveCpd.venueLat, liveCpd.venueLng);
+          distanceLine = ` · ${Math.round(d)}m from venue`;
+        }
+        hero = `<div class="t-hero t-hero-active"><h1><span class="status-pulse"></span>${t('currently_attending')}</h1><p><strong style="color:#fff">${escapeHtml(active.cpdTitle)}</strong>${distanceLine ? `<br><span style="font-size:12px">${distanceLine.trim()}</span>` : ''}</p><button data-end="${active.id}" class="btn btn-danger" style="font-size:17px; padding:20px;">■ ${t('end')}</button></div>`;
+      } else if (nextUpcoming && cpdStatus(nextUpcoming) === 'ongoing') {
+        hero = `<div class="t-hero"><h1>🟢 ${t('live')}</h1><p><strong style="color:#fff">${escapeHtml(nextUpcoming.title)}</strong> · ${fmtTime(nextUpcoming.startTime)} – ${fmtTime(nextUpcoming.endTime)}</p><button data-attend="${nextUpcoming.id}" class="btn btn-primary" style="font-size:17px; padding:20px;">▶ ${t('attend')}</button></div>`;
+      } else if (nextUpcoming) {
+        const start = toDate(nextUpcoming.startTime).getTime();
+        const diffMs = start - now;
+        const diffH = Math.floor(diffMs / 3600000);
+        const diffM = Math.floor((diffMs % 3600000) / 60000);
+        const diffD = Math.floor(diffH / 24);
+        let countdown = '';
+        if (diffD > 0) countdown = `in ${diffD}d ${diffH % 24}h`;
+        else if (diffH > 0) countdown = `in ${diffH}h ${diffM}m`;
+        else countdown = `in ${diffM}m`;
+        hero = `<div class="t-hero"><h1>📅 ${t('next_session')}</h1><p><strong style="color:#fff">${escapeHtml(nextUpcoming.title)}</strong><br>${fmtTime(nextUpcoming.startTime)} · ${countdown}</p></div>`;
+      } else {
+        hero = `<div class="t-hero"><h1>☕ ${t('no_sessions_today')}</h1><p>${t('ready')}</p></div>`;
+      }
+
+      const todayCards = todaySessions.length > 0 ? `<div class="section-title">${t('today')}</div>${todaySessions.map(c => teacherSessionCard(c, active)).join('')}` : '';
+      const upcomingNonToday = upcomingSessions.filter(c => {
+        const d = toDate(c.startTime); if (!d) return false;
+        const s = new Date(d); s.setHours(0,0,0,0);
+        return s.getTime() > now;
+      }).slice(0, 5);
+      const upcomingCards = upcomingNonToday.length > 0 ? `<div class="section-title">${t('upcoming')}</div>${upcomingNonToday.map(c => teacherSessionCard(c, active)).join('')}` : '';
+      let emptyBlock = '';
+      if (!todayCards && !upcomingCards) emptyBlock = proEmptyHtml();
+
+      return `${greetingCardHtml()}${hero}${todayCards}${upcomingCards}${emptyBlock}`;
+    }
+
+    /* ==================== DAILY TAB ==================== */
+    function renderTeacherDaily() {
+      const today = todayLocalDateKey();
+      const daily = state.todayDaily;
+      const now = new Date();
+      
+      const schoolStartH = Math.floor(state.settings.startTime / 60);
+      const schoolStartM = state.settings.startTime % 60;
+      const schoolEndH = Math.floor(state.settings.endTime / 60);
+      const schoolEndM = state.settings.endTime % 60;
+      const schoolStartStr = `${String(schoolStartH).padStart(2,'0')}:${String(schoolStartM).padStart(2,'0')} AM`;
+      const schoolEndStr = `${String(schoolEndH > 12 ? schoolEndH-12 : schoolEndH).padStart(2,'0')}:${String(schoolEndM).padStart(2,'0')} PM`;
+
+      let todayCard = '';
+      if (!daily) {
+        todayCard = `<div class="daily-card">
+          <h2>🏫 ${t('daily_title')}</h2>
+          <p>${t('daily_sub')} School starts at ${schoolStartStr} and ends at ${schoolEndStr}.</p>
+          <button id="btn-daily-in" class="btn btn-present">📍 ${t('daily_sign_in')}</button>
+        </div>`;
+      } else if (daily.state === 'in') {
+        todayCard = `<div class="daily-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px">
+            <h2>🏫 ${t('daily_signed_in')}</h2>
+            <span class="badge badge-live">Active</span>
+          </div>
+          <div class="daily-times">
+            <div class="daily-time-box">
+              <div class="lbl">${t('daily_sign_in')}</div>
+              <div class="val">${fmtTime(daily.signInAt)}</div>
+              ${daily.lateMinutes > 0 ? `<span class="badge badge-late">${t('daily_late')} ${formatMins(daily.lateMinutes)}</span>` : ''}
+            </div>
+          </div>
+          <p style="font-size:12px; margin-bottom:12px; color:#10b981; text-align:center;">✓ ${t('daily_verified_in')}</p>
+          <button id="btn-daily-out" class="btn btn-departure">🚪 ${t('daily_sign_out')}</button>
+        </div>`;
+      } else {
+        todayCard = `<div class="daily-card signed-out">
+          <h2>✅ ${t('daily_signed_out')}</h2>
+          <div class="daily-times">
+            <div class="daily-time-box">
+              <div class="lbl">${t('daily_sign_in')}</div>
+              <div class="val">${fmtTime(daily.signInAt)}</div>
+              ${daily.lateMinutes > 0 ? `<span class="badge badge-late">${t('daily_late')} ${formatMins(daily.lateMinutes)}</span>` : ''}
+            </div>
+            <div class="daily-time-box">
+              <div class="lbl">${t('daily_sign_out')}</div>
+              <div class="val">${fmtTime(daily.signOutAt)}</div>
+              ${daily.earlyLeaveMinutes > 0 ? `<span class="badge badge-absent">${t('daily_early_leave')} ${formatMins(daily.earlyLeaveMinutes)}</span>` : ''}
+            </div>
+          </div>
+          <p style="font-size:12px; color:#38bdf8; text-align:center;">✓ ${t('daily_verified_out')}</p>
+        </div>`;
+      }
+
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthRecords = state.myDailyRecords.filter(r => new Date(r.date + 'T00:00:00') >= monthStart);
+      
+      let lateCount = 0, earlyLeaveCount = 0;
+      let totalArrivalMs = 0, totalArrivalCount = 0;
+      let totalDepartureMs = 0, totalDepartureCount = 0;
+
+      monthRecords.forEach(r => {
+        if (r.lateMinutes > 0) lateCount++;
+        if (r.earlyLeaveMinutes > 0) earlyLeaveCount++;
+        if (r.signInAt) { totalArrivalMs += getMinutesSinceMidnight(toDate(r.signInAt)); totalArrivalCount++; }
+        if (r.signOutAt) { totalDepartureMs += getMinutesSinceMidnight(toDate(r.signOutAt)); totalDepartureCount++; }
+      });
+
+      const avgInMin = totalArrivalCount > 0 ? Math.round(totalArrivalMs / totalArrivalCount) : 0;
+      const avgOutMin = totalDepartureCount > 0 ? Math.round(totalDepartureMs / totalDepartureCount) : 0;
+      
+      const formatClock = (m) => {
+        if (m === 0) return '—';
+        const h = Math.floor(m / 60); const min = m % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM'; const h12 = h % 12 || 12;
+        return `${h12}:${String(min).padStart(2,'0')} ${ampm}`;
+      };
+
+      const analyticsHtml = `
+        <div class="analytics-grid" style="margin-top:24px">
+          <div class="analytics-card"><div class="val" style="color:var(--cyan)">${monthRecords.length}</div><div class="lbl">${t('daily_stat_present')}</div></div>
+          <div class="analytics-card"><div class="val" style="color:#fbbf24">${lateCount}</div><div class="lbl">${t('daily_late')}</div></div>
+          <div class="analytics-card"><div class="val" style="color:var(--lime)">${formatClock(avgInMin)}</div><div class="lbl">${t('daily_stat_avg_in')}</div></div>
+          <div class="analytics-card"><div class="val" style="color:var(--orange)">${formatClock(avgOutMin)}</div><div class="lbl">${t('daily_stat_avg_out')}</div></div>
+        </div>
+      `;
+
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+      const monday = new Date(now); monday.setDate(now.getDate() - currentDay + 1);
+      const weekDays = Array.from({length: 7}, (_, i) => {
+        const d = new Date(monday); d.setDate(monday.getDate() + i);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const rec = state.myDailyRecords.find(r => r.date === key);
+        return { key, label: d.toLocaleDateString([], { weekday: 'short' }), present: !!rec, isToday: key === today, isWeekend: d.getDay() === 0 || d.getDay() === 6 };
+      });
+
+      const chartBars = weekDays.map(d => {
+        if (d.isWeekend && !d.present) return `<div class="chart-col"><div class="chart-bar absent" style="height:4px;opacity:0.3"></div><div class="chart-label" style="opacity:0.5">${d.label}</div></div>`;
+        const h = d.present ? 100 : 4;
+        return `<div class="chart-col"><div class="chart-val">${d.present ? '✓' : '✗'}</div><div class="chart-bar ${d.present ? 'active' : 'absent'}" style="height: ${h}%"></div><div class="chart-label" style="${d.isToday ? 'color:var(--cyan);font-weight:900' : ''}">${d.label}</div></div>`;
+      }).join('');
+
+      const chartHtml = `<div class="chart-container" style="margin-top:24px"><h3>${t('daily_weekly_trend')}</h3><div class="chart-bars">${chartBars}</div></div>`;
+
+      const recentHistory = state.myDailyRecords.slice(0, 10).map(r => {
+        const isLate = r.lateMinutes > 0; const isEarly = r.earlyLeaveMinutes > 0;
+        const signOut = toDate(r.signOutAt);
+        return `<div class="hist-item">
+          <div class="hist-info"><h4>${new Date(r.date).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })}</h4><p>In: ${fmtTime(r.signInAt)} &nbsp;|&nbsp; Out: ${signOut ? fmtTime(r.signOutAt) : '—'}</p></div>
+          <div style="display:flex; gap:4px; flex-direction:column; align-items:flex-end;">
+            ${isLate ? `<span class="badge badge-late">Late ${formatMins(r.lateMinutes)}</span>` : ''}
+            ${isEarly ? `<span class="badge badge-absent">Left Early ${formatMins(r.earlyLeaveMinutes)}</span>` : ''}
+            ${!isLate && !isEarly ? `<span class="badge badge-verified">On Time</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+
+      return `${todayCard}${analyticsHtml}${chartHtml}<div class="section-title" style="margin-top:24px;">Recent History</div>${recentHistory || `<div class="empty"><strong>No recent records</strong></div>`}`;
+    }
+
+    function teacherSessionCard(cpd, active) {
+      const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
+      const status = myAtt?.state === 'active' ? 'live' : myAtt?.state === 'ended' ? 'ended' : cpdStatus(cpd);
+      const isLive = status === 'live'; const isEnded = status === 'ended';
+      let badge = '';
+      if (status === 'live') badge = `<span class="badge badge-live">● ${t('live')}</span>`;
+      else if (status === 'ongoing') badge = `<span class="badge badge-live">● ${t('ongoing')}</span>`;
+      else if (status === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
+      else if (status === 'ended') badge = myAtt?.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+
+      let action = '';
+      if (isLive) action = `<button data-end="${myAtt.id}" class="btn btn-danger" style="font-size:15px">■ ${t('end')}</button>`;
+      else if (isEnded) action = '';
+      else if (myAtt) action = `<div style="padding:10px; text-align:center; font-size:13px; color:var(--muted)">✓ ${t('verified')}</div>`;
+      else if (status === 'ongoing') {
+        if (active) action = `<button disabled class="btn btn-ghost" style="font-size:13px">${t('finish_current')}</button>`;
+        else action = `<button data-attend="${cpd.id}" class="btn btn-primary">▶ ${t('attend')}</button>`;
+      } else if (status === 'upcoming') action = `<button disabled class="btn btn-ghost">${t('not_started')}</button>`;
+      else if (status === 'ended') action = `<button disabled class="btn btn-ghost">${t('ended')}</button>`;
+
+      return `<div class="t-session-card ${isLive ? 'live' : ''} ${isEnded ? 'ended' : ''}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;"><h3 style="flex:1">${escapeHtml(cpd.title)}</h3>${badge}</div>
+        <div class="t-session-meta">
+          <span>⏰ ${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)}</span>
+          <span>📍 ${escapeHtml(cpd.venueName)}</span>
+          ${cpd.facilitator ? `<span>👤 ${escapeHtml(cpd.facilitator)}</span>` : ''}
+        </div>
+        ${action}
+      </div>`;
+    }
+
+    function renderTeacherCalendar() {
+      const year = state.calYear, month = state.calMonth;
+      const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
+      const startWeekday = (firstDay.getDay() + 6) % 7; const daysInMonth = lastDay.getDate();
+      const sessionsByDay = {};
+      state.cpds.forEach(c => {
+        const d = toDate(c.startTime); if (!d) return;
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const key = d.getDate(); if (!sessionsByDay[key]) sessionsByDay[key] = [];
+          sessionsByDay[key].push(c);
+        }
+      });
+      const today = new Date();
+      const isToday = (day) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+      let grid = '';
+      for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const hasCpd = !!sessionsByDay[day]; const classes = ['cal-day'];
+        if (hasCpd) classes.push('has-cpd');
+        if (isToday(day)) classes.push('today');
+        if (state.calSelectedDay === day) classes.push('selected');
+        grid += `<div class="${classes.join(' ')}" data-calday="${day}">${day}</div>`;
+      }
+      const monthName = firstDay.toLocaleString('en', { month: 'long', year: 'numeric' });
+      let dayDetail = '';
+      if (state.calSelectedDay) {
+        const list = sessionsByDay[state.calSelectedDay] || [];
+        const dayDate = new Date(year, month, state.calSelectedDay).toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
+        dayDetail = `<div class="section-title">${dayDate}</div>`;
+        if (list.length === 0) dayDetail += `<div class="empty"><strong>${t('no_sessions_day')}</strong></div>`;
+        else {
+          const active = state.myAttendances.find(a => a.state === 'active');
+          dayDetail += list.map(c => teacherSessionCard(c, active)).join('');
+        }
+      }
+      return `<div class="cal-wrap" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px"><div class="cal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="cal-title" style="font-size:16px;font-weight:800;color:#fff">${monthName}</div><div class="cal-nav" style="display:flex;gap:6px"><button data-calnav="-1" style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.06);color:#cbd5e1;font-size:14px;display:flex;align-items:center;justify-content:center">‹</button><button data-calnav="1" style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.06);color:#cbd5e1;font-size:14px;display:flex;align-items:center;justify-content:center">›</button></div></div><div class="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow" style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:6px 0">${d}</div>`).join('')}${grid}</div></div>${dayDetail}`;
+    }
+
+    function renderTeacherStats() {
+      const ended = state.myAttendances.filter(a => a.state === 'ended');
+      const verified = state.myAttendances.filter(a => a.verified).length;
+      const totalSessions = ended.length;
+      const verifiedRate = totalSessions > 0 ? Math.round(verified / totalSessions * 100) : 0;
+      const totalMinutes = ended.reduce((s, a) => {
+        const s1 = toDate(a.attendedAt)?.getTime(); const e1 = toDate(a.endedAt)?.getTime();
+        if (s1 && e1) return s + Math.max(0, (e1 - s1) / 60000); return s;
+      }, 0);
+      const totalHours = (totalMinutes / 60).toFixed(1);
+      const now = new Date();
+      const thisMonthCount = state.myAttendances.filter(a => {
+        const ts = toDate(a.attendedAt)?.getTime();
+        return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      }).length;
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const start = d.getTime(); const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).getTime();
+        const count = state.myAttendances.filter(a => { const ts = toDate(a.attendedAt)?.getTime(); return ts && ts >= start && ts <= end; }).length;
+        months.push({ label: d.toLocaleString('en', { month: 'short' }), count });
+      }
+      const maxCount = Math.max(1, ...months.map(m => m.count));
+      const circ = 2 * Math.PI * 32; const dash = (verifiedRate / 100) * circ;
+      return `<div class="stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div class="stat-card" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center"><div class="val" style="font-size:26px;font-weight:900;color:#fff;line-height:1">${totalSessions}</div><div class="lbl" style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:6px">${t('sessions_attended')}</div></div>
+        <div class="stat-card" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center"><div class="val" style="font-size:26px;font-weight:900;color:#fff;line-height:1">${totalHours}h</div><div class="lbl" style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:6px">${t('total_hours')}</div></div>
+        <div class="stat-card" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center"><div class="val" style="font-size:26px;font-weight:900;color:#fff;line-height:1">${thisMonthCount}</div><div class="lbl" style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:6px">${t('this_month')}</div></div>
+        <div class="stat-card" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center"><div class="val" style="font-size:26px;font-weight:900;color:#fff;line-height:1">${verifiedRate}%</div><div class="lbl" style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-top:6px">${t('verified_rate')}</div></div>
+      </div>
+      <div class="ring-card" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:20px"><svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" stroke="rgba(255,255,255,0.08)" stroke-width="8" fill="none"/><circle cx="40" cy="40" r="32" stroke="url(#teacherGrad)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${dash} ${circ}" transform="rotate(-90 40 40)"/></svg><div class="ring-info"><h3 style="font-size:14px;font-weight:800;color:#fff;margin:0 0 6px">${t('verified_rate')}</h3><p style="font-size:12px;color:var(--muted);margin:0">${verified} / ${totalSessions} ${t('verified').toLowerCase()}</p></div></div>
+      <div class="chart-card" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px"><h3 style="font-size:14px;font-weight:800;color:#fff;margin:0 0 16px">${t('sessions_this_month')}</h3><div class="bars" style="display:flex;align-items:flex-end;gap:6px;height:100px">${months.map(m => {
+        const h = m.count === 0 ? 4 : Math.max(8, Math.round((m.count / maxCount) * 100));
+        return `<div class="bar-wrap" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><div class="bar-count" style="font-size:10px;color:#cbd5e1;font-weight:800">${m.count || ''}</div><div class="bar" style="height:${h}px;width:100%;background:linear-gradient(180deg,var(--cyan),var(--purple));border-radius:4px 4px 0 0;min-height:4px"></div><div class="bar-lbl" style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase">${m.label}</div></div>`;
+      }).join('')}</div></div>`;
+    }
+
+    function renderTeacherHistory() {
+      const ended = state.myAttendances.filter(a => a.state === 'ended').sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0));
+      if (ended.length === 0) return `<div class="empty" style="margin-top:40px"><strong>${t('no_history')}</strong><span>${t('ready')}</span></div>`;
+      const groups = {};
+      ended.forEach(a => {
+        const d = toDate(a.attendedAt); if (!d) return;
+        const key = d.toLocaleString('en', { month: 'long', year: 'numeric' });
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(a);
+      });
+      return `<div class="section-title">${t('attendance_history')}</div>` + Object.entries(groups).map(([month, list]) => `
+        <div class="hist-month">${month}</div>
+        ${list.map(a => {
+          const s1 = toDate(a.attendedAt)?.getTime(); const e1 = toDate(a.endedAt)?.getTime();
+          const mins = (s1 && e1) ? Math.round((e1 - s1) / 60000) : 0;
+          const durStr = formatMins(mins);
+          const badge = a.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
+          return `<div class="hist-item"><div class="hist-info"><h4>${escapeHtml(a.cpdTitle)}</h4><p>${fmtDate(a.attendedAt)} · ${fmtTime(a.attendedAt)} → ${fmtTime(a.endedAt)} · ${durStr}</p></div>${badge}</div>`;
+        }).join('')}`).join('');
+    }
+
+    /* ==================== HANDLERS ==================== */
+    async function handleDailySignIn(btn) {
+      btn.disabled = true; btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Verifying Location...`;
+      
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, SCHOOL_LAT, SCHOOL_LNG);
+        
+        if (dist > SCHOOL_RADIUS) {
+          toast(`You are ${Math.round(dist)}m away. You must be within ${SCHOOL_RADIUS}m of the school to sign in. Please return to school.`, 'error');
+          btn.disabled = false; btn.innerHTML = `📍 ${t('daily_sign_in')}`;
+          return;
+        }
+
+        // GPS passed, now verify Face
+        btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
+        const selfieBase64 = await verifyFace();
+        if (!selfieBase64) {
+          btn.disabled = false; btn.innerHTML = `📍 ${t('daily_sign_in')}`;
+          return;
+        }
+
+        btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Saving...`;
+        const todayKey = todayLocalDateKey();
+        const dailyId = `${state.user.uid}_${todayKey}`;
+        
+        const now = new Date();
+        const currentMins = getMinutesSinceMidnight(now);
+        const lateMinutes = Math.max(0, currentMins - state.settings.startTime);
+
+        await setDoc(doc(db, 'daily_attendance', dailyId), {
+          teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email,
+          teacherEmail: state.user.email,
+          date: todayKey,
+          signInAt: serverTimestamp(),
+          signInLat: pos.lat, signInLng: pos.lng, signInDistanceMeters: dist,
+          lateMinutes: lateMinutes,
+          signOutAt: null, signOutLat: null, signOutLng: null, signOutDistanceMeters: null, earlyLeaveMinutes: 0,
+          state: 'in', verified: true,
+          selfieIn: selfieBase64,
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        });
+        
+        toast('Arrival recorded! Have a great day.', 'success');
+        showThankYouModal(true);
+      } catch (err) {
+        toast(err.message || 'GPS Error', 'error');
+        btn.disabled = false; btn.innerHTML = `📍 ${t('daily_sign_in')}`;
+      }
+    }
+
+    async function handleDailySignOut(btn) {
+      btn.disabled = true; btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Verifying Location...`;
+      
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, SCHOOL_LAT, SCHOOL_LNG);
+        
+        if (dist > SCHOOL_RADIUS) {
+          toast(`You are ${Math.round(dist)}m away. You must be within ${SCHOOL_RADIUS}m of the school to sign out. Please return to school.`, 'error');
+          btn.disabled = false; btn.innerHTML = `🚪 ${t('daily_sign_out')}`;
+          return;
+        }
+
+        // GPS passed, now verify Face
+        btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
+        const selfieBase64 = await verifyFace();
+        if (!selfieBase64) {
+          btn.disabled = false; btn.innerHTML = `🚪 ${t('daily_sign_out')}`;
+          return;
+        }
+
+        btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Saving...`;
+        const todayKey = todayLocalDateKey();
+        const dailyId = `${state.user.uid}_${todayKey}`;
+        
+        const now = new Date();
+        const currentMins = getMinutesSinceMidnight(now);
+        const earlyLeaveMinutes = Math.max(0, state.settings.endTime - currentMins);
+
+        await updateDoc(doc(db, 'daily_attendance', dailyId), {
+          signOutAt: serverTimestamp(),
+          signOutLat: pos.lat, signOutLng: pos.lng, signOutDistanceMeters: dist,
+          earlyLeaveMinutes: earlyLeaveMinutes,
+          state: 'out',
+          selfieOut: selfieBase64,
+          updatedAt: serverTimestamp()
+        });
+        
+        toast('Departure recorded! Safe travels.', 'success');
+      } catch (err) {
+        toast(err.message || 'GPS Error', 'error');
+        btn.disabled = false; btn.innerHTML = `🚪 ${t('daily_sign_out')}`;
+      }
+    }
+
+    async function handleAttend(cpdId, btn) {
+      const cpd = state.cpds.find(c => c.id === cpdId); if (!cpd) return;
+      if (state.myAttendances.some(a => a.state === 'active')) { toast(t('finish_current'), 'warn'); return; }
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> ${t('locating')}`;
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = dist <= cpd.radiusMeters ? 'near' : 'far';
+        await addDoc(collection(db, 'attendance'), {
+          cpdId, cpdTitle: cpd.title, teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email,
+          teacherEmail: state.user.email,
+          teacherPhotoURL: state.user.photoURL || state.profile?.photoURL || null,
+          attendedAt: serverTimestamp(), attendedLat: pos.lat, attendedLng: pos.lng,
+          attendedDistanceMeters: dist, attendedStatus: status,
+          liveLat: pos.lat, liveLng: pos.lng, liveAccuracy: pos.accuracy, liveUpdatedAt: serverTimestamp(),
+          state: 'active', verified: false,
+        });
+        toast('Attendance recorded!', 'success');
+      } catch (err) {
+        toast(err.message || 'GPS Error', 'error');
+        btn.disabled = false; btn.innerHTML = `▶ ${t('attend')}`;
+      }
+    }
+
+    async function handleEnd(attId, btn) {
+      const att = state.myAttendances.find(a => a.id === attId);
+      const cpd = state.cpds.find(c => c.id === att?.cpdId);
+      if (!att || !cpd) return;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> ${t('finalizing')}`;
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        const status = dist <= cpd.radiusMeters ? 'near' : 'far';
+        const verified = att.attendedStatus === 'near' && status === 'near';
+        await updateDoc(doc(db, 'attendance', att.id), {
+          endedAt: serverTimestamp(), endedLat: pos.lat, endedLng: pos.lng,
+          endedDistanceMeters: dist, endedStatus: status, state: 'ended', verified,
+        });
+        clearWatch();
+        toast(verified ? t('verified') : t('flagged'), verified ? 'success' : 'warn');
+        showThankYouModal(false);
+      } catch (err) {
+        toast(err.message || 'GPS Error', 'error');
+        btn.disabled = false; btn.innerHTML = `■ ${t('end')}`;
+      }
+    }
+
+    function ensureWatchForActive() {
+      const active = state.myAttendances.find(a => a.state === 'active');
+      if (!active) { clearWatch(); return; }
+      if (state.watchingFor === active.id) return;
+      clearWatch(); state.watchingFor = active.id;
+      state.watchId = navigator.geolocation.watchPosition(
+        pos => { updateDoc(doc(db, 'attendance', active.id), { liveLat: pos.coords.latitude, liveLng: pos.coords.longitude, liveAccuracy: pos.coords.accuracy, liveUpdatedAt: serverTimestamp() }).catch(() => {}); },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+      );
+    }
+
+    /* ==================== BOOT ==================== */
+    document.getElementById('app').innerHTML = `
+      <div class="loader">
+        <img src="${LOGO_URL}" alt="Logo" style="width:100px;height:100px;object-fit:contain" />
+        <div class="loader-ring"></div>
+      </div>`;
   </script>
 </body>
 </html>
