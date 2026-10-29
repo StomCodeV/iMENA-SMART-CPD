@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#071B33" />
-  <title>Admin Portal — iMENA Smart Attendance</title>
+  <title>Admin Portal - iMENA Smart Attendance</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/zBDCZhCb/i-MENA-Smart-CPD-Badge.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -302,7 +302,6 @@
     .chart-val { position: absolute; top: -20px; font-size: 10px; font-weight: 800; color: #00ffcc; opacity: 0; transition: opacity 0.2s; }
     .chart-col:hover .chart-val { opacity: 1; }
 
-    /* ADVANCED DAILY ROW */
     .daily-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; transition: all 0.2s; }
     .daily-row:hover { background: rgba(15,23,42,0.8); }
     .daily-row.in-school { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
@@ -492,7 +491,7 @@
         btn_create: 'Create Event', btn_creating: 'Creating...',
         attendees: 'Attendees', record: 'Attendance Record', map: 'Map',
         t_teacher: 'Teacher', t_attended: 'Checked In', t_ended: 'Ended', t_status: 'Status',
-        no_att: 'No attendance yet.', msg_sign_out: 'Sign out?', msg_delete: 'Delete this session?', msg_create: 'Session created!',
+        no_att: 'No attendance yet.', msg_sign_out: 'Sign out?', msg_delete: 'Delete this session?', msg_create: 'Event created!',
         duration: 'Duration', use_location: 'Use my location', quick_now: 'Now',
         upcoming: 'Upcoming', ongoing: 'Ongoing', ended: 'Ended', live: 'Live',
         verified: 'Verified', flagged: 'Flagged',
@@ -501,16 +500,16 @@
         stat_in_cpd: 'In CPD', stat_in_school: 'In School',
         all_categories: 'All', nursery: 'Nursery', primary: 'Primary', secondary: 'Secondary',
         no_teachers_match: 'No teachers match your search',
-        download_current: 'Download Current CPD', download_history: 'Download Full History', download_this: 'Download Session CSV',
+        download_current: 'Download Current', download_history: 'Download History', download_this: 'Download CSV',
         male: 'Male', female: 'Female',
         search_teacher_placeholder: '🔍 Search teacher by name…',
         just_now: 'just now', min_ago: 'min', hour_ago: 'h', day_ago: 'd',
         cpds_label: 'CPDs', last_label: 'Last', never_label: 'Never',
-        in_cpd_label: 'In CPD', not_in_cpd_label: 'Not in CPD',
+        in_cpd_label: 'In Event', not_in_cpd_label: 'Not in Event',
         attended_label: 'Attended', not_attended_label: 'Did not attend',
         attendance_breakdown: 'Attendance Breakdown',
-        currently_in_cpd: 'Currently in CPD', not_in_cpd_yet: 'Not in CPD yet',
-        teacher_report: 'Teacher Report', total_cpds: 'CPDs', total_hours: 'Hours',
+        currently_in_cpd: 'Currently in Event', not_in_cpd_yet: 'Not in Event yet',
+        teacher_report: 'Teacher Report', total_cpds: 'Events', total_hours: 'Hours',
         verified_pct: 'Verified %', this_month: 'This Month',
         sessions_history: 'Sessions History', no_sessions_yet: 'No sessions attended yet',
         back_to_teachers: 'Back to Teachers',
@@ -530,22 +529,22 @@
       rw: {
         home: 'Ahabanza', logout: 'Sohoka', admin: 'Ubuyobozi', overview: 'Incamake', daily: 'Buri Munsi', sessions: 'Amasomo', calendar: 'Ikalendari', new_cpd: 'Gishya', teachers: 'Abarimu',
         admin_title: 'Urubuga rw\'Ubuyobozi', stat_total: 'Byose', stat_ongoing: 'Arakomeje', stat_upcoming: 'Araza', stat_ended: 'Byarangiye',
-        stat_live_now: 'Kuri ubu', stat_next_session: 'Isomo rikurikira',
+        stat_live_now: 'Kuri ubu', stat_next_session: 'Igikorwa gikurikira',
         open: 'Fungura', back: 'Subira', delete: 'Siba', approve: 'Emeza',
         create_title: 'Tegura Igikorwa', create_sub: 'Uzuza amakuru y\'igikorwa.', form_title: 'Umutwe *', form_theme: 'Insanganyamatsiko', form_start: 'Itangira *', form_end: 'Irangira *', form_facilitator: 'Umuyobozi', form_type: 'Ubwoko',
         form_venue: 'Aho ribera', form_map: 'Aho ribera & Ikarita', btn_create: 'Fungura Igikorwa', btn_creating: 'Turifungura...',
         attendees: 'Abitabiriye', record: 'Inyandiko', map: 'Ikarita', t_teacher: 'Umwarimu', t_attended: 'Yitabiriye', t_ended: 'Yarangiye', t_status: 'Uko bimeze', no_att: 'Nta muntu wabitabiriye.', msg_sign_out: 'Ushaka gusohoka?', msg_delete: 'Gusiba iri somo?', msg_create: 'Igikorwa cyafunguwe!',
         duration: 'Igihe', use_location: 'Koresha aho ndi', quick_now: 'Ubu', upcoming: 'Araza', ongoing: 'Arakomeje', ended: 'Ryarangiye', live: 'Kuri ubu', verified: 'Byemejwe', flagged: 'Byaretswe', past_sessions: 'Ibyakozwe', all_sessions: 'Ibyose', no_sessions_day: 'Nta gikorwa kuri uyu munsi',
-        teachers_title: 'Abarimu · GS St Etienne', stat_in_cpd: 'Mu CPD', stat_in_school: 'Mu ishuri', all_categories: 'Bose', nursery: 'Incuke', primary: 'P1–P6', secondary: 'S1–S6', no_teachers_match: 'Nta mwarimu uhuye n\'ubushakashatsi', download_current: 'Kuramo CPD y\'ubu', download_history: 'Kuramo Amateka Yose', download_this: 'Kuramo CSV',
+        teachers_title: 'Abarimu · GS St Etienne', stat_in_cpd: 'Mu gikorwa', stat_in_school: 'Mu ishuri', all_categories: 'Bose', nursery: 'Incuke', primary: 'P1–P6', secondary: 'S1–S6', no_teachers_match: 'Nta mwarimu uhuye n\'ubushakashatsi', download_current: 'Kuramo ibiriho', download_history: 'Kuramo Amateka Yose', download_this: 'Kuramo CSV',
         male: 'Gabo', female: 'Gore',
         search_teacher_placeholder: '🔍 Shakisha umwarimu ku izina…',
         just_now: 'ubu', min_ago: 'min', hour_ago: 'h', day_ago: 'd',
-        cpds_label: 'CPD', last_label: 'Iheruka', never_label: 'Nta na rimwe',
-        in_cpd_label: 'Muri CPD', not_in_cpd_label: 'Ntabwo ari muri CPD',
+        cpds_label: 'Ibyakozwe', last_label: 'Iheruka', never_label: 'Nta na rimwe',
+        in_cpd_label: 'Muri gikorwa', not_in_cpd_label: 'Ntabwo ari mu gikorwa',
         attended_label: 'Yitabiriye', not_attended_label: 'Ntiyitabiriye',
         attendance_breakdown: 'Uko bitabiriye',
-        currently_in_cpd: 'Kuri ubu muri CPD', not_in_cpd_yet: 'Batarinjiye muri CPD',
-        teacher_report: 'Raporo', total_cpds: 'CPD', total_hours: 'Amasaha',
+        currently_in_cpd: 'Kuri ubu mu gikorwa', not_in_cpd_yet: 'Batarinjiye mu gikorwa',
+        teacher_report: 'Raporo', total_cpds: 'Ibyakozwe', total_hours: 'Amasaha',
         verified_pct: 'Byemejwe %', this_month: 'Uku kwezi',
         sessions_history: 'Amateka', no_sessions_yet: 'Nta byakozwe',
         back_to_teachers: 'Subira ku Barimu',
@@ -571,16 +570,16 @@
         form_venue: 'Lieu', form_map: 'Lieu & Carte', btn_create: 'Créer', btn_creating: 'Création...',
         attendees: 'Participants', record: 'Registre', map: 'Carte', t_teacher: 'Enseignant', t_attended: 'Arrivée', t_ended: 'Départ', t_status: 'Statut', no_att: 'Aucune présence.', msg_sign_out: 'Déconnexion ?', msg_delete: 'Supprimer ?', msg_create: 'Session créée !',
         duration: 'Durée', use_location: 'Ma position', quick_now: 'Maintenant', upcoming: 'À venir', ongoing: 'En cours', ended: 'Terminé', live: 'En direct', verified: 'Vérifié', flagged: 'Signalé', past_sessions: 'Sessions récentes', all_sessions: 'Toutes les sessions', no_sessions_day: 'Aucune session ce jour',
-        teachers_title: 'Enseignants · GS St Etienne', stat_in_cpd: 'En CPD', stat_in_school: 'À l\'école', all_categories: 'Tous', nursery: 'Maternelle', primary: 'Primaire', secondary: 'Secondaire', no_teachers_match: 'Aucun enseignant ne correspond', download_current: 'Télécharger CPD actuel', download_history: 'Télécharger tout l\'historique', download_this: 'Télécharger CSV',
+        teachers_title: 'Enseignants · GS St Etienne', stat_in_cpd: 'En CPD', stat_in_school: 'À l\'école', all_categories: 'Tous', nursery: 'Maternelle', primary: 'Primaire', secondary: 'Secondaire', no_teachers_match: 'Aucun enseignant ne correspond', download_current: 'Télécharger actuel', download_history: 'Télécharger tout', download_this: 'Télécharger CSV',
         male: 'Homme', female: 'Femme',
         search_teacher_placeholder: '🔍 Rechercher un enseignant…',
         just_now: 'à l\'instant', min_ago: 'min', hour_ago: 'h', day_ago: 'j',
-        cpds_label: 'CPD', last_label: 'Dernière', never_label: 'Jamais',
-        in_cpd_label: 'En CPD', not_in_cpd_label: 'Pas en CPD',
+        cpds_label: 'Événements', last_label: 'Dernière', never_label: 'Jamais',
+        in_cpd_label: 'En événement', not_in_cpd_label: 'Pas en événement',
         attended_label: 'Présents', not_attended_label: 'Absents',
         attendance_breakdown: 'Répartition des présences',
-        currently_in_cpd: 'Actuellement en CPD', not_in_cpd_yet: 'Pas encore en CPD',
-        teacher_report: 'Rapport enseignant', total_cpds: 'CPD', total_hours: 'Heures',
+        currently_in_cpd: 'Actuellement en événement', not_in_cpd_yet: 'Pas encore en événement',
+        teacher_report: 'Rapport enseignant', total_cpds: 'Événements', total_hours: 'Heures',
         verified_pct: 'Vérifié %', this_month: 'Ce mois',
         sessions_history: 'Historique', no_sessions_yet: 'Aucune session suivie',
         back_to_teachers: 'Retour aux enseignants',
@@ -1900,7 +1899,7 @@
       </div></div>`;
     }
 
-    /* ==================== NEW CPD ==================== */
+    /* ==================== NEW CPD (DYNAMIC) ==================== */
     function renderAdminNew() {
       const now = new Date(); now.setSeconds(0, 0); now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5);
       const startStr = toLocalInputValue(now);
@@ -1908,13 +1907,13 @@
       return `
         <button id="btn-back" class="btn btn-ghost" style="width:auto;padding:10px 14px;margin-bottom:14px;font-size:13px;">← ${t('back')}</button>
         <div class="form-card">
-          <h2>${t('create_title')}</h2>
-          <p class="sub">${t('create_sub')}</p>
+          <h2 id="form-title-heading">${t('create_title')}</h2>
+          <p class="sub" id="form-sub-heading">${t('create_sub')}</p>
           <form id="cpd-form">
             <div id="form-error" style="display:none;margin-bottom:14px;padding:12px;background:rgba(239,68,68,0.25);color:#fca5a5;border-radius:12px;font-size:13px;font-weight:600"></div>
             
             <label>${t('form_type')}</label>
-            <select name="eventType" class="input" style="margin-bottom:16px;">
+            <select name="eventType" id="event-type-select" class="input" style="margin-bottom:16px;" onchange="updateFormForType(this.value)">
               <option value="CPD">CPD Session</option>
               <option value="Meeting">Staff Meeting</option>
               <option value="Workshop">Workshop</option>
@@ -1966,6 +1965,30 @@
           </form>
         </div>`;
     }
+
+    window.updateFormForType = (type) => {
+      const btn = document.getElementById('btn-save-cpd');
+      const title = document.getElementById('form-title-heading');
+      const sub = document.getElementById('form-sub-heading');
+      
+      if (type === 'CPD') {
+        btn.textContent = 'Create CPD Session';
+        title.textContent = 'Plan a CPD Session';
+        sub.textContent = 'Fill in the details for the upcoming CPD session.';
+      } else if (type === 'Meeting') {
+        btn.textContent = 'Create Staff Meeting';
+        title.textContent = 'Plan a Staff Meeting';
+        sub.textContent = 'Fill in the details for the upcoming staff meeting.';
+      } else if (type === 'Workshop') {
+        btn.textContent = 'Create Workshop';
+        title.textContent = 'Plan a Workshop';
+        sub.textContent = 'Fill in the details for the upcoming workshop.';
+      } else {
+        btn.textContent = 'Create Event';
+        title.textContent = 'Plan an Event';
+        sub.textContent = 'Fill in the details for the upcoming event.';
+      }
+    };
 
     function bindAdminNewEvents() {
       document.getElementById('btn-back').onclick = () => { state.adminTab = 'overview'; renderAdmin(); };
@@ -2050,7 +2073,7 @@
       };
     }
 
-    /* ==================== CPD DETAIL ==================== */
+    /* ==================== CPD DETAIL (DYNAMIC) ==================== */
     function goCpdDetail(cpdId) {
       state.view = 'cpd-detail'; state.selectedCpdId = cpdId;
       state.selectedCpd = null; state.cpdAttendances = [];
@@ -2068,6 +2091,8 @@
 
     function renderCpdDetail() {
       const cpd = state.selectedCpd; if (!cpd) return;
+      const typeName = cpd.type || 'CPD';
+      
       const attByKey = new Map();
       state.cpdAttendances.forEach(a => {
         const key = normalizeName(a.teacherName); const existing = attByKey.get(key);
@@ -2105,7 +2130,7 @@
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap">
           <div>
             <div style="display:flex; gap:6px; margin-bottom:4px;">
-              <span class="badge badge-type">${cpd.type || 'CPD'}</span>
+              <span class="badge badge-type">${typeName}</span>
             </div>
             <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;word-break:break-word;text-shadow:0 0 20px rgba(0,255,204,0.3);">${escapeHtml(cpd.title)}</h1>
             ${cpd.facilitator ? `<p style="font-size:13px;color:#00ffcc;margin:4px 0 0;font-weight:600;">Facilitator: ${escapeHtml(cpd.facilitator)}</p>` : ''}
@@ -2115,15 +2140,15 @@
         <p style="font-size:13px;color:#94a3b8;margin:0 0 20px">${escapeHtml(cpd.venueName)} · ${fmtDateTime(cpd.startTime)}</p>
 
         <div class="a-stat-grid">
-          <div class="a-stat"><div class="val">${inCpdList.length}/${colTotal}</div><div class="lbl">${t('in_cpd_label')}</div></div>
+          <div class="a-stat"><div class="val">${inCpdList.length}/${colTotal}</div><div class="lbl">In ${typeName}</div></div>
           <div class="a-stat"><div class="val" style="color:#00ffcc">${liveCount}</div><div class="lbl">${t('live')}</div></div>
           <div class="a-stat"><div class="val" style="color:#38bdf8">${verifiedCount}</div><div class="lbl">${t('verified')}</div></div>
-          <div class="a-stat"><div class="val" style="color:#94a3b8">${notInCpdList.length}</div><div class="lbl">${t('not_in_cpd_label')}</div></div>
+          <div class="a-stat"><div class="val" style="color:#94a3b8">${notInCpdList.length}</div><div class="lbl">Not in ${typeName}</div></div>
         </div>
 
         <div class="map-card"><h3>📍 ${t('map')}</h3><div id="live-map" style="height:280px;border-radius:12px;overflow:hidden"></div></div>
 
-        <div class="map-card"><h3>${t('record')}</h3>
+        <div class="map-card"><h3>${typeName} Record</h3>
           <div style="overflow-x:auto">
             <table class="detail-table">
               <thead><tr><th>${t('t_teacher')}</th><th>${t('t_attended')}</th><th>${t('t_ended')}</th><th>${t('t_status')}</th><th></th></tr></thead>
@@ -2139,11 +2164,11 @@
           </div>
         </div>
 
-        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 12px;padding-left:4px;">${t('attendance_breakdown')}</h3>
+        <h3 style="font-size:13px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 12px;padding-left:4px;">${typeName} Attendance Breakdown</h3>
 
         <div class="cpd-split">
-          <div class="cpd-col attended"><div class="cpd-col-head"><h3>✓ ${t('currently_in_cpd')}</h3><span class="cnt">${inCpdList.length}/${colTotal}</span></div>${colHtml(inCpdGrouped, true)}</div>
-          <div class="cpd-col not-attended"><div class="cpd-col-head"><h3>○ ${t('not_in_cpd_yet')}</h3><span class="cnt">${notInCpdList.length}/${colTotal}</span></div>${colHtml(notInCpdGrouped, false)}</div>
+          <div class="cpd-col attended"><div class="cpd-col-head"><h3>✓ Currently in ${typeName}</h3><span class="cnt">${inCpdList.length}/${colTotal}</span></div>${colHtml(inCpdGrouped, true)}</div>
+          <div class="cpd-col not-attended"><div class="cpd-col-head"><h3>○ Not in ${typeName} yet</h3><span class="cnt">${notInCpdList.length}/${colTotal}</span></div>${colHtml(notInCpdGrouped, false)}</div>
         </div>
       </main>`;
 
@@ -2196,43 +2221,5 @@
         <div class="loader-ring"></div>
       </div>`;
   </script>
-<!-- Code injected by live-server -->
-<script>
-	// <![CDATA[  <-- For SVG support
-	if ('WebSocket' in window) {
-		(function () {
-			function refreshCSS() {
-				var sheets = [].slice.call(document.getElementsByTagName("link"));
-				var head = document.getElementsByTagName("head")[0];
-				for (var i = 0; i < sheets.length; ++i) {
-					var elem = sheets[i];
-					var parent = elem.parentElement || head;
-					parent.removeChild(elem);
-					var rel = elem.rel;
-					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
-						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
-						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
-					}
-					parent.appendChild(elem);
-				}
-			}
-			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
-			var address = protocol + window.location.host + window.location.pathname + '/ws';
-			var socket = new WebSocket(address);
-			socket.onmessage = function (msg) {
-				if (msg.data == 'reload') window.location.reload();
-				else if (msg.data == 'refreshcss') refreshCSS();
-			};
-			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
-				console.log('Live reload enabled.');
-				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
-			}
-		})();
-	}
-	else {
-		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
-	}
-	// ]]>
-</script>
 </body>
 </html>
