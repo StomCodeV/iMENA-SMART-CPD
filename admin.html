@@ -807,6 +807,17 @@
     function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
     function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
     function todayLocalDateKey() { const d = new Date(); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+    function toLocalInputValue(d) { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+    function getPositionOnce() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported.'));
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+          err => reject(new Error(err.code === 1 ? 'Location denied.' : 'GPS error.')),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+      });
+    }
     function avatarUrlFor(photoURL, name, size = 64) {
       if (photoURL && /^https?:\/\//.test(photoURL)) return photoURL;
       const q = encodeURIComponent((name || 'User').trim());
@@ -1239,7 +1250,7 @@
         ${greetingCardHtml()}
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
           <h1 style="font-size:22px;font-weight:900;margin:0;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('admin_title')}</h1>
-          <button id="btn-top-new" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">+ ${t('New')}</button>
+          <button id="btn-top-new" class="btn btn-primary" style="width:auto; padding: 10px 16px; font-size: 13px;">+ ${t('new_cpd')}</button>
         </div>
         <div class="a-stat-grid">
           <div class="a-stat"><div class="val" style="color:#00ffcc">${liveNow}</div><div class="lbl">${t('stat_live_now')}</div></div>
@@ -1421,10 +1432,10 @@
       const btnCsv = document.getElementById('btn-daily-csv');
       const btnSettings = document.getElementById('btn-edit-settings');
 
-      if (prev) prev.onclick = () => { state.dailyDate = shiftDateKey(state.dailyDate, -1); renderAdminDaily(); };
-      if (next) next.onclick = () => { const newDate = shiftDateKey(state.dailyDate, 1); if (newDate > todayLocalDateKey()) return; state.dailyDate = newDate; renderAdminDaily(); };
-      if (today) today.onclick = () => { state.dailyDate = todayLocalDateKey(); renderAdminDaily(); };
-      if (dateInput) dateInput.onchange = (e) => { const v = e.target.value; if (!v) return; state.dailyDate = v > todayLocalDateKey() ? todayLocalDateKey() : v; renderAdminDaily(); };
+      if (prev) prev.onclick = () => { state.dailyDate = shiftDateKey(state.dailyDate, -1); renderAdmin(); };
+      if (next) next.onclick = () => { const newDate = shiftDateKey(state.dailyDate, 1); if (newDate > todayLocalDateKey()) return; state.dailyDate = newDate; renderAdmin(); };
+      if (today) today.onclick = () => { state.dailyDate = todayLocalDateKey(); renderAdmin(); };
+      if (dateInput) dateInput.onchange = (e) => { const v = e.target.value; if (!v) return; state.dailyDate = v > todayLocalDateKey() ? todayLocalDateKey() : v; renderAdmin(); };
       if (btnCsv) btnCsv.onclick = () => downloadDailyCSV();
       
       if (btnSettings) {
@@ -1882,7 +1893,7 @@
 
     function bindLessonPlanEvents() {
       document.querySelectorAll('[data-lpfilter]').forEach(b => {
-        b.onclick = () => { state.lpFilter = b.dataset.lpfilter; renderAdminLessonPlans(); };
+        b.onclick = () => { state.lpFilter = b.dataset.lpfilter; renderAdmin(); };
       });
     }
 
