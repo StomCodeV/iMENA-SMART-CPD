@@ -404,21 +404,26 @@
 
     /* ==================== FACE API LOGIC ==================== */
     async function loadFaceModels() {
-      if (modelsLoaded) return;
-      try {
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        modelsLoaded = true;
-      } catch (err) { console.error('Face models failed to load:', err); toast('Failed to load facial recognition engine.', 'error'); }
-    }
-
-    // Replaced scanFaceUI with the advanced UI from the provided standalone file
+  if (modelsLoaded) return true;
+  try {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+    ]);
+    modelsLoaded = true;
+    return true;
+  } catch (err) {
+    console.error('[face-api] model load failed', err);
+    modelsLoaded = false;
+    return false;
+  }
+}
     async function scanFaceUI(isEnrollment = false) {
       if (!modelsLoaded) {
-        toast('Loading AI models... please wait.', 'info');
+        toast('Preparing face scanner...', 'info');
         await loadFaceModels();
-        if (!modelsLoaded) return null;
+        if (!modelsLoaded) { toast('AI models failed to load. Check your internet.', 'error'); return null; }
       }
 
       return new Promise((resolve) => {
@@ -430,9 +435,7 @@
               position: fixed; inset: 0; z-index: 9999; background: #050b18;
               display: flex; justify-content: center;
               padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
-              overflow-y: auto;
-              font-family: Inter, system-ui, sans-serif;
-              color: #e8eefc;
+              overflow-y: auto; font-family: Inter, system-ui, sans-serif; color: #e8eefc;
             }
             :root { --bg: #050b18; --panel: #0b1730; --line: #1c2d52; --tx: #e8eefc; --mut: #8da0c0; --teal: #2de2c4; --gold: #f5c451; }
             * { box-sizing: border-box; margin: 0; }
@@ -447,19 +450,19 @@
               box-shadow: 0 30px 80px -24px rgba(45, 226, 196, .3);
             }
             .frame > * { position: absolute; inset: 0; width: 100%; height: 100%; }
-            video { object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .4s; }
+            video { object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .3s; }
             [data-s=load] video, [data-s=scan] video { opacity: 1; }
-            .snap { object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .4s; }
+            .snap { object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .3s; }
             [data-s=done] .snap { opacity: 1; }
             .glyph { fill: none; stroke: var(--teal); stroke-width: 1.5; opacity: .35; }
             [data-s=scan] .glyph, [data-s=done] .glyph { display: none; }
             .base { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1.5; stroke-dasharray: 2 4; }
-            .prog { fill: none; stroke: var(--teal); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .25s linear, stroke .4s; filter: drop-shadow(0 0 6px rgba(45, 226, 196, .7)); }
+            .prog { fill: none; stroke: var(--teal); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .2s linear, stroke .3s; filter: drop-shadow(0 0 6px rgba(45, 226, 196, .7)); }
             [data-s=done] .prog { stroke: var(--gold); stroke-dashoffset: 0; filter: drop-shadow(0 0 8px rgba(245, 196, 81, .7)); }
             .br { fill: none; stroke: var(--teal); stroke-width: 2.5; stroke-linecap: round; opacity: .7; }
             .scanwrap { clip-path: ellipse(36% 35% at 50% 47.5%); opacity: 0; transition: opacity .3s; pointer-events: none; }
             .on .scanwrap { opacity: 1; }
-            .band { position: absolute; left: 0; right: 0; height: 46px; background: linear-gradient(transparent, rgba(45, 226, 196, .3)); border-bottom: 2px solid var(--teal); animation: sw 2.2s ease-in-out infinite alternate; }
+            .band { position: absolute; left: 0; right: 0; height: 46px; background: linear-gradient(transparent, rgba(45, 226, 196, .3)); border-bottom: 2px solid var(--teal); animation: sw 1.6s ease-in-out infinite alternate; }
             @keyframes sw { from { top: 2%; } to { top: calc(82.5% - 46px); } }
             .info { text-align: center; display: flex; flex-direction: column; gap: 8px; }
             h1 { font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
@@ -469,7 +472,7 @@
             main:not([data-s=scan]) .live { display: none; }
             .live { display: flex; flex-direction: column; gap: 14px; }
             .steps { display: flex; gap: 6px; }
-            .steps i { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
+            .steps i { flex: 1; height: 5px; border-radius: 5px; background: var(--line); }
             .steps i.d { background: var(--teal); }
             .steps i.c { background: linear-gradient(90deg, var(--teal) var(--p, 0%), var(--line) 0); }
             .chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
@@ -479,8 +482,7 @@
             .chip.no b { background: var(--gold); }
             .btns { display: grid; gap: 10px; }
             .btn { height: 52px; border-radius: 16px; font: 600 15px Inter, sans-serif; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--tx); }
-            .btn.pri { background: var(--teal); border-color: var(--teal); color: #032019; }
-            .btn:focus-visible, .dots button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+            .btn.pri { background: var(--teal); border-color: var(--teal); color: #032019; font-weight: 700; }
             .note { text-align: center; font-size: 12px; color: #5d6f90; }
             [data-s=scan] h1, [data-s=scan] .note { display: none; }
             main:not([data-s=scan]):not([data-s=load]) .watch { display: none; }
@@ -505,11 +507,13 @@
             .ln { font-size: 14px; line-height: 1.4; color: #dfe8fb; opacity: 0; transform: translateY(6px); }
             .a .ln { animation: ln .7s var(--d) forwards; }
             @keyframes ln { to { opacity: 1; transform: none; } }
-            @media(prefers-reduced-motion:reduce) { .band, .sc * { animation: none!important; } .band { top: 40%; } .ln { opacity: 1; transform: none; } }
+            .capture-flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 50; pointer-events: none; }
+            .capture-flash.fire { animation: flash .35s ease-out; }
+            @keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
           </style>
           <main id="app" data-s="idle">
             <div class="top">
-              <div class="brand">Teacher's Face Scan Verification</div>
+              <div class="brand">Teacher's Face Scan</div>
             </div>
             <div class="frame" id="frame">
               <video id="v" playsinline muted></video>
@@ -532,13 +536,14 @@
                 <path class="br" d="M20 54V34a14 14 0 0 1 14-14h20M280 54V34a14 14 0 0 0-14-14h-20M20 346v20a14 14 0 0 0 14 14h20M280 346v20a14 14 0 0 1-14 14h-20"/>
               </svg>
               <div class="scanwrap"><div class="band"></div></div>
+              <div class="capture-flash" id="flash"></div>
             </div>
             <section class="info">
               <h1 id="ttl"></h1>
               <p id="msg" aria-live="polite"></p>
             </section>
             <section class="live">
-              <div class="steps" id="steps"><i></i><i></i><i></i><i></i></div>
+              <div class="steps" id="steps"><i></i><i></i></div>
               <div class="chips">
                 <span class="chip" id="q0"><b></b><u style="text-decoration:none"></u></span>
                 <span class="chip" id="q1"><b></b><u style="text-decoration:none"></u></span>
@@ -619,7 +624,7 @@
               </svg>
               <div class="sc story">
                 <p class="ln" style="--d:.5s">A proud hare mocked a slow tortoise.</p>
-                <p class="ln" style="--d:2.9s">“Race me,” said the tortoise, calmly.</p>
+                <p class="ln" style="--d:2.9s">"Race me," said the tortoise, calmly.</p>
                 <p class="ln" style="--d:5.3s">The hare raced ahead, then took a nap.</p>
                 <p class="ln" style="--d:7.7s">Step by step, the tortoise won.</p>
               </div>
@@ -647,21 +652,30 @@
         const cx = overlay.querySelector('#cx');
         const msg = overlay.querySelector('#msg');
         const snap = overlay.querySelector('#snap');
+        const flash = overlay.querySelector('#flash');
 
-        let step = 0, hold = 0, NEED = [30, 10, 10, 5], stream = null, run = 0;
-        let frontal = null, lastFaceBox = null, stillFrames = 0;
+        // Only 2 steps now, and MUCH easier thresholds
+        let step = 0, hold = 0;
+        const NEED = [10, 3]; // Look straight (10 frames ≈ 700ms), Blink (3 frames ≈ 200ms)
+        let stream = null;
+        let frontal = null, lastBox = null, stillFrames = 0;
+        let lastLumaTime = 0, lastLumaOk = true;
+
+        // Faster detector config — smaller input, more lenient threshold
+        const detOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
 
         const t = k => {
            const dict = {
-             ttl: isEnrollment ? 'Face enrollment' : 'Face verification',
-             sub: isEnrollment ? 'Fit your face inside the oval. We will ask you to turn your head and blink.' : 'Hold still while we verify your identity.',
-             start: 'Start scan', cancel: 'Cancel', load: 'Starting camera…',
-             s0: 'Look straight at the camera', s1: 'Slowly turn your head left', s2: 'Slowly turn your head right', s3: 'Blink your eyes',
-             none: 'No face found. Face the camera.', near: 'Move closer', far: 'Move back a little', center: 'Center your face in the oval',
-             move: 'Hold still', dark: 'Too dark. Find more light.', bright: 'Too bright. Avoid direct light.',
-             done: 'Face verified', donesub: 'Your face is enrolled. Continue to finish.', cont: 'Continue', retake: 'Retake',
-             err: 'Camera or face model did not load. Allow the camera, check your internet, and try again.', retry: 'Try again',
-             q0: 'Light', q1: 'Position', q2: 'Steady', priv: 'Face detection runs on your device.'
+             ttl: isEnrollment ? 'Face Enrollment' : 'Face Verification',
+             sub: isEnrollment ? 'Position your face in the oval and hold still.' : 'Hold still while we verify your identity.',
+             start: 'Start Scan', cancel: 'Cancel', load: 'Starting camera…',
+             s0: 'Look straight at the camera', s1: 'Now blink your eyes',
+             none: 'No face detected — face the camera', near: 'Move closer', far: 'Move back a little', center: 'Center your face in the oval',
+             move: 'Hold still…', dark: 'Too dark — find more light', bright: 'Too bright — avoid direct light',
+             done: 'Face Verified ✓', donesub: 'Identity confirmed. Returning to attendance...',
+             cont: 'Continue', retake: 'Retry',
+             err: 'Camera failed to load. Allow camera access and try again.', retry: 'Try again',
+             q0: 'Light', q1: 'Position', q2: 'Steady', priv: 'Face detection runs on your device — nothing is uploaded.'
            };
            return dict[k] || k;
         };
@@ -687,7 +701,7 @@
 
         function stopCam() {
           if (stream) stream.getTracks().forEach(x => x.stop());
-          stream = null; V.srcObject = null; run++;
+          stream = null; V.srcObject = null;
         }
 
         function draw(p) {
@@ -706,12 +720,16 @@
         async function start() {
           setState('load'); show(0);
           try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
-            V.srcObject = stream; await V.play();
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+              audio: false
+            });
+            V.srcObject = stream;
+            await V.play();
           } catch (e) {
             console.error(e); stopCam(); return setState('err');
           }
-          step = 0; hold = 0; frontal = null; lastFaceBox = null; stillFrames = 0;
+          step = 0; hold = 0; frontal = null; lastBox = null; stillFrames = 0;
           setState('scan'); loop();
         }
 
@@ -723,80 +741,112 @@
             ctx.setTransform(d, 0, 0, d, 0, 0);
             ctx.clearRect(0, 0, cw, ch);
 
-            // Lighting check
-            const tmpCanvas = document.createElement('canvas'); tmpCanvas.width = 24; tmpCanvas.height = 24;
-            const tCtx = tmpCanvas.getContext('2d'); tCtx.drawImage(V, 0, 0, 24, 24);
-            const data = tCtx.getImageData(0, 0, 24, 24).data;
-            let luma = 0;
-            for (let i = 0; i < data.length; i += 4) luma += .299 * data[i] + .587 * data[i + 1] + .114 * data[i + 2];
-            luma /= 576;
-            const lightOk = luma > 55 && luma < 215;
+            // Light check only every 500ms (was every frame - slow!)
+            const now = performance.now();
+            if (now - lastLumaTime > 500) {
+              lastLumaTime = now;
+              const tmp = document.createElement('canvas'); tmp.width = 24; tmp.height = 24;
+              const tc = tmp.getContext('2d'); tc.drawImage(V, 0, 0, 24, 24);
+              const data = tc.getImageData(0, 0, 24, 24).data;
+              let luma = 0;
+              for (let i = 0; i < data.length; i += 4) luma += .299 * data[i] + .587 * data[i + 1] + .114 * data[i + 2];
+              luma /= 576;
+              lastLumaOk = luma > 50 && luma < 220;
+            }
+            const lightOk = lastLumaOk;
 
-            // Face detection
-            const detection = await faceapi.detectSingleFace(V, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            // FAST detection — landmarks only, NO descriptor on each frame
+            const detection = await faceapi.detectSingleFace(V, detOptions).withFaceLandmarks();
 
             let key = 's0', fit = false, still = false;
 
             if (!detection) {
-              hold = Math.max(0, hold - 2); key = 'none';
+              hold = Math.max(0, hold - 2);
+              key = 'none';
+              stillFrames = 0;
             } else {
-              const box = detection.detection.box; const lm = detection.landmarks;
+              const box = detection.detection.box;
               const fx = box.x + box.width / 2, fy = box.y + box.height / 2;
-              const ex = vw / 2, ey = vh / 2; const size = box.height / vh;
-              fit = Math.abs(fx - ex) / vw < 0.2 && Math.abs(fy - ey) / vh < 0.2 && size > 0.3 && size < 0.7;
+              const ex = vw / 2, ey = vh / 2;
+              const size = box.height / vh;
+              fit = Math.abs(fx - ex) / vw < 0.22 && Math.abs(fy - ey) / vh < 0.22 && size > 0.25 && size < 0.75;
 
-              if (lastFaceBox) {
-                const dist = Math.hypot(box.x - lastFaceBox.x, box.y - lastFaceBox.y);
-                if (dist < 5) stillFrames++; else stillFrames = 0;
-              } else { lastFaceBox = { x: box.x, y: box.y }; }
-              lastFaceBox = { x: box.x, y: box.y };
-              still = stillFrames > 5;
+              // Still detection
+              if (lastBox) {
+                const dist = Math.hypot(box.x - lastBox.x, box.y - lastBox.y);
+                if (dist < 6) stillFrames++; else stillFrames = Math.max(0, stillFrames - 1);
+              }
+              lastBox = { x: box.x, y: box.y };
+              still = stillFrames >= 3;
 
-              const nose = lm.getNose()[3];
-              const leftEye = lm.getLeftEye()[0]; const rightEye = lm.getRightEye()[3];
-              const yaw = (nose.x - leftEye.x) / (rightEye.x - leftEye.x);
-
-              const leftEyePoints = lm.getLeftEye();
-              const ear = (Math.abs(leftEyePoints[1].y - leftEyePoints[5].y) + Math.abs(leftEyePoints[2].y - leftEyePoints[4].y)) / (2 * Math.abs(leftEyePoints[0].x - leftEyePoints[3].x));
-              const blink = ear < 0.2;
-
-              let stepOk = false;
-              if (step === 0) stepOk = fit && still;
-              else if (step === 1) stepOk = yaw > 0.65;
-              else if (step === 2) stepOk = yaw < 0.35;
-              else if (step === 3) stepOk = blink;
-
-              const ok = lightOk && stepOk;
-              hold = ok ? hold + 1 : Math.max(0, hold - 2);
-
-              const pts = lm.positions.map(p => [cw - (p.x * cw / vw), p.y * ch / vh]);
-              const prog = (step + Math.min(1, hold / NEED[step])) / 4;
+              // Draw landmarks
+              const pts = detection.landmarks.positions.map(p => [cw - (p.x * cw / vw), p.y * ch / vh]);
+              const prog = (step + Math.min(1, hold / NEED[step])) / 2;
               ctx.fillStyle = `rgba(120,255,235,${.45 + .4 * prog})`;
               for (const p of pts) ctx.fillRect(p[0] - .8, p[1] - .8, 1.6, 1.6);
 
-              if (hold >= NEED[step]) {
-                if (step === 0) {
-                  const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh; cv.getContext('2d').drawImage(V, 0, 0);
-                  const mirrorCv = document.createElement('canvas'); mirrorCv.width = vw; mirrorCv.height = vh;
-                  const mCtx = mirrorCv.getContext('2d'); mCtx.translate(vw, 0); mCtx.scale(-1, 1); mCtx.drawImage(cv, 0, 0);
-                  frontal = { photo: mirrorCv.toDataURL('image/jpeg', .88), descriptor: detection.descriptor };
+              if (step === 0) {
+                const ok = lightOk && fit && still;
+                hold = ok ? hold + 1 : Math.max(0, hold - 2);
+                key = !lightOk ? 'dark' : !fit ? (size <= 0.25 ? 'near' : size >= 0.75 ? 'far' : 'center') : !still ? 'move' : 's0';
+
+                if (hold >= NEED[0]) {
+                  // === CAPTURE: NOW compute the descriptor ONCE ===
+                  const capture = await faceapi.detectSingleFace(V, detOptions).withFaceLandmarks().withFaceDescriptor();
+                  if (capture) {
+                    const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
+                    cv.getContext('2d').drawImage(V, 0, 0);
+                    const mirrorCv = document.createElement('canvas'); mirrorCv.width = vw; mirrorCv.height = vh;
+                    const mCtx = mirrorCv.getContext('2d'); mCtx.translate(vw, 0); mCtx.scale(-1, 1); mCtx.drawImage(cv, 0, 0);
+                    frontal = { photo: mirrorCv.toDataURL('image/jpeg', 0.85), descriptor: capture.descriptor };
+                    flash.classList.add('fire');
+                    setTimeout(() => flash.classList.remove('fire'), 400);
+                    navigator.vibrate && navigator.vibrate(20);
+                    step = 1; hold = 0; stillFrames = 0;
+                  }
                 }
-                step++; hold = 0; navigator.vibrate && navigator.vibrate(15);
-                if (step === 4) return finish();
+              } else if (step === 1) {
+                // === BLINK LIVENESS CHECK ===
+                const lm = detection.landmarks;
+                const leftEye = lm.getLeftEye();
+                const ear = (Math.abs(leftEye[1].y - leftEye[5].y) + Math.abs(leftEye[2].y - leftEye[4].y)) / (2 * Math.abs(leftEye[0].x - leftEye[3].x));
+                const blink = ear < 0.25; // lenient threshold
+                hold = blink ? hold + 1 : Math.max(0, hold - 1);
+                key = blink ? 's1' : 's1';
+
+                if (hold >= NEED[1]) {
+                  return finish();
+                }
               }
             }
-            chip('q0', lightOk); chip('q1', fit); chip('q2', still);
+
+            chip('q0', lightOk);
+            chip('q1', fit);
+            chip('q2', still);
             overlay.querySelector('#frame').classList.toggle('on', !!detection);
             if (msg.textContent !== t(key)) {
-              msg.textContent = t(key); msg.classList.toggle('warn', !/^s\d$/.test(key));
+              msg.textContent = t(key);
+              msg.classList.toggle('warn', !/^s\d$/.test(key));
             }
-            draw((step + Math.min(1, hold / NEED[Math.min(step, 3)])) / 4);
+            draw((step + Math.min(1, hold / NEED[Math.min(step, 1)])) / 2);
           }
           requestAnimationFrame(loop);
         }
 
         function finish() {
-          stopCam(); snap.src = frontal.photo; draw(1); setState('done');
+          stopCam();
+          snap.src = frontal.photo;
+          draw(1);
+          setState('done');
+          navigator.vibrate && navigator.vibrate([30, 40, 30]);
+
+          // Auto-close after a brief success display
+          setTimeout(() => {
+            if (M.dataset.s === 'done') {
+              overlay.remove();
+              resolve({ descriptor: frontal.descriptor, selfie: frontal.photo });
+            }
+          }, 1200);
         }
 
         go.onclick = () => {
@@ -809,13 +859,14 @@
           stopCam(); overlay.remove(); resolve(null);
         };
 
+        // Distraction carousel
         const sc = [...overlay.querySelectorAll('.sc')], dots = [...overlay.querySelectorAll('.dots button')], CAP = ['Goats at play', 'Fishing at sunset', 'The Hare and the Tortoise'];
         let si = 0;
         function show(i) {
           si = i; sc.forEach((e, k) => e.classList.toggle('a', k === i)); dots.forEach((d, k) => d.setAttribute('aria-current', k === i)); overlay.querySelector('#cap').textContent = CAP[i];
         }
         dots.forEach((d, k) => d.onclick = () => show(k));
-        const distractionTimer = setInterval(() => { if (/load|scan/.test(M.dataset.s)) show((si + 1) % sc.length); }, 11000);
+        const distractionTimer = setInterval(() => { if (/load|scan/.test(M.dataset.s)) show((si + 1) % sc.length); }, 9000);
 
         const origRemove = overlay.remove;
         overlay.remove = function() { clearInterval(distractionTimer); stopCam(); origRemove.call(this); };
@@ -823,7 +874,6 @@
         show(0); render();
       });
     }
-
     async function ensureFaceEnrollment() {
       if (state.profile.faceDescriptor) return true;
 
@@ -970,6 +1020,8 @@
       if (state.profile.role === 'admin') { window.location.replace('admin.html'); return; }
       
       loadFaceModels(); 
+      // Preload silently in background so first scan is instant
+      setTimeout(() => { if (!modelsLoaded) loadFaceModels(); }, 500);
       state.loading = false;
       goTeacher();
     });
