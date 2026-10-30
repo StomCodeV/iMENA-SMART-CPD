@@ -14,7 +14,7 @@
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; background: var(--bg); }
     body { margin: 0; font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; overflow-x: hidden; line-height: 1.5; background: var(--bg); }
-    button, input { font-family: inherit; }
+    button, input, select, textarea { font-family: inherit; }
     button { cursor: pointer; border: none; background: none; color: inherit; }
     a { color: inherit; text-decoration: none; }
 
@@ -98,6 +98,7 @@
     .badge-absent { background: rgba(239,68,68,0.18); color: #f87171; border: 1px solid rgba(239,68,68,0.35); }
     .badge-late { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
     .badge-out { background: rgba(56,189,248,0.18); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); }
+    .badge-type { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.35); }
 
     /* Daily Tab - Premium Look */
     .daily-card { border-radius: 24px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.6); backdrop-filter: blur(24px); border: 1px solid var(--line); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
@@ -179,25 +180,32 @@
     .loader { position: fixed; inset: 0; background: #070b13; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
     .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(104,228,224,0.2); border-top-color: var(--cyan); animation: spin 1s linear infinite; }
 
-    /* FACE SCAN MODAL */
-    .face-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-    .face-modal.open { opacity: 1; pointer-events: auto; }
-    .face-scan-container { position: relative; width: 100%; max-width: 380px; aspect-ratio: 3/4; border-radius: 24px; overflow: hidden; border: 2px solid rgba(104,228,224,0.3); box-shadow: 0 0 40px rgba(104,228,224,0.15); background: #000; }
-    .face-scan-container video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-    .face-scan-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%); }
-    .face-oval { width: 60%; height: 50%; border: 2px dashed rgba(104,228,224,0.5); border-radius: 50%; transition: all 0.3s; }
-    .face-oval.detected { border-color: #10b981; border-style: solid; box-shadow: 0 0 20px rgba(16,185,129,0.4); }
-    
-    /* HIGH-TECH SCANNING LINE */
-    .scan-line { position: absolute; left: 0; width: 100%; height: 4px; background: rgba(16,185,129,0.8); box-shadow: 0 0 15px rgba(16,185,129,1), 0 0 5px rgba(16,185,129,1); animation: scanAnim 2s infinite linear; z-index: 10; }
-    @keyframes scanAnim { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    /* LESSON PLAN STYLES */
+    .lp-upload-card { background: rgba(15,23,42,0.6); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+    .lp-upload-card h3 { font-size: 16px; font-weight: 800; color: #fff; margin: 0 0 12px; }
+    .lp-upload-card p { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+    .lp-file-input { display: block; width: 100%; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px dashed var(--line); color: #fff; margin-bottom: 12px; cursor: pointer; }
+    .lp-file-input::file-selector-button { background: rgba(104,228,224,0.15); border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-right: 12px; font-family: inherit; }
+    .lp-list { display: flex; flex-direction: column; gap: 10px; }
+    .lp-item { background: rgba(15,23,42,0.6); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .lp-item .info { flex: 1; min-width: 0; }
+    .lp-item h4 { font-size: 14px; color: #fff; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lp-item p { font-size: 12px; color: var(--muted); margin: 0; }
+    .lp-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .lp-btn { background: rgba(104,228,224,0.15); color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer; transition: background 0.2s; }
+    .lp-btn:hover { background: rgba(104,228,224,0.3); }
+    .lp-btn.delete { background: rgba(239,68,68,0.15); color: #f87171; border-color: #ef4444; }
+    .lp-btn.delete:hover { background: rgba(239,68,68,0.3); }
 
-    .face-status { margin-top: 24px; text-align: center; }
-    .face-status h3 { font-size: 20px; font-weight: 800; color: #fff; margin: 0 0 8px; letter-spacing: -0.02em; }
-    .face-status p { font-size: 13px; color: var(--muted); margin: 0 0 24px; max-width: 320px; line-height: 1.6; }
-    .face-status .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); margin-right: 6px; animation: pulse 1.5s infinite; }
-    .face-actions { display: flex; gap: 12px; width: 100%; max-width: 380px; }
-    .face-actions button { flex: 1; }
+    .lp-preview-modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .lp-preview-modal.open { opacity: 1; pointer-events: auto; }
+    .lp-preview-container { width: 100%; max-width: 900px; height: 85vh; background: #fff; border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .lp-preview-header { position: absolute; top: 0; left: 0; right: 0; height: 48px; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
+    .lp-preview-header h3 { font-size: 14px; margin: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lp-preview-close { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .lp-preview-close:hover { background: rgba(239,68,68,0.8); }
+    .lp-preview-body { width: 100%; height: 100%; padding-top: 48px; background: #e2e8f0; }
+    .lp-preview-body iframe, .lp-preview-body embed { width: 100%; height: 100%; border: none; display: block; }
 
     @media (min-width: 768px) {
       .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
@@ -227,7 +235,7 @@
       getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import {
-      getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc,
+      getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
       onSnapshot, query, where, serverTimestamp, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -258,9 +266,8 @@
     const state = {
       user: null, profile: null, view: 'boot',
       teacherTab: 'home',
-      calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), calSelectedDay: null,
-      cpds: [], myAttendances: [], myDailyRecords: [], todayDaily: null,
-      subCpds: null, subMine: null, subDaily: null, subSettings: null,
+      cpds: [], myAttendances: [], myDailyRecords: [], todayDaily: null, myLessonPlans: [],
+      subCpds: null, subMine: null, subDaily: null, subSettings: null, subLessonPlans: null,
       settings: { startTime: 480, endTime: 1020 }, // Default 08:00, 17:00
       watchId: null, watchingFor: null,
       loading: true,
@@ -271,7 +278,7 @@
     /* ==================== I18N ==================== */
     const I18N = {
       en: {
-        home: 'Home', daily: 'Daily', calendar: 'Calendar', stats: 'Stats', history: 'History',
+        home: 'Home', daily: 'Daily', lesson_plans: 'Lesson Plans', stats: 'Stats', history: 'History',
         logout: 'Sign Out', teacher: 'Teacher',
         attend: 'ATTEND', end: 'END SESSION', locating: 'Locating...', finalizing: 'Ending...',
         upcoming: 'Upcoming', ongoing: 'Ongoing', ended: 'Ended', live: 'Live',
@@ -299,7 +306,12 @@
         daily_stat_avg_in: 'Avg Arrival', daily_stat_avg_out: 'Avg Departure',
         daily_weekly_trend: 'This Week',
         daily_absent: 'Absent', daily_weekend: 'Weekend',
-        daily_late: 'Late', daily_early_leave: 'Early Leave'
+        daily_late: 'Late', daily_early_leave: 'Early Leave',
+        lp_title: 'Lesson Plans', lp_sub: 'Upload and manage your lesson plans here.',
+        lp_upload: 'Upload New Plan', lp_select_file: 'Select File (PDF, DOCX, JPG)',
+        lp_submit: 'Submit Plan', lp_uploading: 'Uploading...',
+        lp_history: 'Submitted Plans', lp_no_plans: 'No lesson plans submitted yet.',
+        lp_preview: 'Preview', lp_delete: 'Delete', lp_delete_confirm: 'Delete this lesson plan?'
       }
     };
     function t(k) { return (I18N[state.lang || 'en'])[k] || I18N.en[k] || k; }
@@ -344,6 +356,7 @@
     function toDate(ts) { if (!ts) return null; if (ts.toDate) return ts.toDate(); if (ts instanceof Date) return ts; return new Date(ts); }
     function fmtTime(ts) { const d = toDate(ts); return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'; }
     function fmtDate(ts) { const d = toDate(ts); return d ? d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
+    function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
     function todayLocalDateKey() { const d = new Date(); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
     function distanceMeters(lat1, lng1, lat2, lng2) {
       const R = 6371000, toRad = d => d * Math.PI / 180;
@@ -382,8 +395,6 @@
     function clearWatch() {
       if (state.watchId != null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; state.watchingFor = null; }
     }
-    
-    // Format minutes to h m (e.g., 90 -> 1h 30m)
     function formatMins(mins) {
       if (mins <= 0) return '0m';
       const h = Math.floor(mins / 60);
@@ -401,77 +412,415 @@
         modelsLoaded = true;
       } catch (err) { console.error('Face models failed to load:', err); toast('Failed to load facial recognition engine.', 'error'); }
     }
-    async function startCamera() {
-      const video = document.getElementById('face-video');
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      video.srcObject = stream; return stream;
-    }
-    function stopCamera(stream) { if (stream) stream.getTracks().forEach(track => track.stop()); }
 
+    // Replaced scanFaceUI with the advanced UI from the provided standalone file
     async function scanFaceUI(isEnrollment = false) {
       if (!modelsLoaded) {
         toast('Loading AI models... please wait.', 'info');
         await loadFaceModels();
         if (!modelsLoaded) return null;
       }
+
       return new Promise((resolve) => {
-        const modal = document.createElement('div');
-        modal.className = 'face-modal open';
-        modal.innerHTML = `
-          <div class="face-scan-container">
-            <video id="face-video" autoplay playsinline muted></video>
-            <div class="face-scan-overlay">
-              <div class="face-oval" id="face-oval"></div>
-              <div class="scan-line"></div>
-            </div>
-          </div>
-          <div class="face-status">
-            <h3>${isEnrollment ? 'Face Enrollment' : 'Identity Verification'}</h3>
-            <p>${isEnrollment ? 'Align your face within the oval and look directly at the camera.' : 'Hold still while we verify your identity.'}</p>
-            <div id="face-detection-status" style="font-size:12px; font-weight:bold; color:var(--cyan); letter-spacing:0.05em; text-transform:uppercase">
-              <span class="status-dot"></span> Initializing camera...
-            </div>
-          </div>
-          <div class="face-actions">
-            <button class="btn btn-ghost" id="btn-face-cancel">Cancel</button>
-          </div>
-        `;
-        document.body.appendChild(modal);
-
-        let stream = null;
-        let isProcessing = false;
-
-        startCamera().then(s => {
-          stream = s;
-          document.getElementById('face-detection-status').innerHTML = '<span class="status-dot"></span> Scanning face...';
-          const video = document.getElementById('face-video');
-          const oval = document.getElementById('face-oval');
-
-          const interval = setInterval(async () => {
-            if (isProcessing || video.paused || video.ended) return;
-            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-
-            if (detection) {
-              oval.classList.add('detected');
-              document.getElementById('face-detection-status').innerHTML = '<span class="status-dot" style="background:#10b981"></span> Face captured!';
-              isProcessing = true;
-              clearInterval(interval);
-
-              const canvas = document.createElement('canvas');
-              canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-              canvas.getContext('2d').drawImage(video, 0, 0);
-              const selfie = canvas.toDataURL('image/jpeg', 0.6);
-
-              stopCamera(stream); modal.remove();
-              resolve({ descriptor: detection.descriptor, selfie });
+        const overlay = document.createElement('div');
+        overlay.id = 'face-scan-overlay';
+        overlay.innerHTML = `
+          <style>
+            #face-scan-overlay {
+              position: fixed; inset: 0; z-index: 9999; background: #050b18;
+              display: flex; justify-content: center;
+              padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+              overflow-y: auto;
+              font-family: Inter, system-ui, sans-serif;
+              color: #e8eefc;
             }
-          }, 500);
-        }).catch(err => {
-          document.getElementById('face-detection-status').innerText = 'Camera access denied.';
-          document.getElementById('face-detection-status').style.color = '#ef4444';
-        });
+            :root { --bg: #050b18; --panel: #0b1730; --line: #1c2d52; --tx: #e8eefc; --mut: #8da0c0; --teal: #2de2c4; --gold: #f5c451; }
+            * { box-sizing: border-box; margin: 0; }
+            #face-scan-overlay { background: radial-gradient(900px 600px at 50% -10%, #10305a 0, transparent 60%), var(--bg); }
+            main { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px; margin: auto; }
+            [hidden] { display: none!important; }
+            .top { display: flex; justify-content: center; }
+            .brand { font-weight: 600; font-size: 15px; text-align: center; }
+            .frame {
+              position: relative; width: min(100%, max(260px, calc((100dvh - 330px) * .75))); margin-inline: auto;
+              aspect-ratio: 3/4; border-radius: 28px; overflow: hidden; background: #07101f; border: 1px solid var(--line);
+              box-shadow: 0 30px 80px -24px rgba(45, 226, 196, .3);
+            }
+            .frame > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+            video { object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .4s; }
+            [data-s=load] video, [data-s=scan] video { opacity: 1; }
+            .snap { object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .4s; }
+            [data-s=done] .snap { opacity: 1; }
+            .glyph { fill: none; stroke: var(--teal); stroke-width: 1.5; opacity: .35; }
+            [data-s=scan] .glyph, [data-s=done] .glyph { display: none; }
+            .base { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 1.5; stroke-dasharray: 2 4; }
+            .prog { fill: none; stroke: var(--teal); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .25s linear, stroke .4s; filter: drop-shadow(0 0 6px rgba(45, 226, 196, .7)); }
+            [data-s=done] .prog { stroke: var(--gold); stroke-dashoffset: 0; filter: drop-shadow(0 0 8px rgba(245, 196, 81, .7)); }
+            .br { fill: none; stroke: var(--teal); stroke-width: 2.5; stroke-linecap: round; opacity: .7; }
+            .scanwrap { clip-path: ellipse(36% 35% at 50% 47.5%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+            .on .scanwrap { opacity: 1; }
+            .band { position: absolute; left: 0; right: 0; height: 46px; background: linear-gradient(transparent, rgba(45, 226, 196, .3)); border-bottom: 2px solid var(--teal); animation: sw 2.2s ease-in-out infinite alternate; }
+            @keyframes sw { from { top: 2%; } to { top: calc(82.5% - 46px); } }
+            .info { text-align: center; display: flex; flex-direction: column; gap: 8px; }
+            h1 { font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
+            #msg { font-size: 15px; line-height: 1.5; color: var(--mut); min-height: 23px; }
+            [data-s=scan] #msg { color: var(--tx); font-size: 17px; font-weight: 500; }
+            [data-s=scan] #msg.warn { color: var(--gold); }
+            main:not([data-s=scan]) .live { display: none; }
+            .live { display: flex; flex-direction: column; gap: 14px; }
+            .steps { display: flex; gap: 6px; }
+            .steps i { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
+            .steps i.d { background: var(--teal); }
+            .steps i.c { background: linear-gradient(90deg, var(--teal) var(--p, 0%), var(--line) 0); }
+            .chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+            .chip { display: flex; gap: 7px; align-items: center; font-size: 12px; font-weight: 500; color: var(--mut); background: var(--panel); border: 1px solid var(--line); padding: 6px 11px; border-radius: 99px; }
+            .chip b { width: 7px; height: 7px; border-radius: 50%; background: #52627f; }
+            .chip.ok b { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+            .chip.no b { background: var(--gold); }
+            .btns { display: grid; gap: 10px; }
+            .btn { height: 52px; border-radius: 16px; font: 600 15px Inter, sans-serif; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--tx); }
+            .btn.pri { background: var(--teal); border-color: var(--teal); color: #032019; }
+            .btn:focus-visible, .dots button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+            .note { text-align: center; font-size: 12px; color: #5d6f90; }
+            [data-s=scan] h1, [data-s=scan] .note { display: none; }
+            main:not([data-s=scan]):not([data-s=load]) .watch { display: none; }
+            .watch { position: relative; height: 140px; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: #07101f; }
+            .sc { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .8s; }
+            .sc.a { opacity: 1; }
+            .cap { position: absolute; left: 12px; bottom: 10px; z-index: 2; font-size: 12px; font-weight: 600; background: rgba(5, 11, 24, .62); padding: 4px 10px; border-radius: 99px; }
+            .dots { position: absolute; right: 12px; bottom: 14px; z-index: 2; display: flex; gap: 6px; }
+            .dots button { width: 8px; height: 8px; border-radius: 8px; border: 0; padding: 0; background: rgba(255, 255, 255, .4); cursor: pointer; transition: width .3s; }
+            .dots button[aria-current=true] { background: var(--teal); width: 18px; }
+            .gh { transform-box: fill-box; transform-origin: 50% 100%; animation: hop 1.3s ease-in-out infinite; }
+            @keyframes hop { 0%, 100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-15px) rotate(-5deg); } 60% { transform: translateY(0) rotate(0); } }
+            .cl, .wv { animation: dr 12s ease-in-out infinite alternate; }
+            @keyframes dr { to { transform: translateX(40px); } }
+            .fl { animation: bob 2s ease-in-out infinite; }
+            @keyframes bob { 50% { transform: translateY(2.5px); } }
+            .rp { transform-box: fill-box; transform-origin: center; animation: rp 2s ease-out infinite; }
+            @keyframes rp { 0% { transform: scale(.5); opacity: .9; } 100% { transform: scale(2.2); opacity: 0; } }
+            .fs { opacity: 0; animation: fj 6.5s ease-in-out infinite; }
+            @keyframes fj { 0%, 55% { opacity: 0; transform: translate(176px, 100px) rotate(-30deg); } 58% { opacity: 1; } 74% { opacity: 1; transform: translate(198px, 62px) rotate(0); } 90% { opacity: 1; transform: translate(222px, 100px) rotate(35deg); } 93%, 100% { opacity: 0; transform: translate(222px, 100px) rotate(35deg); } }
+            .story { display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 14px 18px 34px; background: linear-gradient(135deg, #0d1f40, #081226); font-family: Georgia, 'Times New Roman', serif; }
+            .ln { font-size: 14px; line-height: 1.4; color: #dfe8fb; opacity: 0; transform: translateY(6px); }
+            .a .ln { animation: ln .7s var(--d) forwards; }
+            @keyframes ln { to { opacity: 1; transform: none; } }
+            @media(prefers-reduced-motion:reduce) { .band, .sc * { animation: none!important; } .band { top: 40%; } .ln { opacity: 1; transform: none; } }
+          </style>
+          <main id="app" data-s="idle">
+            <div class="top">
+              <div class="brand">Teacher's Face Scan Verification</div>
+            </div>
+            <div class="frame" id="frame">
+              <video id="v" playsinline muted></video>
+              <img class="snap" id="snap" alt="">
+              <canvas id="c"></canvas>
+              <svg viewBox="0 0 300 400" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <mask id="m">
+                    <rect width="300" height="400" fill="#fff"/>
+                    <ellipse cx="150" cy="190" rx="108" ry="140"/>
+                  </mask>
+                </defs>
+                <rect width="300" height="400" fill="rgba(5,11,24,.74)" mask="url(#m)"/>
+                <g class="glyph">
+                  <circle cx="150" cy="150" r="40"/>
+                  <path d="M78 300c0-56 32-84 72-84s72 28 72 84"/>
+                </g>
+                <ellipse class="base" cx="150" cy="190" rx="108" ry="140"/>
+                <path class="prog" id="prog" pathLength="100" d="M150 50A108 140 0 0 1 150 330A108 140 0 0 1 150 50"/>
+                <path class="br" d="M20 54V34a14 14 0 0 1 14-14h20M280 54V34a14 14 0 0 0-14-14h-20M20 346v20a14 14 0 0 0 14 14h20M280 346v20a14 14 0 0 1-14 14h-20"/>
+              </svg>
+              <div class="scanwrap"><div class="band"></div></div>
+            </div>
+            <section class="info">
+              <h1 id="ttl"></h1>
+              <p id="msg" aria-live="polite"></p>
+            </section>
+            <section class="live">
+              <div class="steps" id="steps"><i></i><i></i><i></i><i></i></div>
+              <div class="chips">
+                <span class="chip" id="q0"><b></b><u style="text-decoration:none"></u></span>
+                <span class="chip" id="q1"><b></b><u style="text-decoration:none"></u></span>
+                <span class="chip" id="q2"><b></b><u style="text-decoration:none"></u></span>
+              </div>
+            </section>
+            <div class="watch" aria-label="Relax while we scan">
+              <svg class="sc a" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs>
+                  <linearGradient id="k1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#2b5f99"/>
+                    <stop offset="1" stop-color="#f7b974"/>
+                  </linearGradient>
+                  <symbol id="goat" viewBox="0 0 60 46">
+                    <g fill="#5b4636">
+                      <rect x="14" y="28" width="4" height="17" rx="2"/>
+                      <rect x="21" y="28" width="4" height="17" rx="2"/>
+                      <rect x="34" y="28" width="4" height="17" rx="2"/>
+                      <rect x="41" y="28" width="4" height="17" rx="2"/>
+                    </g>
+                    <rect x="8" y="14" width="40" height="19" rx="9.5" fill="currentColor"/>
+                    <path d="M40 20L47 8l8 5-5 11z" fill="currentColor"/>
+                    <ellipse cx="54" cy="14" rx="6.5" ry="4.5" transform="rotate(25 54 14)" fill="currentColor"/>
+                    <path d="M48 8q-3-7 3-8M52 9q0-6 6-6" stroke="#5b4636" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <path d="M8 18L3 14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="55.5" cy="13" r="1.1" fill="#222"/>
+                  </symbol>
+                </defs>
+                <rect width="320" height="140" fill="url(#k1)"/>
+                <circle cx="268" cy="34" r="15" fill="#ffe7a8"/>
+                <g class="cl">
+                  <ellipse cx="60" cy="28" rx="24" ry="7" fill="#fff" opacity=".7"/>
+                  <ellipse cx="78" cy="22" rx="14" ry="7" fill="#fff" opacity=".7"/>
+                </g>
+                <path d="M0 104Q80 72 170 96T320 88V140H0z" fill="#2e8f55"/>
+                <path d="M0 122Q100 102 200 118T320 112V140H0z" fill="#1f6e42"/>
+                <g class="gh"><use href="#goat" x="60" y="66" width="64" height="49" style="color:#f4efe6"/></g>
+                <g transform="translate(364 0) scale(-1 1)">
+                  <g class="gh" style="animation-delay:.65s"><use href="#goat" x="150" y="66" width="64" height="49" style="color:#d9c3a5"/></g>
+                </g>
+                <g class="gh" style="animation-delay:.3s"><use href="#goat" x="232" y="88" width="40" height="31" style="color:#b98a5b"/></g>
+              </svg>
+              <svg class="sc" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs>
+                  <linearGradient id="k2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#1c2a60"/>
+                    <stop offset="1" stop-color="#f28c5c"/>
+                  </linearGradient>
+                </defs>
+                <rect width="320" height="140" fill="url(#k2)"/>
+                <circle cx="232" cy="70" r="22" fill="#ffd58c"/>
+                <rect y="78" width="320" height="62" fill="#12365a"/>
+                <rect x="206" y="82" width="52" height="3" rx="1.5" fill="#ffd58c" opacity=".55"/>
+                <g class="wv" stroke="#5b92c4" stroke-width="1.2" fill="none" opacity=".6">
+                  <path d="M150 100q8-4 16 0t16 0"/>
+                  <path d="M220 112q8-4 16 0t16 0"/>
+                  <path d="M110 120q8-4 16 0t16 0"/>
+                </g>
+                <path d="M0 108Q44 90 92 98L106 140H0z" fill="#0c241d"/>
+                <g fill="#08140f">
+                  <circle cx="56" cy="70" r="6"/>
+                  <ellipse cx="56" cy="65" rx="11" ry="2.4"/>
+                  <path d="M50 65q6-8 12 0z"/>
+                  <path d="M47 78q9-6 17 0l4 17H44z"/>
+                  <path d="M44 95h30l9 7h-8l-7-3H44z"/>
+                </g>
+                <path d="M66 82L146 40" stroke="#c9a36a" stroke-width="2" stroke-linecap="round"/>
+                <path d="M146 40L154 96" stroke="#d8e6f5" stroke-width=".9"/>
+                <g class="fl">
+                  <circle cx="154" cy="96" r="2.8" fill="#ff5a4d"/>
+                  <circle cx="154" cy="93.5" r="1.4" fill="#fff"/>
+                </g>
+                <ellipse class="rp" cx="154" cy="99" rx="6" ry="1.6" fill="none" stroke="#9cc8ee"/>
+                <g class="fs">
+                  <ellipse rx="8" ry="3.4" fill="#d4ebff"/>
+                  <path d="M-8 0l-6-4v8z" fill="#d4ebff"/>
+                </g>
+              </svg>
+              <div class="sc story">
+                <p class="ln" style="--d:.5s">A proud hare mocked a slow tortoise.</p>
+                <p class="ln" style="--d:2.9s">“Race me,” said the tortoise, calmly.</p>
+                <p class="ln" style="--d:5.3s">The hare raced ahead, then took a nap.</p>
+                <p class="ln" style="--d:7.7s">Step by step, the tortoise won.</p>
+              </div>
+              <span class="cap" id="cap"></span>
+              <div class="dots">
+                <button aria-label="Goats at play"></button>
+                <button aria-label="Fishing at sunset"></button>
+                <button aria-label="Short story"></button>
+              </div>
+            </div>
+            <div class="btns">
+              <button class="btn pri" id="go"></button>
+              <button class="btn" id="cx"></button>
+            </div>
+            <p class="note" id="priv"></p>
+          </main>
+        `;
+        document.body.appendChild(overlay);
 
-        document.getElementById('btn-face-cancel').onclick = () => { stopCamera(stream); modal.remove(); resolve(null); };
+        const M = overlay.querySelector('#app');
+        const V = overlay.querySelector('#v');
+        const C = overlay.querySelector('#c');
+        const ctx = C.getContext('2d');
+        const go = overlay.querySelector('#go');
+        const cx = overlay.querySelector('#cx');
+        const msg = overlay.querySelector('#msg');
+        const snap = overlay.querySelector('#snap');
+
+        let step = 0, hold = 0, NEED = [30, 10, 10, 5], stream = null, run = 0;
+        let frontal = null, lastFaceBox = null, stillFrames = 0;
+
+        const t = k => {
+           const dict = {
+             ttl: isEnrollment ? 'Face enrollment' : 'Face verification',
+             sub: isEnrollment ? 'Fit your face inside the oval. We will ask you to turn your head and blink.' : 'Hold still while we verify your identity.',
+             start: 'Start scan', cancel: 'Cancel', load: 'Starting camera…',
+             s0: 'Look straight at the camera', s1: 'Slowly turn your head left', s2: 'Slowly turn your head right', s3: 'Blink your eyes',
+             none: 'No face found. Face the camera.', near: 'Move closer', far: 'Move back a little', center: 'Center your face in the oval',
+             move: 'Hold still', dark: 'Too dark. Find more light.', bright: 'Too bright. Avoid direct light.',
+             done: 'Face verified', donesub: 'Your face is enrolled. Continue to finish.', cont: 'Continue', retake: 'Retake',
+             err: 'Camera or face model did not load. Allow the camera, check your internet, and try again.', retry: 'Try again',
+             q0: 'Light', q1: 'Position', q2: 'Steady', priv: 'Face detection runs on your device.'
+           };
+           return dict[k] || k;
+        };
+
+        function render() {
+          const s = M.dataset.s;
+          overlay.querySelector('#ttl').textContent = t('ttl');
+          msg.textContent = t({ idle: 'sub', load: 'load', done: 'donesub', err: 'err' }[s] || 's0');
+          go.textContent = t(s === 'done' ? 'cont' : s === 'err' ? 'retry' : 'start');
+          go.hidden = !/idle|done|err/.test(s);
+          cx.textContent = t(s === 'done' ? 'retake' : 'cancel');
+          cx.hidden = /idle|err/.test(s);
+          ['q0', 'q1', 'q2'].forEach(q => overlay.querySelector('#' + q + ' u').textContent = t(q));
+          overlay.querySelector('#priv').textContent = t('priv');
+        }
+
+        function setState(s) {
+          M.dataset.s = s;
+          msg.classList.remove('warn');
+          overlay.querySelector('#frame').classList.remove('on');
+          render();
+        }
+
+        function stopCam() {
+          if (stream) stream.getTracks().forEach(x => x.stop());
+          stream = null; V.srcObject = null; run++;
+        }
+
+        function draw(p) {
+          overlay.querySelector('#prog').style.strokeDashoffset = 100 - p * 100;
+          const steps = overlay.querySelectorAll('#steps i');
+          steps.forEach((el, i) => {
+            el.className = i < step ? 'd' : i === step ? 'c' : '';
+            el.style.setProperty('--p', (Math.min(1, hold / NEED[step] || 0) * 100) + '%');
+          });
+        }
+
+        function chip(id, ok) {
+          overlay.querySelector('#' + id).className = 'chip ' + (ok ? 'ok' : 'no');
+        }
+
+        async function start() {
+          setState('load'); show(0);
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+            V.srcObject = stream; await V.play();
+          } catch (e) {
+            console.error(e); stopCam(); return setState('err');
+          }
+          step = 0; hold = 0; frontal = null; lastFaceBox = null; stillFrames = 0;
+          setState('scan'); loop();
+        }
+
+        async function loop() {
+          if (M.dataset.s !== 'scan') return;
+          if (V.readyState >= 2) {
+            const vw = V.videoWidth, vh = V.videoHeight, cw = C.clientWidth, ch = C.clientHeight, d = devicePixelRatio || 1;
+            if (C.width !== Math.round(cw * d)) { C.width = cw * d; C.height = ch * d; }
+            ctx.setTransform(d, 0, 0, d, 0, 0);
+            ctx.clearRect(0, 0, cw, ch);
+
+            // Lighting check
+            const tmpCanvas = document.createElement('canvas'); tmpCanvas.width = 24; tmpCanvas.height = 24;
+            const tCtx = tmpCanvas.getContext('2d'); tCtx.drawImage(V, 0, 0, 24, 24);
+            const data = tCtx.getImageData(0, 0, 24, 24).data;
+            let luma = 0;
+            for (let i = 0; i < data.length; i += 4) luma += .299 * data[i] + .587 * data[i + 1] + .114 * data[i + 2];
+            luma /= 576;
+            const lightOk = luma > 55 && luma < 215;
+
+            // Face detection
+            const detection = await faceapi.detectSingleFace(V, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+
+            let key = 's0', fit = false, still = false;
+
+            if (!detection) {
+              hold = Math.max(0, hold - 2); key = 'none';
+            } else {
+              const box = detection.detection.box; const lm = detection.landmarks;
+              const fx = box.x + box.width / 2, fy = box.y + box.height / 2;
+              const ex = vw / 2, ey = vh / 2; const size = box.height / vh;
+              fit = Math.abs(fx - ex) / vw < 0.2 && Math.abs(fy - ey) / vh < 0.2 && size > 0.3 && size < 0.7;
+
+              if (lastFaceBox) {
+                const dist = Math.hypot(box.x - lastFaceBox.x, box.y - lastFaceBox.y);
+                if (dist < 5) stillFrames++; else stillFrames = 0;
+              } else { lastFaceBox = { x: box.x, y: box.y }; }
+              lastFaceBox = { x: box.x, y: box.y };
+              still = stillFrames > 5;
+
+              const nose = lm.getNose()[3];
+              const leftEye = lm.getLeftEye()[0]; const rightEye = lm.getRightEye()[3];
+              const yaw = (nose.x - leftEye.x) / (rightEye.x - leftEye.x);
+
+              const leftEyePoints = lm.getLeftEye();
+              const ear = (Math.abs(leftEyePoints[1].y - leftEyePoints[5].y) + Math.abs(leftEyePoints[2].y - leftEyePoints[4].y)) / (2 * Math.abs(leftEyePoints[0].x - leftEyePoints[3].x));
+              const blink = ear < 0.2;
+
+              let stepOk = false;
+              if (step === 0) stepOk = fit && still;
+              else if (step === 1) stepOk = yaw > 0.65;
+              else if (step === 2) stepOk = yaw < 0.35;
+              else if (step === 3) stepOk = blink;
+
+              const ok = lightOk && stepOk;
+              hold = ok ? hold + 1 : Math.max(0, hold - 2);
+
+              const pts = lm.positions.map(p => [cw - (p.x * cw / vw), p.y * ch / vh]);
+              const prog = (step + Math.min(1, hold / NEED[step])) / 4;
+              ctx.fillStyle = `rgba(120,255,235,${.45 + .4 * prog})`;
+              for (const p of pts) ctx.fillRect(p[0] - .8, p[1] - .8, 1.6, 1.6);
+
+              if (hold >= NEED[step]) {
+                if (step === 0) {
+                  const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh; cv.getContext('2d').drawImage(V, 0, 0);
+                  const mirrorCv = document.createElement('canvas'); mirrorCv.width = vw; mirrorCv.height = vh;
+                  const mCtx = mirrorCv.getContext('2d'); mCtx.translate(vw, 0); mCtx.scale(-1, 1); mCtx.drawImage(cv, 0, 0);
+                  frontal = { photo: mirrorCv.toDataURL('image/jpeg', .88), descriptor: detection.descriptor };
+                }
+                step++; hold = 0; navigator.vibrate && navigator.vibrate(15);
+                if (step === 4) return finish();
+              }
+            }
+            chip('q0', lightOk); chip('q1', fit); chip('q2', still);
+            overlay.querySelector('#frame').classList.toggle('on', !!detection);
+            if (msg.textContent !== t(key)) {
+              msg.textContent = t(key); msg.classList.toggle('warn', !/^s\d$/.test(key));
+            }
+            draw((step + Math.min(1, hold / NEED[Math.min(step, 3)])) / 4);
+          }
+          requestAnimationFrame(loop);
+        }
+
+        function finish() {
+          stopCam(); snap.src = frontal.photo; draw(1); setState('done');
+        }
+
+        go.onclick = () => {
+          if (M.dataset.s === 'done') { overlay.remove(); resolve({ descriptor: frontal.descriptor, selfie: frontal.photo }); }
+          else start();
+        };
+
+        cx.onclick = () => {
+          if (M.dataset.s === 'done') return start();
+          stopCam(); overlay.remove(); resolve(null);
+        };
+
+        const sc = [...overlay.querySelectorAll('.sc')], dots = [...overlay.querySelectorAll('.dots button')], CAP = ['Goats at play', 'Fishing at sunset', 'The Hare and the Tortoise'];
+        let si = 0;
+        function show(i) {
+          si = i; sc.forEach((e, k) => e.classList.toggle('a', k === i)); dots.forEach((d, k) => d.setAttribute('aria-current', k === i)); overlay.querySelector('#cap').textContent = CAP[i];
+        }
+        dots.forEach((d, k) => d.onclick = () => show(k));
+        const distractionTimer = setInterval(() => { if (/load|scan/.test(M.dataset.s)) show((si + 1) % sc.length); }, 11000);
+
+        const origRemove = overlay.remove;
+        overlay.remove = function() { clearInterval(distractionTimer); stopCam(); origRemove.call(this); };
+
+        show(0); render();
       });
     }
 
@@ -482,25 +831,18 @@
       const result = await scanFaceUI(true);
       if (!result) return false;
 
-      // --- GLOBAL UNIQUENESS CHECK ---
       toast('Checking face uniqueness...', 'info');
       try {
         const usersSnap = await getDocs(collection(db, 'users'));
         let isDuplicate = false;
 
         for (const docSnap of usersSnap.docs) {
-          if (docSnap.id === state.user.uid) continue; // Skip checking against our own account
-          
+          if (docSnap.id === state.user.uid) continue;
           const data = docSnap.data();
           if (data.faceDescriptor && Array.isArray(data.faceDescriptor)) {
             const existingDescriptor = new Float32Array(data.faceDescriptor);
             const distance = faceapi.euclideanDistance(existingDescriptor, result.descriptor);
-            
-            // Strict threshold for unique faces
-            if (distance < 0.55) {
-              isDuplicate = true;
-              break; 
-            }
+            if (distance < 0.55) { isDuplicate = true; break; }
           }
         }
 
@@ -513,7 +855,6 @@
         toast('Could not verify face uniqueness. Check your connection.', 'error');
         return false;
       }
-      // ------------------------------
 
       try {
         await updateDoc(doc(db, 'users', state.user.uid), {
@@ -524,15 +865,19 @@
         state.profile.faceDescriptor = Array.from(result.descriptor);
         state.profile.faceSelfie = result.selfie;
         toast('Face enrolled successfully!', 'success');
-        renderTeacher(); // refresh UI
+        renderTeacher();
         return true;
       } catch (err) { toast('Failed to save face data.', 'error'); return false; }
     }
 
     async function verifyFace() {
-      if (!state.profile.faceDescriptor) { toast('No face enrolled. Please enroll first.', 'error'); return false; }
+      if (!state.profile.faceDescriptor) { 
+        const enrolled = await ensureFaceEnrollment();
+        return enrolled ? verifyFace() : false;
+      }
+      
       const result = await scanFaceUI(false);
-      if (!result) return false; // Cancelled
+      if (!result) return false;
       
       const storedDescriptor = new Float32Array(state.profile.faceDescriptor);
       const distance = faceapi.euclideanDistance(storedDescriptor, result.descriptor);
@@ -544,13 +889,10 @@
     async function deleteFace() {
       if (!confirm('Are you sure you want to delete your registered face? You will need to scan it again before your next attendance.')) return;
       try {
-        await updateDoc(doc(db, 'users', state.user.uid), {
-          faceDescriptor: null, faceSelfie: null
-        });
+        await updateDoc(doc(db, 'users', state.user.uid), { faceDescriptor: null, faceSelfie: null });
         state.profile.faceDescriptor = null; state.profile.faceSelfie = null;
         toast('Face deleted. Please enroll again.', 'success');
-        setTimeout(() => ensureFaceEnrollment(), 1000);
-        renderTeacher(); // refresh UI
+        renderTeacher();
       } catch (err) { toast(err.message, 'error'); }
     }
 
@@ -630,14 +972,6 @@
       loadFaceModels(); 
       state.loading = false;
       goTeacher();
-
-      // Check enrollment after slight delay
-      if (!state.profile.faceDescriptor) {
-        setTimeout(async () => {
-          const enrolled = await ensureFaceEnrollment();
-          if (!enrolled) toast('You must enroll your face to use daily attendance.', 'warn');
-        }, 1500);
-      }
     });
 
     /* ==================== HEADER ==================== */
@@ -654,6 +988,7 @@
            </div>`
         : `<div style="margin-top:16px; text-align:center;">
              <div style="font-size:12px; color:#f87171; font-weight:700;">Face Not Enrolled</div>
+             <button id="btn-enroll-face" class="btn-face" style="margin-top:8px; font-size:13px; padding:10px;">Enroll Now</button>
            </div>`;
 
       return `
@@ -695,11 +1030,17 @@
       const btnProfile = document.getElementById('btn-profile');
       const btnLogout = document.getElementById('btn-logout');
       const btnDeleteFace = document.getElementById('btn-delete-face');
+      const btnEnrollFace = document.getElementById('btn-enroll-face');
       
       if (btnProfile) btnProfile.onclick = () => modal.classList.add('open');
       if (modal) modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('open'); };
       if (btnLogout) btnLogout.onclick = () => { if (confirm(t('msg_sign_out'))) signOut(auth); };
       if (btnDeleteFace) btnDeleteFace.onclick = () => { modal.classList.remove('open'); deleteFace(); };
+      if (btnEnrollFace) btnEnrollFace.onclick = async () => { 
+        modal.classList.remove('open'); 
+        const enrolled = await ensureFaceEnrollment(); 
+        if (enrolled) toast('Face enrolled successfully!', 'success');
+      };
     }
 
     /* ==================== TEACHER ==================== */
@@ -716,7 +1057,6 @@
           err => console.error(err));
       }
       
-      // Settings Listener for school times
       if (!state.subSettings) {
         state.subSettings = onSnapshot(doc(db, 'settings', 'attendance'), snap => {
           if (snap.exists()) {
@@ -745,6 +1085,14 @@
         }, err => console.error(err));
       }
 
+      if (!state.subLessonPlans) {
+        const q = query(collection(db, 'lesson_plans'), where('teacherId', '==', state.user.uid));
+        state.subLessonPlans = onSnapshot(q, snap => {
+          state.myLessonPlans = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => toDate(b.submittedAt) - toDate(a.submittedAt));
+          if (state.view === 'teacher') renderTeacher();
+        }, err => console.error(err));
+      }
+
       renderTeacher();
     }
 
@@ -752,7 +1100,7 @@
       const tabs = [
         { id: 'home', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>' },
         { id: 'daily', icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
-        { id: 'calendar', icon: '<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>' },
+        { id: 'lesson_plans', icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>' },
         { id: 'stats', icon: '<path d="M18 20V10M12 20V4M6 20v-6"/>' },
         { id: 'history', icon: '<path d="M12 8v4l3 3M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/>' }
       ];
@@ -762,7 +1110,7 @@
     function renderTeacher() {
       const active = state.myAttendances.find(a => a.state === 'active');
       let body = '';
-      if (state.teacherTab === 'calendar') body = renderTeacherCalendar();
+      if (state.teacherTab === 'lesson_plans') body = renderTeacherLessonPlans();
       else if (state.teacherTab === 'stats') body = renderTeacherStats();
       else if (state.teacherTab === 'history') body = renderTeacherHistory();
       else if (state.teacherTab === 'daily') body = renderTeacherDaily();
@@ -777,6 +1125,7 @@
       if (btnDailyIn) btnDailyIn.onclick = () => handleDailySignIn(btnDailyIn);
       const btnDailyOut = document.getElementById('btn-daily-out');
       if (btnDailyOut) btnDailyOut.onclick = () => handleDailySignOut(btnDailyOut);
+      if (state.teacherTab === 'lesson_plans') bindLessonPlanEvents();
     }
 
     function renderTeacherHome(active) {
@@ -950,6 +1299,113 @@
       return `${todayCard}${analyticsHtml}${chartHtml}<div class="section-title" style="margin-top:24px;">Recent History</div>${recentHistory || `<div class="empty"><strong>No recent records</strong></div>`}`;
     }
 
+    /* ==================== LESSON PLANS TAB ==================== */
+    function renderTeacherLessonPlans() {
+      const listHtml = state.myLessonPlans.length === 0
+        ? `<div class="empty"><strong>${t('lp_no_plans')}</strong></div>`
+        : state.myLessonPlans.map(lp => `
+          <div class="lp-item">
+            <div class="info">
+              <h4>${escapeHtml(lp.title)}</h4>
+              <p>${fmtDateTime(lp.submittedAt)}</p>
+            </div>
+            <div class="actions">
+              <button class="lp-btn" onclick="openLessonPlanPreview('${lp.id}')">${t('lp_preview')}</button>
+              <button class="lp-btn delete" onclick="deleteLessonPlan('${lp.id}')">${t('lp_delete')}</button>
+            </div>
+          </div>
+        `).join('');
+
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('lp_title')}</h1>
+        <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${t('lp_sub')}</p>
+
+        <div class="lp-upload-card">
+          <h3>${t('lp_upload')}</h3>
+          <form id="lp-form">
+            <input type="text" name="title" placeholder="Plan Title (e.g. Week 1 - Mathematics)" required style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); background:rgba(0,0,0,0.3); color:#fff; margin-bottom:12px;" />
+            <input type="file" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="lp-file-input" id="lp-file" />
+            <button type="submit" id="btn-submit-lp" class="btn btn-primary" style="padding:14px; font-size:15px; margin-top:8px;">${t('lp_submit')}</button>
+          </form>
+        </div>
+
+        <div class="section-title" style="margin-top:24px;">${t('lp_history')}</div>
+        <div class="lp-list">
+          ${listHtml}
+        </div>
+      `;
+    }
+
+    function bindLessonPlanEvents() {
+      const form = document.getElementById('lp-form');
+      if (!form) return;
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit-lp');
+        const fileInput = document.getElementById('lp-file');
+        const file = fileInput.files[0];
+        const title = form.elements.title.value.trim();
+
+        if (!file || !title) return;
+        if (file.size > 2 * 1024 * 1024) { toast('File too large. Max 2MB.', 'error'); return; }
+
+        btn.disabled = true; btn.textContent = t('lp_uploading');
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result;
+            await addDoc(collection(db, 'lesson_plans'), {
+              teacherId: state.user.uid,
+              teacherName: state.profile?.fullName || state.user.email,
+              title: title,
+              fileName: file.name,
+              fileType: file.type,
+              fileBase64: base64,
+              submittedAt: serverTimestamp()
+            });
+            form.reset();
+            toast('Lesson plan submitted!', 'success');
+          } catch (err) {
+            toast(err.message, 'error');
+          } finally {
+            btn.disabled = false; btn.textContent = t('lp_submit');
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+
+    window.openLessonPlanPreview = (planId) => {
+      const plan = state.myLessonPlans.find(lp => lp.id === planId);
+      if (!plan || !plan.fileBase64) { toast('No file attached.', 'warn'); return; }
+
+      const modal = document.createElement('div');
+      modal.className = 'lp-preview-modal open';
+      modal.innerHTML = `
+        <div class="lp-preview-container">
+          <div class="lp-preview-header">
+            <h3>${escapeHtml(plan.title)}</h3>
+            <button class="lp-preview-close" onclick="this.closest('.lp-preview-modal').remove()">✕</button>
+          </div>
+          <div class="lp-preview-body">
+            <iframe src="${plan.fileBase64}" type="${plan.fileType}"></iframe>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.onclick = e => { if (e.target === modal) modal.remove(); };
+    };
+
+    window.deleteLessonPlan = async (planId) => {
+      if (!confirm(t('lp_delete_confirm'))) return;
+      try {
+        await deleteDoc(doc(db, 'lesson_plans', planId));
+        toast('Lesson plan deleted.', 'success');
+      } catch (err) { toast(err.message, 'error'); }
+    };
+
     function teacherSessionCard(cpd, active) {
       const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
       const status = myAtt?.state === 'active' ? 'live' : myAtt?.state === 'ended' ? 'ended' : cpdStatus(cpd);
@@ -979,44 +1435,6 @@
         </div>
         ${action}
       </div>`;
-    }
-
-    function renderTeacherCalendar() {
-      const year = state.calYear, month = state.calMonth;
-      const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
-      const startWeekday = (firstDay.getDay() + 6) % 7; const daysInMonth = lastDay.getDate();
-      const sessionsByDay = {};
-      state.cpds.forEach(c => {
-        const d = toDate(c.startTime); if (!d) return;
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          const key = d.getDate(); if (!sessionsByDay[key]) sessionsByDay[key] = [];
-          sessionsByDay[key].push(c);
-        }
-      });
-      const today = new Date();
-      const isToday = (day) => today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
-      let grid = '';
-      for (let i = 0; i < startWeekday; i++) grid += `<div class="cal-day empty"></div>`;
-      for (let day = 1; day <= daysInMonth; day++) {
-        const hasCpd = !!sessionsByDay[day]; const classes = ['cal-day'];
-        if (hasCpd) classes.push('has-cpd');
-        if (isToday(day)) classes.push('today');
-        if (state.calSelectedDay === day) classes.push('selected');
-        grid += `<div class="${classes.join(' ')}" data-calday="${day}">${day}</div>`;
-      }
-      const monthName = firstDay.toLocaleString('en', { month: 'long', year: 'numeric' });
-      let dayDetail = '';
-      if (state.calSelectedDay) {
-        const list = sessionsByDay[state.calSelectedDay] || [];
-        const dayDate = new Date(year, month, state.calSelectedDay).toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
-        dayDetail = `<div class="section-title">${dayDate}</div>`;
-        if (list.length === 0) dayDetail += `<div class="empty"><strong>${t('no_sessions_day')}</strong></div>`;
-        else {
-          const active = state.myAttendances.find(a => a.state === 'active');
-          dayDetail += list.map(c => teacherSessionCard(c, active)).join('');
-        }
-      }
-      return `<div class="cal-wrap" style="background:rgba(15,23,42,0.6);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px"><div class="cal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="cal-title" style="font-size:16px;font-weight:800;color:#fff">${monthName}</div><div class="cal-nav" style="display:flex;gap:6px"><button data-calnav="-1" style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.06);color:#cbd5e1;font-size:14px;display:flex;align-items:center;justify-content:center">‹</button><button data-calnav="1" style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.06);color:#cbd5e1;font-size:14px;display:flex;align-items:center;justify-content:center">›</button></div></div><div class="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => `<div class="cal-dow" style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:6px 0">${d}</div>`).join('')}${grid}</div></div>${dayDetail}`;
     }
 
     function renderTeacherStats() {
@@ -1091,7 +1509,7 @@
           return;
         }
 
-        // GPS passed, now verify Face
+        // GPS passed, now verify Face (Auto-enrolls if first time)
         btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
         const selfieBase64 = await verifyFace();
         if (!selfieBase64) {
@@ -1183,6 +1601,15 @@
         const pos = await getPositionOnce();
         const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
         const status = dist <= cpd.radiusMeters ? 'near' : 'far';
+
+        // Face verify for CPD too
+        btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
+        const selfieBase64 = await verifyFace();
+        if (!selfieBase64) {
+          btn.disabled = false; btn.innerHTML = `▶ ${t('attend')}`;
+          return;
+        }
+
         await addDoc(collection(db, 'attendance'), {
           cpdId, cpdTitle: cpd.title, teacherId: state.user.uid,
           teacherName: state.profile?.fullName || state.user.email,
@@ -1191,7 +1618,7 @@
           attendedAt: serverTimestamp(), attendedLat: pos.lat, attendedLng: pos.lng,
           attendedDistanceMeters: dist, attendedStatus: status,
           liveLat: pos.lat, liveLng: pos.lng, liveAccuracy: pos.accuracy, liveUpdatedAt: serverTimestamp(),
-          state: 'active', verified: false,
+          state: 'active', verified: false, selfieIn: selfieBase64,
         });
         toast('Attendance recorded!', 'success');
       } catch (err) {
@@ -1210,10 +1637,20 @@
         const pos = await getPositionOnce();
         const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
         const status = dist <= cpd.radiusMeters ? 'near' : 'far';
+        
+        // Face verify for CPD end
+        btn.innerHTML = `<span class="spin" style="width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block"></span> Scanning Face...`;
+        const selfieBase64 = await verifyFace();
+        if (!selfieBase64) {
+          btn.disabled = false; btn.innerHTML = `■ ${t('end')}`;
+          return;
+        }
+
         const verified = att.attendedStatus === 'near' && status === 'near';
         await updateDoc(doc(db, 'attendance', att.id), {
           endedAt: serverTimestamp(), endedLat: pos.lat, endedLng: pos.lng,
           endedDistanceMeters: dist, endedStatus: status, state: 'ended', verified,
+          selfieOut: selfieBase64,
         });
         clearWatch();
         toast(verified ? t('verified') : t('flagged'), verified ? 'success' : 'warn');
