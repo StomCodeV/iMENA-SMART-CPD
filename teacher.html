@@ -858,49 +858,26 @@
       });
     }
 
-    async function ensureFaceEnrollment() {
-      if (state.profile.faceDescriptor) return true;
+async function ensureFaceEnrollment() {
+  if (state.profile.faceDescriptor) return true;
 
-      toast('Face enrollment required.', 'info');
-      const result = await scanFaceUI(true);
-      if (!result) return false;
+  toast('Face enrollment required.', 'info');
+  const result = await scanFaceUI(true);
+  if (!result) return false;
 
-      // Simple face uniqueness check — reject if this face already belongs to another account
-      toast('Checking face uniqueness...', 'info');
-      try {
-        const usersSnap = await getDocs(collection(db, 'users'));
-        let isDuplicate = false;
-        for (const docSnap of usersSnap.docs) {
-          if (docSnap.id === state.user.uid) continue;
-          const data = docSnap.data();
-          if (data.faceDescriptor && Array.isArray(data.faceDescriptor)) {
-            const existing = new Float32Array(data.faceDescriptor);
-            const dist = faceapi.euclideanDistance(existing, result.descriptor);
-            if (dist < 0.55) { isDuplicate = true; break; }
-          }
-        }
-        if (isDuplicate) {
-          toast('This face is already registered to another account. Access denied.', 'error');
-          return false;
-        }
-      } catch (err) {
-        console.error('Uniqueness check failed:', err);
-        // Continue anyway — don't block enrollment on a network error
-      }
-
-      try {
-        await updateDoc(doc(db, 'users', state.user.uid), {
-          faceDescriptor: Array.from(result.descriptor),
-          faceSelfie: result.selfie,
-          faceEnrolledAt: serverTimestamp()
-        });
-        state.profile.faceDescriptor = Array.from(result.descriptor);
-        state.profile.faceSelfie = result.selfie;
-        toast('Face enrolled successfully!', 'success');
-        renderTeacher();
-        return true;
-      } catch (err) { toast('Failed to save face data.', 'error'); return false; }
-    }
+  try {
+    await updateDoc(doc(db, 'users', state.user.uid), {
+      faceDescriptor: Array.from(result.descriptor),
+      faceSelfie: result.selfie,
+      faceEnrolledAt: serverTimestamp()
+    });
+    state.profile.faceDescriptor = Array.from(result.descriptor);
+    state.profile.faceSelfie = result.selfie;
+    toast('Face enrolled successfully!', 'success');
+    renderTeacher();
+    return true;
+  } catch (err) { toast('Failed to save face data.', 'error'); return false; }
+}
 
     async function verifyFace() {
       if (!state.profile.faceDescriptor) { 
