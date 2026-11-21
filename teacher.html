@@ -69,7 +69,7 @@
     .tab-badge { position: absolute; top: 6px; right: calc(50% - 18px); background: #ef4444; color: #fff; font-size: 9px; font-weight: 900; padding: 1px 6px; border-radius: 99px; min-width: 16px; }
 
     .t-hero { border-radius: 24px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.6); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); border: 1px solid var(--line); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .t-hero::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,var(--cyan),var(--purple),var(--lime)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.5; }
+    .t-hero::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,var(--cyan),var(--purple),var(--lime)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.5; }
     .t-hero-active::before { background: linear-gradient(135deg,#10b981,#06b6d4); opacity: 1; }
     .t-hero h1 { font-size: 22px; font-weight: 900; margin: 0 0 8px; line-height: 1.2; color: #fff; }
     .t-hero p { font-size: 14px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
@@ -95,7 +95,7 @@
     .badge-type { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.35); }
 
     .daily-card { border-radius: 24px; padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden; background: rgba(15,23,42,0.6); backdrop-filter: blur(24px); border: 1px solid var(--line); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .daily-card::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,#10b981,#06b6d4); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.7; }
+    .daily-card::before { content: ''; position: absolute; inset: 0; padding: 1px; background: linear-gradient(135deg,#10b981,#06b6d4); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; border-radius: 24px; pointer-events: none; opacity: 0.7; }
     .daily-card.signed-out::before { background: linear-gradient(135deg,#f59e0b,#ef4444); }
     .daily-card h2 { font-size: 20px; font-weight: 900; margin: 0 0 6px; line-height: 1.2; color: #fff; }
     .daily-card p { font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
@@ -168,7 +168,6 @@
     .loader { position: fixed; inset: 0; background: #070b13; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; }
     .loader-ring { width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(104,228,224,0.2); border-top-color: var(--cyan); animation: spin 1s linear infinite; }
 
-    /* ── LESSON PLANS: CALENDAR ── */
     .cal-wrap { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .cal-title { font-size: 16px; font-weight: 800; color: #fff; }
@@ -177,18 +176,35 @@
     .cal-nav button:active { transform: scale(0.95); }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
     .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 6px 0; }
+    .cal-dow.weekend { color: #475569; opacity: 0.6; }
     .cal-day { aspect-ratio: 1; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #cbd5e1; cursor: pointer; position: relative; transition: background 0.15s; }
     .cal-day.empty { background: transparent; cursor: default; }
+    .cal-day.weekend { opacity: 0.45; background: rgba(255,255,255,0.015); cursor: default; }
+    .cal-day.weekend.has-plan { opacity: 0.85; }
     .cal-day.has-plan { background: rgba(104,228,224,0.18); border: 1px solid rgba(104,228,224,0.4); color: #fff; }
     .cal-day.has-plan::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--cyan); }
     .cal-day.today { border: 2px solid var(--cyan); }
     .cal-day.selected { background: linear-gradient(135deg,var(--cyan),var(--purple)); color: #0a0f1e; border-color: transparent; }
     .cal-day.selected::after { background: #fff; }
-    .cal-day:active:not(.empty) { transform: scale(0.94); }
+    .cal-day:active:not(.empty):not(.weekend) { transform: scale(0.94); }
     .cal-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
     .cal-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-weight: 600; }
     .cal-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     .cal-legend .dot-submitted { background: var(--cyan); box-shadow: 0 0 8px rgba(104,228,224,0.5); }
+    .cal-legend .dot-pending { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.5); }
+    .cal-legend .dot-weekend { background: rgba(148,163,184,0.4); }
+
+    .week-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 14px; }
+    .week-pill { padding: 8px 4px; border-radius: 10px; text-align: center; background: rgba(15,23,42,0.55); border: 1px solid var(--line); }
+    .week-pill .day { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .week-pill .status { font-size: 14px; margin-top: 2px; }
+    .week-pill.ok { border-color: rgba(104,228,224,0.5); background: rgba(104,228,224,0.1); }
+    .week-pill.ok .day { color: var(--cyan); }
+    .week-pill.pending { border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.08); }
+    .week-pill.pending .day { color: #fbbf24; }
+    .week-pill.missed { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
+    .week-pill.missed .day { color: #f87171; }
+    .week-pill.today { box-shadow: 0 0 0 2px rgba(104,228,224,0.3); }
 
     .lp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 8px; }
     .lp-card { background: rgba(15,23,42,0.55); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.15s, border-color 0.15s; border-left: 4px solid var(--cyan); }
@@ -200,13 +216,6 @@
     .lp-card .lp-actions .view { background: rgba(104,228,224,0.15); color: var(--cyan); border: 1px solid var(--cyan); }
     .lp-card .lp-actions .del { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid #ef4444; }
 
-    .lp-upload-card { background: rgba(15,23,42,0.6); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
-    .lp-upload-card h3 { font-size: 16px; font-weight: 800; color: #fff; margin: 0 0 12px; }
-    .lp-upload-card p { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
-    .lp-file-input { display: block; width: 100%; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px dashed var(--line); color: #fff; margin-bottom: 12px; cursor: pointer; }
-    .lp-file-input::file-selector-button { background: rgba(104,228,224,0.15); border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-right: 12px; font-family: inherit; }
-
-    /* ── PREVIEW MODAL ── */
     .lp-preview-modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .lp-preview-modal.open { opacity: 1; pointer-events: auto; }
     .lp-preview-container { width: 100%; max-width: 900px; height: 85vh; background: #fff; border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -220,23 +229,43 @@
     .lp-preview-body .fallback { display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; height: 100%; color: #475569; text-align: center; padding: 20px; }
     .lp-preview-body .fallback a { padding: 12px 18px; border-radius: 10px; background: #0ea5e9; color: #fff; font-weight: 700; text-decoration: none; }
 
-    /* ── FEEDBACK CHAT ── */
-    .chat-wrap { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 20px; display: flex; flex-direction: column; height: 68vh; overflow: hidden; }
-    .chat-head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
-    .ch-icon { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,var(--cyan),var(--purple)); display: flex; align-items: center; justify-content: center; color: #0a0f1e; font-weight: 900; font-size: 16px; flex-shrink: 0; }
+    /* ===== Chat ===== */
+    .chat-wrap { background: rgba(15,23,42,0.72); backdrop-filter: blur(20px); border: 1px solid var(--line); border-radius: 20px; display: flex; flex-direction: column; height: 68vh; overflow: hidden; position: relative; }
+    .chat-head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.15); }
+    .ch-icon { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,var(--cyan),var(--purple)); display: flex; align-items: center; justify-content: center; color: #0a0f1e; font-weight: 900; font-size: 16px; flex-shrink: 0; }
     .ch-text h3 { font-size: 14px; color: #fff; margin: 0; font-weight: 800; }
-    .ch-text p { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
-    #fb-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.2); }
-    .chat-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
-    .chat-form .input { margin: 0; flex: 1; }
-    .chat-form .btn { width: auto; padding: 12px 18px; min-height: 44px; }
-    .msg-row { display: flex; flex-direction: column; gap: 2px; }
+    .ch-text p { font-size: 11px; color: var(--muted); margin: 2px 0 0; display: flex; align-items: center; gap: 5px; }
+    .ch-text p .online-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981; }
+    #fb-messages { flex: 1; overflow-y: auto; padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 4px; background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.3)); scroll-behavior: smooth; }
+    .chat-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); background: rgba(0,0,0,0.2); }
+    .chat-form .input { margin: 0; flex: 1; padding: 12px 14px; border-radius: 22px; border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.7); color: #e2e8f0; font-size: 14px; transition: border-color .15s, box-shadow .15s; }
+    .chat-form .input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(104,228,224,0.15); }
+    .chat-form .btn { width: 46px; min-width: 46px; height: 46px; padding: 0; border-radius: 50%; min-height: 46px; }
+    .chat-form .btn svg { width: 20px; height: 20px; }
+
+    .msg-row { display: flex; flex-direction: column; margin-bottom: 3px; max-width: 100%; animation: msgIn .22s cubic-bezier(.2,.8,.2,1); }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     .msg-row.mine { align-items: flex-end; }
     .msg-row.theirs { align-items: flex-start; }
-    .msg-bubble { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.45; word-wrap: break-word; }
-    .msg-row.mine .msg-bubble { background: linear-gradient(135deg,var(--cyan),var(--purple)); color: #0a0f1e; border-radius: 14px 14px 4px 14px; font-weight: 500; }
-    .msg-row.theirs .msg-bubble { background: rgba(255,255,255,0.08); color: #e2e8f0; border-radius: 14px 14px 14px 4px; }
-    .msg-time { font-size: 10px; color: #64748b; }
+    .msg-bubble { max-width: 80%; padding: 8px 12px 6px; border-radius: 16px; font-size: 13.5px; line-height: 1.45; word-wrap: break-word; word-break: break-word; }
+    .msg-row.mine .msg-bubble { background: linear-gradient(135deg,#0ea5e9,#06b6d4); color: #fff; border-radius: 16px 16px 4px 16px; box-shadow: 0 2px 6px rgba(6,182,212,0.25); }
+    .msg-row.theirs .msg-bubble { background: rgba(255,255,255,0.08); color: #e2e8f0; border-radius: 16px 16px 16px 4px; border: 1px solid rgba(255,255,255,0.06); }
+    .msg-row.grouped { margin-top: -6px; }
+    .msg-row.mine.grouped  .msg-bubble { border-top-right-radius: 6px; }
+    .msg-row.theirs.grouped .msg-bubble { border-top-left-radius: 6px; }
+    .msg-row.grouped .msg-meta { display: none; }
+    .msg-meta { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #64748b; margin-top: 2px; padding: 0 4px; }
+    .msg-row.mine .msg-meta { justify-content: flex-end; }
+    .msg-status { font-weight: 900; letter-spacing: -2px; font-size: 12px; line-height: 1; color: #94a3b8; display: inline-block; margin-left: 2px; }
+    .msg-status.seen { color: #38bdf8; }
+    .msg-status.pending { opacity: 0.5; letter-spacing: 0; }
+    .msg-date-sep { display: flex; align-items: center; justify-content: center; margin: 14px 0 8px; position: relative; }
+    .msg-date-sep span { background: rgba(15,23,42,0.9); padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--line); backdrop-filter: blur(6px); }
+    .chat-empty { text-align: center; color: #64748b; font-size: 13px; padding: 40px 20px; line-height: 1.6; }
+
+    .scroll-bottom-btn { position: absolute; right: 14px; bottom: 74px; width: 38px; height: 38px; border-radius: 50%; background: rgba(15,23,42,0.9); border: 1px solid var(--cyan); color: var(--cyan); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transform: translateY(6px); transition: opacity .18s, transform .18s; z-index: 5; }
+    .scroll-bottom-btn.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .scroll-bottom-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
     @media (min-width: 768px) {
       .main { padding: 24px 24px calc(90px + env(safe-area-inset-bottom)); }
@@ -268,6 +297,9 @@
       getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
       onSnapshot, query, where, orderBy, serverTimestamp, increment, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import {
+      getStorage, ref as storageRef, uploadBytes, getDownloadURL
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyAa3mJKaSFaRqN0b5YUPtQcM--SsYOzHj8",
@@ -281,6 +313,7 @@
     const firebaseApp = initializeApp(FIREBASE_CONFIG);
     const auth = getAuth(firebaseApp);
     const db = getFirestore(firebaseApp);
+    const storage = getStorage(firebaseApp);
     try { getAnalytics(firebaseApp); } catch {}
     setPersistence(auth, browserLocalPersistence).catch(() => {});
 
@@ -288,7 +321,7 @@
     const SCHOOL_LAT = -2.129565168007717;
     const SCHOOL_LNG = 29.77740799677921;
     const SCHOOL_RADIUS = 150;
-    const LP_MAX_BYTES = 700 * 1024; // 700KB — safe for Firestore 1MB doc limit
+    const LP_MAX_BYTES = 8 * 1024 * 1024; // 8MB — files now go to Firebase Storage, not inline in Firestore
     const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
     let modelsLoaded = false;
 
@@ -303,9 +336,8 @@
       watchId: null, watchingFor: null,
       lpCalYear: new Date().getFullYear(), lpCalMonth: new Date().getMonth(), lpCalSelected: null,
       loading: true,
+      lang: 'en'
     };
-
-    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || window.innerWidth < 768;
 
     const I18N = {
       en: {
@@ -338,12 +370,15 @@
         daily_weekly_trend: 'This Week',
         daily_absent: 'Absent', daily_weekend: 'Weekend',
         daily_late: 'Late', daily_early_leave: 'Early Leave',
-        lp_title: 'Lesson Plans', lp_sub: 'Tap any day to see, upload, or preview plans.',
+        lp_title: 'Lesson Plans', lp_sub: 'Tap any weekday to see, upload, or preview plans.',
         lp_upload: 'Upload New Plan', lp_select_file: 'Select File (PDF, DOCX, JPG)',
         lp_submit: 'Submit Plan', lp_uploading: 'Uploading...',
         lp_history: 'Submitted Plans', lp_no_plans: 'No lesson plans submitted yet.',
         lp_preview: 'Preview', lp_delete: 'Delete', lp_delete_confirm: 'Delete this lesson plan?',
-        lp_upload_for: 'Upload plan for', lp_selected_day: 'Selected day', lp_no_plan_selected: 'Select a day on the calendar to view or add plans.',
+        lp_upload_for: 'Upload plan for', lp_selected_day: 'Selected day', lp_no_plan_selected: 'Select a weekday on the calendar to view or add plans.',
+        lp_weekend_blocked: 'New lesson plans cannot be uploaded on weekends. You can still view past records.',
+        lp_this_week: 'This Week',
+        lp_status_submitted: 'Submitted', lp_status_pending: 'Pending', lp_status_missed: 'Missed',
         fb_title: 'Feedback & Messages', fb_sub: 'Chat directly with your admin. Replies arrive here.',
         fb_admin_name: 'Admin', fb_admin_sub: 'iMENA Smart Attendance',
         fb_placeholder: 'Type a message…', fb_send: 'Send', fb_empty: 'No messages yet. Say hello to your admin 👋',
@@ -351,7 +386,6 @@
       }
     };
     function t(k) { return (I18N[state.lang || 'en'])[k] || I18N.en[k] || k; }
-    state.lang = 'en';
 
     /* ==================== 3D BACKGROUND ==================== */
     const canvas = document.getElementById('space'), ctx = canvas.getContext('2d');
@@ -395,6 +429,10 @@
     function fmtDateTime(ts) { const d = toDate(ts); return d ? d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
     function dateKeyOf(d) { const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
     function todayLocalDateKey() { return dateKeyOf(new Date()); }
+    function isWeekend(dateKey) {
+      const d = new Date(dateKey + 'T00:00:00');
+      return d.getDay() === 0 || d.getDay() === 6;
+    }
     function distanceMeters(lat1, lng1, lat2, lng2) {
       const R = 6371000, toRad = d => d * Math.PI / 180;
       const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
@@ -437,6 +475,82 @@
       const h = Math.floor(mins / 60); const m = mins % 60;
       return h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
+    function dayLabelForDate(iso) {
+      const d = new Date(iso + 'T00:00:00');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const diff = Math.round((today - d) / 86400000);
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Yesterday';
+      return d.toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long' });
+    }
+    function shortDayName(iso) {
+      return new Date(iso + 'T00:00:00').toLocaleDateString([], { weekday: 'short' });
+    }
+
+    /* ==================== PDF.js inline renderer ==================== */
+    const PDFJS_VERSION = '3.11.174';
+    let pdfjsPromise = null;
+    function ensurePdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (pdfjsPromise) return pdfjsPromise;
+      pdfjsPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.min.js`;
+        s.onload = () => {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.js`;
+          resolve(window.pdfjsLib);
+        };
+        s.onerror = () => reject(new Error('Failed to load PDF renderer'));
+        document.head.appendChild(s);
+      });
+      return pdfjsPromise;
+    }
+
+    async function renderPdfInline(container, src) {
+      container.innerHTML = '';
+      const shell = document.createElement('div');
+      shell.style.cssText =
+        'height:100%;overflow-y:auto;background:#0b1220;padding:14px;' +
+        'display:flex;flex-direction:column;align-items:center;gap:12px;';
+      shell.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:40px 0;">Loading preview…</div>';
+      container.appendChild(shell);
+
+      try {
+        const lib = await ensurePdfJs();
+        const pdf = await lib.getDocument({ url: src }).promise;
+        shell.innerHTML = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const base = page.getViewport({ scale: 1 });
+          const target = Math.max(280, shell.clientWidth - 28);
+          const scale = Math.min(2, target / base.width);
+          const viewport = page.getViewport({ scale });
+
+          const cv = document.createElement('canvas');
+          cv.width = viewport.width;
+          cv.height = viewport.height;
+          cv.style.cssText =
+            'display:block;max-width:100%;height:auto;background:#fff;' +
+            'box-shadow:0 6px 18px rgba(0,0,0,0.4);border-radius:6px;';
+          shell.appendChild(cv);
+          await page.render({ canvasContext: cv.getContext('2d'), viewport }).promise;
+        }
+
+        if (pdf.numPages === 0) {
+          shell.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:40px 0;">This PDF has no pages.</div>';
+        }
+      } catch (err) {
+        console.error('[pdf]', err);
+        shell.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;height:100%;color:#cbd5e1;text-align:center;padding:20px;">
+            <div>Could not render this PDF inline.</div>
+            <a href="${escapeHtml(src)}" target="_blank" rel="noopener"
+               style="padding:12px 18px;border-radius:10px;background:#0ea5e9;color:#fff;font-weight:700;text-decoration:none;">Open in new tab</a>
+          </div>`;
+      }
+    }
 
     /* ==================== FACE API ==================== */
     async function loadFaceModels() {
@@ -462,7 +576,6 @@
         await loadFaceModels();
         if (!modelsLoaded) { toast('AI models failed to load. Check your internet.', 'error'); return null; }
       }
-
       return new Promise((resolve) => {
         const overlay = document.createElement('div');
         overlay.id = 'face-scan-overlay';
@@ -549,8 +662,7 @@
               <button class="btn" id="cx"></button>
             </div>
             <p class="note" id="priv"></p>
-          </main>
-        `;
+          </main>`;
         document.body.appendChild(overlay);
 
         const M = overlay.querySelector('#app');
@@ -563,15 +675,13 @@
         const snap = overlay.querySelector('#snap');
         const flash = overlay.querySelector('#flash');
 
-        let step = 0, hold = 0;
-        const NEED = [12];
+        let hold = 0; const NEED = 12;
         let stream = null;
         let frontal = null, lastBox = null, stillFrames = 0;
         let lastLumaTime = 0, lastLumaOk = true;
-
         const detOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
 
-        const t = k => {
+        const tr = k => {
           const dict = {
             ttl: isEnrollment ? 'Face Enrollment' : 'Face Verification',
             sub: isEnrollment ? 'Position your face in the oval and hold still.' : 'Hold still while we verify your identity.',
@@ -579,7 +689,7 @@
             s0: 'Look straight at the camera',
             none: 'No face detected — face the camera', near: 'Move closer', far: 'Move back a little', center: 'Center your face in the oval',
             move: 'Hold still…', dark: 'Too dark — find more light', bright: 'Too bright — avoid direct light',
-            done: 'Face Verified ✓', donesub: 'Identity confirmed. Returning to attendance...',
+            done: 'Face Verified ✓', donesub: 'Identity confirmed. Returning...',
             cont: 'Continue', retake: 'Retry',
             err: 'Camera failed to load. Allow camera access and try again.', retry: 'Try again',
             q0: 'Light', q1: 'Position', q2: 'Steady', priv: 'Face detection runs on your device — nothing is uploaded.'
@@ -589,14 +699,14 @@
 
         function render() {
           const s = M.dataset.s;
-          overlay.querySelector('#ttl').textContent = t('ttl');
-          msg.textContent = t({ idle: 'sub', load: 'load', done: 'donesub', err: 'err' }[s] || 's0');
-          go.textContent = t(s === 'done' ? 'cont' : s === 'err' ? 'retry' : 'start');
+          overlay.querySelector('#ttl').textContent = tr('ttl');
+          msg.textContent = tr({ idle: 'sub', load: 'load', done: 'donesub', err: 'err' }[s] || 's0');
+          go.textContent = tr(s === 'done' ? 'cont' : s === 'err' ? 'retry' : 'start');
           go.hidden = !/idle|done|err/.test(s);
-          cx.textContent = t(s === 'done' ? 'retake' : 'cancel');
+          cx.textContent = tr(s === 'done' ? 'retake' : 'cancel');
           cx.hidden = /idle|err/.test(s);
-          ['q0', 'q1', 'q2'].forEach(q => overlay.querySelector('#' + q + ' u').textContent = t(q));
-          overlay.querySelector('#priv').textContent = t('priv');
+          ['q0','q1','q2'].forEach(q => overlay.querySelector('#'+q+' u').textContent = tr(q));
+          overlay.querySelector('#priv').textContent = tr('priv');
         }
 
         function setState(s) {
@@ -606,35 +716,19 @@
           render();
         }
 
-        function stopCam() {
-          if (stream) stream.getTracks().forEach(x => x.stop());
-          stream = null; V.srcObject = null;
-        }
-
+        function stopCam() { if (stream) stream.getTracks().forEach(x => x.stop()); stream = null; V.srcObject = null; }
         function draw(p) {
           overlay.querySelector('#prog').style.strokeDashoffset = 100 - p * 100;
-          const steps = overlay.querySelectorAll('#steps i');
-          steps.forEach((el, i) => {
-            el.className = i < step ? 'd' : i === step ? 'c' : '';
-            el.style.setProperty('--p', (Math.min(1, hold / NEED[step] || 0) * 100) + '%');
-          });
         }
-
-        function chip(id, ok) { overlay.querySelector('#' + id).className = 'chip ' + (ok ? 'ok' : 'no'); }
+        function chip(id, ok) { overlay.querySelector('#'+id).className = 'chip ' + (ok ? 'ok' : 'no'); }
 
         async function start() {
           setState('load');
           try {
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-              audio: false
-            });
-            V.srcObject = stream;
-            await V.play();
-          } catch (e) {
-            console.error(e); stopCam(); return setState('err');
-          }
-          step = 0; hold = 0; frontal = null; lastBox = null; stillFrames = 0;
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user', width:{ideal:640}, height:{ideal:480} }, audio:false });
+            V.srcObject = stream; await V.play();
+          } catch (e) { console.error(e); stopCam(); return setState('err'); }
+          hold = 0; frontal = null; lastBox = null; stillFrames = 0;
           setState('scan'); loop();
         }
 
@@ -643,8 +737,7 @@
           if (V.readyState >= 2) {
             const vw = V.videoWidth, vh = V.videoHeight, cw = C.clientWidth, ch = C.clientHeight, d = devicePixelRatio || 1;
             if (C.width !== Math.round(cw * d)) { C.width = cw * d; C.height = ch * d; }
-            ctx.setTransform(d, 0, 0, d, 0, 0);
-            ctx.clearRect(0, 0, cw, ch);
+            ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, cw, ch);
 
             const now = performance.now();
             if (now - lastLumaTime > 500) {
@@ -653,75 +746,64 @@
               const tc = tmp.getContext('2d'); tc.drawImage(V, 0, 0, 24, 24);
               const data = tc.getImageData(0, 0, 24, 24).data;
               let luma = 0;
-              for (let i = 0; i < data.length; i += 4) luma += .299 * data[i] + .587 * data[i + 1] + .114 * data[i + 2];
-              luma /= 576;
-              lastLumaOk = luma > 50 && luma < 220;
+              for (let i = 0; i < data.length; i += 4) luma += .299*data[i] + .587*data[i+1] + .114*data[i+2];
+              luma /= 576; lastLumaOk = luma > 50 && luma < 220;
             }
             const lightOk = lastLumaOk;
-
             const detection = await faceapi.detectSingleFace(V, detOptions).withFaceLandmarks();
-
             let key = 's0', fit = false, still = false;
 
-            if (!detection) {
-              hold = Math.max(0, hold - 2);
-              key = 'none'; stillFrames = 0;
-            } else {
+            if (!detection) { hold = Math.max(0, hold - 2); key = 'none'; stillFrames = 0; }
+            else {
               const box = detection.detection.box;
-              const fx = box.x + box.width / 2, fy = box.y + box.height / 2;
-              const ex = vw / 2, ey = vh / 2;
+              const fx = box.x + box.width/2, fy = box.y + box.height/2;
+              const ex = vw/2, ey = vh/2;
               const size = box.height / vh;
-              fit = Math.abs(fx - ex) / vw < 0.22 && Math.abs(fy - ey) / vh < 0.22 && size > 0.25 && size < 0.75;
-
+              fit = Math.abs(fx-ex)/vw < 0.22 && Math.abs(fy-ey)/vh < 0.22 && size > 0.25 && size < 0.75;
               if (lastBox) {
                 const dist = Math.hypot(box.x - lastBox.x, box.y - lastBox.y);
-                if (dist < 6) stillFrames++; else stillFrames = Math.max(0, stillFrames - 1);
+                if (dist < 6) stillFrames++; else stillFrames = Math.max(0, stillFrames-1);
               }
               lastBox = { x: box.x, y: box.y };
               still = stillFrames >= 3;
 
-              const pts = detection.landmarks.positions.map(p => [cw - (p.x * cw / vw), p.y * ch / vh]);
-              const prog = Math.min(1, hold / NEED[0]);
-              ctx.fillStyle = `rgba(120,255,235,${.45 + .4 * prog})`;
-              for (const p of pts) ctx.fillRect(p[0] - .8, p[1] - .8, 1.6, 1.6);
+              const pts = detection.landmarks.positions.map(p => [cw - (p.x*cw/vw), p.y*ch/vh]);
+              const prog = Math.min(1, hold/NEED);
+              ctx.fillStyle = `rgba(120,255,235,${.45 + .4*prog})`;
+              for (const p of pts) ctx.fillRect(p[0]-.8, p[1]-.8, 1.6, 1.6);
 
               const ok = lightOk && fit && still;
               hold = ok ? hold + 1 : Math.max(0, hold - 2);
               key = !lightOk ? 'dark' : !fit ? (size <= 0.25 ? 'near' : size >= 0.75 ? 'far' : 'center') : !still ? 'move' : 's0';
 
-              if (hold >= NEED[0]) {
+              if (hold >= NEED) {
                 const capture = await faceapi.detectSingleFace(V, detOptions).withFaceLandmarks().withFaceDescriptor();
                 if (capture) {
                   const cv = document.createElement('canvas'); cv.width = vw; cv.height = vh;
                   cv.getContext('2d').drawImage(V, 0, 0);
                   const mirrorCv = document.createElement('canvas'); mirrorCv.width = vw; mirrorCv.height = vh;
-                  const mCtx = mirrorCv.getContext('2d'); mCtx.translate(vw, 0); mCtx.scale(-1, 1); mCtx.drawImage(cv, 0, 0);
+                  const mCtx = mirrorCv.getContext('2d'); mCtx.translate(vw,0); mCtx.scale(-1,1); mCtx.drawImage(cv, 0, 0);
                   frontal = { photo: mirrorCv.toDataURL('image/jpeg', 0.85), descriptor: capture.descriptor };
                   flash.classList.add('fire');
                   setTimeout(() => flash.classList.remove('fire'), 400);
                   navigator.vibrate && navigator.vibrate(20);
-                  finish();
-                  return;
-                } else { hold = 0; }
+                  finish(); return;
+                } else hold = 0;
               }
             }
-
             chip('q0', lightOk); chip('q1', fit); chip('q2', still);
             overlay.querySelector('#frame').classList.toggle('on', !!detection);
-            if (msg.textContent !== t(key)) {
-              msg.textContent = t(key);
+            if (msg.textContent !== tr(key)) {
+              msg.textContent = tr(key);
               msg.classList.toggle('warn', !/^s\d$/.test(key));
             }
-            draw(Math.min(1, hold / NEED[0]));
+            draw(Math.min(1, hold/NEED));
           }
           requestAnimationFrame(loop);
         }
 
         function finish() {
-          stopCam();
-          snap.src = frontal.photo;
-          draw(1);
-          setState('done');
+          stopCam(); snap.src = frontal.photo; draw(1); setState('done');
           navigator.vibrate && navigator.vibrate([30, 40, 30]);
           setTimeout(() => {
             if (M.dataset.s === 'done') {
@@ -770,8 +852,8 @@
       }
       const result = await scanFaceUI(false);
       if (!result) return false;
-      const storedDescriptor = new Float32Array(state.profile.faceDescriptor);
-      const distance = faceapi.euclideanDistance(storedDescriptor, result.descriptor);
+      const stored = new Float32Array(state.profile.faceDescriptor);
+      const distance = faceapi.euclideanDistance(stored, result.descriptor);
       if (distance < 0.50) return result.selfie;
       toast('Face does not match. Access denied.', 'error');
       return false;
@@ -797,8 +879,8 @@
     };
     function dayHash(salt) {
       const d = new Date(); const uid = state.user?.uid || 'guest';
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}|${uid}|${salt || ''}`;
-      let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0; return h;
+      const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}|${uid}|${salt || ''}`;
+      let h = 0; for (let i = 0; i < key.length; i++) h = (h*31 + key.charCodeAt(i)) >>> 0; return h;
     }
     function pickDaily(list, salt) { return list[dayHash(salt) % list.length]; }
     function getGreetingInfo() {
@@ -806,11 +888,11 @@
       const fullName = state.profile?.fullName || state.user?.displayName || state.user?.email || 'Friend';
       const name = (fullName.split(/[\s@]/)[0] || 'Friend');
       let slot, greetings, emoji;
-      if (h >= 5 && h < 11) { slot = 'morning'; emoji = '☀️'; greetings = ['Good morning','Hello','Hey','Welcome back','Rise and shine','Top of the morning']; }
-      else if (h >= 11 && h < 14) { slot = 'lunch'; emoji = '🍽️'; greetings = ['Have a good lunch','Hello','Hey','Good day','Enjoy your lunch']; }
-      else if (h >= 14 && h < 18) { slot = 'afternoon'; emoji = '🌤️'; greetings = ['Good afternoon','Hello','Hey','Welcome back','Good day']; }
-      else if (h >= 18 && h < 22) { slot = 'evening'; emoji = '🌆'; greetings = ['Good evening','Hello','Hey','Welcome','Nice to see you']; }
-      else { slot = 'night'; emoji = '🌙'; greetings = ['Good night','Hello','Hey','Working late','Welcome']; }
+      if (h >= 5 && h < 11) { slot='morning'; emoji='☀️'; greetings=['Good morning','Hello','Hey','Welcome back','Rise and shine','Top of the morning']; }
+      else if (h >= 11 && h < 14) { slot='lunch'; emoji='🍽️'; greetings=['Have a good lunch','Hello','Hey','Good day','Enjoy your lunch']; }
+      else if (h >= 14 && h < 18) { slot='afternoon'; emoji='🌤️'; greetings=['Good afternoon','Hello','Hey','Welcome back','Good day']; }
+      else if (h >= 18 && h < 22) { slot='evening'; emoji='🌆'; greetings=['Good evening','Hello','Hey','Welcome','Nice to see you']; }
+      else { slot='night'; emoji='🌙'; greetings=['Good night','Hello','Hey','Working late','Welcome']; }
       return { name, slot, emoji, greeting: pickDaily(greetings, 'greet'), sub: pickDaily(GREET_SUBLINES[slot], 'sub') };
     }
     function greetingCardHtml() {
@@ -825,15 +907,14 @@
     }
     function showThankYouModal(isDaily = false) {
       const g = getGreetingInfo();
-      const closings = { morning: ['Have a great morning','Enjoy your morning'], lunch: ['Have a good lunch','Enjoy your lunch'], afternoon: ['Have a great afternoon','Enjoy the rest of your day'], evening: ['Have a good evening','Enjoy your evening'], night: ['Have a good night','Sleep well'] };
+      const closings = { morning:['Have a great morning','Enjoy your morning'], lunch:['Have a good lunch','Enjoy your lunch'], afternoon:['Have a great afternoon','Enjoy the rest of your day'], evening:['Have a good evening','Enjoy your evening'], night:['Have a good night','Sleep well'] };
       let closing = pickDaily(closings[g.slot] || closings.afternoon, 'close');
-      if ([0, 6].includes(new Date().getDay())) closing += ' and a lovely weekend';
+      if ([0,6].includes(new Date().getDay())) closing += ' and a lovely weekend';
       let title, msg;
       if (isDaily) { title = pickDaily(['Have a great day at school!','You are marked present.','Ready for a great day?'], 'thank_daily'); msg = 'Your arrival has been recorded.'; }
       else { title = pickDaily(['I hope you enjoyed your CPD!','Thanks for attending — your growth matters.','Another session complete — proud of you!','Great job showing up today.','Your dedication is inspiring.','Every CPD makes you a stronger teacher.'], 'thank'); msg = t('thanks_generic'); }
       const emoji = pickDaily(['🎉','🌟','🙌','💪','✨','🎓'], 'emoji');
-      const modal = document.createElement('div');
-      modal.className = 'thank-modal';
+      const modal = document.createElement('div'); modal.className = 'thank-modal';
       modal.innerHTML = `<div class="thank-card"><div class="thank-emoji">${emoji}</div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(msg)}</p><p class="closing">${escapeHtml(closing)}, ${escapeHtml(g.name)}.</p><button class="btn btn-primary" id="thank-close">${escapeHtml(t('continue_btn'))}</button></div>`;
       document.body.appendChild(modal);
       requestAnimationFrame(() => modal.classList.add('open'));
@@ -871,16 +952,15 @@
       const name = state.profile?.fullName || state.user?.displayName || 'User';
       const src = avatarUrlFor(state.user?.photoURL || state.profile?.photoURL, name, 128);
       const fallback = avatarUrlFor(null, name, 128);
-
       const faceStatusHtml = state.profile?.faceDescriptor
-        ? `<div style="margin-top:16px; text-align:center;">
-             <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; margin-bottom:6px; font-weight:700">Registered Face</div>
-             <img src="${state.profile.faceSelfie}" style="width:80px; height:80px; border-radius:12px; object-fit:cover; border:2px solid var(--cyan); margin-bottom:8px;" />
-             <br/><button id="btn-delete-face" style="color:#f87171; font-size:12px; font-weight:700; text-decoration:underline;">Delete & Re-scan</button>
+        ? `<div style="margin-top:16px;text-align:center;">
+             <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;margin-bottom:6px;font-weight:700">Registered Face</div>
+             <img src="${state.profile.faceSelfie}" style="width:80px;height:80px;border-radius:12px;object-fit:cover;border:2px solid var(--cyan);margin-bottom:8px;" />
+             <br/><button id="btn-delete-face" style="color:#f87171;font-size:12px;font-weight:700;text-decoration:underline;">Delete & Re-scan</button>
            </div>`
-        : `<div style="margin-top:16px; text-align:center;">
-             <div style="font-size:12px; color:#f87171; font-weight:700;">Face Not Enrolled</div>
-             <button id="btn-enroll-face" class="btn-face" style="margin-top:8px; font-size:13px; padding:10px;">Enroll Now</button>
+        : `<div style="margin-top:16px;text-align:center;">
+             <div style="font-size:12px;color:#f87171;font-weight:700;">Face Not Enrolled</div>
+             <button id="btn-enroll-face" class="btn-face" style="margin-top:8px;font-size:13px;padding:10px;">Enroll Now</button>
            </div>`;
 
       return `
@@ -969,7 +1049,7 @@
 
         const q = query(collection(db, 'daily_attendance'), where('teacherId', '==', state.user.uid));
         state.subDaily = onSnapshot(q, snap => {
-          state.myDailyRecords = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.date.localeCompare(a.date));
+          state.myDailyRecords = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
           if (state.view === 'teacher') renderTeacher();
         }, err => console.error(err));
       }
@@ -1005,6 +1085,13 @@
     }
 
     function renderTeacher() {
+      // Soft render for feedback: dedicated listeners already patch #fb-messages /
+      // the tab badge directly, so a full teardown here would blow away whatever
+      // the teacher is mid-typing and restart every message's entrance animation
+      // every time an unrelated collection (cpds, attendance, settings...) updates.
+      if (state.teacherTab === 'feedback' && state.view === 'teacher' && document.getElementById('chat-wrap')) {
+        return;
+      }
       const active = state.myAttendances.find(a => a.state === 'active');
       let body = '';
       if (state.teacherTab === 'lesson_plans') body = renderTeacherLessonPlans();
@@ -1045,9 +1132,9 @@
         let distanceLine = '';
         if (active.liveLat != null && liveCpd) {
           const d = distanceMeters(active.liveLat, active.liveLng, liveCpd.venueLat, liveCpd.venueLng);
-          distanceLine = ` · ${Math.round(d)}m from venue`;
+          distanceLine = `${Math.round(d)}m from venue`;
         }
-        hero = `<div class="t-hero t-hero-active"><h1><span class="status-pulse"></span>${t('currently_attending')}</h1><p><strong style="color:#fff">${escapeHtml(active.cpdTitle)}</strong>${distanceLine ? `<br><span style="font-size:12px">${distanceLine.trim()}</span>` : ''}</p><button data-end="${active.id}" class="btn btn-danger" style="font-size:17px; padding:20px;">■ ${t('end')}</button></div>`;
+        hero = `<div class="t-hero t-hero-active"><h1><span class="status-pulse"></span>${t('currently_attending')}</h1><p><strong style="color:#fff">${escapeHtml(active.cpdTitle || '')}</strong>${distanceLine ? `<br><span style="font-size:12px">${distanceLine}</span>` : ''}</p><button data-end="${active.id}" class="btn btn-danger" style="font-size:17px; padding:20px;">■ ${t('end')}</button></div>`;
       } else if (nextUpcoming && cpdStatus(nextUpcoming) === 'ongoing') {
         hero = `<div class="t-hero"><h1>🟢 ${t('live')}</h1><p><strong style="color:#fff">${escapeHtml(nextUpcoming.title)}</strong> · ${fmtTime(nextUpcoming.startTime)} – ${fmtTime(nextUpcoming.endTime)}</p><button data-attend="${nextUpcoming.id}" class="btn btn-primary" style="font-size:17px; padding:20px;">▶ ${t('attend')}</button></div>`;
       } else if (nextUpcoming) {
@@ -1078,6 +1165,39 @@
       return `${greetingCardHtml()}${hero}${todayCards}${upcomingCards}${emptyBlock}`;
     }
 
+    function teacherSessionCard(c, active) {
+      const status = cpdStatus(c);
+      const hasAttended = state.myAttendances.some(a => a.cpdId === c.id && a.state === 'completed');
+      const isActive = active && active.cpdId === c.id;
+      let badge, action = '';
+      if (status === 'ongoing') {
+        badge = `<span class="badge badge-live">● ${t('live')}</span>`;
+        if (isActive) {
+          action = `<button data-end="${active.id}" class="btn btn-danger" style="margin-top:12px;">■ ${t('end')}</button>`;
+        } else if (!hasAttended) {
+          action = `<button data-attend="${c.id}" class="btn btn-primary" style="margin-top:12px;">▶ ${t('attend')}</button>`;
+        } else {
+          action = `<span class="badge badge-verified">✓ ${t('verified')}</span>`;
+        }
+      } else if (status === 'upcoming') {
+        badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
+      } else {
+        badge = hasAttended
+          ? `<span class="badge badge-verified">✓ ${t('verified')}</span>`
+          : `<span class="badge badge-ended">${t('ended')}</span>`;
+      }
+      const cls = isActive ? 'live' : (status === 'ended' ? 'ended' : '');
+      return `<div class="t-session-card ${cls}">
+        <h3>${escapeHtml(c.title || 'CPD Session')}</h3>
+        <div class="t-session-meta">
+          ${badge}
+          <span>🕐 ${fmtTime(c.startTime)} – ${fmtTime(c.endTime)}</span>
+          ${c.venueName ? `<span>📍 ${escapeHtml(c.venueName)}</span>` : ''}
+        </div>
+        ${action}
+      </div>`;
+    }
+
     /* ==================== DAILY TAB ==================== */
     function renderTeacherDaily() {
       const today = todayLocalDateKey();
@@ -1088,10 +1208,10 @@
       const schoolStartM = state.settings.startTime % 60;
       const schoolEndH = Math.floor(state.settings.endTime / 60);
       const schoolEndM = state.settings.endTime % 60;
-      const schoolStartStr = `${String(schoolStartH).padStart(2,'0')}:${String(schoolStartM).padStart(2,'0')} AM`;
-      const schoolEndStr = `${String(schoolEndH > 12 ? schoolEndH-12 : schoolEndH).padStart(2,'0')}:${String(schoolEndM).padStart(2,'0')} PM`;
+      const schoolStartStr = `${String(schoolStartH).padStart(2,'0')}:${String(schoolStartM).padStart(2,'0')}`;
+      const schoolEndStr = `${String(schoolEndH).padStart(2,'0')}:${String(schoolEndM).padStart(2,'0')}`;
 
-      let todayCard = '';
+      let todayCard;
       if (!daily) {
         todayCard = `<div class="daily-card">
           <h2>🏫 ${t('daily_title')}</h2>
@@ -1135,7 +1255,6 @@
 
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthRecords = state.myDailyRecords.filter(r => new Date(r.date + 'T00:00:00') >= monthStart);
-
       let lateCount = 0, earlyLeaveCount = 0;
       let totalArrivalMs = 0, totalArrivalCount = 0;
       let totalDepartureMs = 0, totalDepartureCount = 0;
@@ -1153,15 +1272,13 @@
         const ampm = h >= 12 ? 'PM' : 'AM'; const h12 = h % 12 || 12;
         return `${h12}:${String(min).padStart(2,'0')} ${ampm}`;
       };
-
       const analyticsHtml = `
         <div class="analytics-grid" style="margin-top:24px">
           <div class="analytics-card"><div class="val" style="color:var(--cyan)">${monthRecords.length}</div><div class="lbl">${t('daily_stat_present')}</div></div>
           <div class="analytics-card"><div class="val" style="color:#fbbf24">${lateCount}</div><div class="lbl">${t('daily_late')}</div></div>
           <div class="analytics-card"><div class="val" style="color:var(--lime)">${formatClock(avgInMin)}</div><div class="lbl">${t('daily_stat_avg_in')}</div></div>
           <div class="analytics-card"><div class="val" style="color:var(--orange)">${formatClock(avgOutMin)}</div><div class="lbl">${t('daily_stat_avg_out')}</div></div>
-        </div>
-      `;
+        </div>`;
 
       const currentDay = now.getDay() === 0 ? 7 : now.getDay();
       const monday = new Date(now); monday.setDate(now.getDate() - currentDay + 1);
@@ -1182,7 +1299,7 @@
         const isLate = r.lateMinutes > 0; const isEarly = r.earlyLeaveMinutes > 0;
         const signOut = toDate(r.signOutAt);
         return `<div class="hist-item">
-          <div class="hist-info"><h4>${new Date(r.date).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })}</h4><p>In: ${fmtTime(r.signInAt)} &nbsp;|&nbsp; Out: ${signOut ? fmtTime(r.signOutAt) : '—'}</p></div>
+          <div class="hist-info"><h4>${new Date(r.date + 'T00:00:00').toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' })}</h4><p>In: ${fmtTime(r.signInAt)} &nbsp;|&nbsp; Out: ${signOut ? fmtTime(r.signOutAt) : '—'}</p></div>
           <div style="display:flex; gap:4px; flex-direction:column; align-items:flex-end;">
             ${isLate ? `<span class="badge badge-late">Late ${formatMins(r.lateMinutes)}</span>` : ''}
             ${isEarly ? `<span class="badge badge-absent">Left Early ${formatMins(r.earlyLeaveMinutes)}</span>` : ''}
@@ -1194,7 +1311,96 @@
       return `${todayCard}${analyticsHtml}${chartHtml}<div class="section-title" style="margin-top:24px;">Recent History</div>${recentHistory || `<div class="empty"><strong>No recent records</strong></div>`}`;
     }
 
-    /* ==================== LESSON PLANS (CALENDAR) ==================== */
+    /* ==================== STATS ==================== */
+    function renderTeacherStats() {
+      const completed = state.myAttendances.filter(a => a.state === 'completed' && a.endTime && a.startTime);
+      let totalMs = 0;
+      completed.forEach(a => {
+        const s = toDate(a.startTime)?.getTime();
+        const e = toDate(a.endTime)?.getTime();
+        if (s && e) totalMs += (e - s);
+      });
+      const totalHours = (totalMs / 3600000).toFixed(1);
+      const verified = completed.filter(a => a.verifiedOut).length;
+      const verifiedRate = completed.length > 0 ? Math.round((verified / completed.length) * 100) : 0;
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const thisMonth = state.myAttendances.filter(a => {
+        const d = toDate(a.startTime);
+        return d && d >= monthStart;
+      }).length;
+
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const next = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        const count = state.myAttendances.filter(a => {
+          const tt = toDate(a.startTime);
+          return tt && tt >= d && tt < next;
+        }).length;
+        months.push({ label: d.toLocaleDateString([], { month: 'short' }), count });
+      }
+      const maxCount = Math.max(1, ...months.map(m => m.count));
+      const chartBars = months.map(m => `
+        <div class="chart-col">
+          <div class="chart-val">${m.count}</div>
+          <div class="chart-bar ${m.count > 0 ? 'active' : ''}" style="height:${(m.count / maxCount) * 100}%"></div>
+          <div class="chart-label">${m.label}</div>
+        </div>`).join('');
+
+      return `
+        <h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;">${t('stats')}</h1>
+        <div class="analytics-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="analytics-card"><div class="val" style="color:var(--cyan)">${completed.length}</div><div class="lbl">${t('sessions_attended')}</div></div>
+          <div class="analytics-card"><div class="val" style="color:var(--lime)">${totalHours}</div><div class="lbl">${t('total_hours')}</div></div>
+          <div class="analytics-card"><div class="val" style="color:var(--purple)">${verifiedRate}%</div><div class="lbl">${t('verified_rate')}</div></div>
+          <div class="analytics-card"><div class="val" style="color:var(--orange)">${thisMonth}</div><div class="lbl">${t('this_month')}</div></div>
+        </div>
+        <div class="chart-container">
+          <h3>${t('sessions_this_month')}</h3>
+          <div class="chart-bars">${chartBars}</div>
+        </div>`;
+    }
+
+    /* ==================== HISTORY ==================== */
+    function renderTeacherHistory() {
+      const completed = state.myAttendances
+        .filter(a => a.state === 'completed')
+        .sort((a, b) => (toDate(b.startTime)?.getTime() || 0) - (toDate(a.startTime)?.getTime() || 0));
+      if (completed.length === 0) {
+        return `<h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;">${t('history')}</h1>
+          <div class="empty"><strong>${t('no_history')}</strong></div>`;
+      }
+      const byMonth = {};
+      completed.forEach(a => {
+        const d = toDate(a.startTime);
+        if (!d) return;
+        const key = d.toLocaleDateString([], { month: 'long', year: 'numeric' });
+        (byMonth[key] = byMonth[key] || []).push(a);
+      });
+      let html = `<h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;">${t('attendance_history')}</h1>`;
+      for (const [month, items] of Object.entries(byMonth)) {
+        html += `<div class="hist-month">${escapeHtml(month)}</div>`;
+        items.forEach(a => {
+          const s = toDate(a.startTime), e = toDate(a.endTime);
+          let dur = '—';
+          if (s && e) dur = formatMins(Math.round((e - s) / 60000));
+          const badge = a.verifiedOut
+            ? `<span class="badge badge-verified">${t('verified')}</span>`
+            : `<span class="badge badge-flagged">${t('flagged')}</span>`;
+          html += `<div class="hist-item">
+            <div class="hist-info">
+              <h4>${escapeHtml(a.cpdTitle || 'CPD Session')}</h4>
+              <p>${fmtDate(a.startTime)} · ${fmtTime(a.startTime)} – ${e ? fmtTime(a.endTime) : '—'} · ${dur}</p>
+            </div>
+            ${badge}
+          </div>`;
+        });
+      }
+      return html;
+    }
+
+    /* ==================== LESSON PLANS ==================== */
     function renderTeacherLessonPlans() {
       const year = state.lpCalYear, month = state.lpCalMonth;
       const first = new Date(year, month, 1);
@@ -1203,7 +1409,6 @@
       const startDow = first.getDay();
       const monthLabel = first.toLocaleDateString([], { month: 'long', year: 'numeric' });
 
-      // Group plans by date — prefer forDate, fallback to submittedAt
       const plansByDay = {};
       state.myLessonPlans.forEach(p => {
         let dateKey = p.forDate;
@@ -1221,24 +1426,48 @@
       for (let d = 1; d <= daysInMonth; d++) {
         const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const has = !!plansByDay[key];
-        const cls = ['cal-day', has ? 'has-plan' : '', key === todayKey ? 'today' : '', key === state.lpCalSelected ? 'selected' : ''].filter(Boolean).join(' ');
+        const weekend = isWeekend(key);
+        const cls = ['cal-day', has ? 'has-plan' : '', weekend ? 'weekend' : '', key === todayKey ? 'today' : '', key === state.lpCalSelected ? 'selected' : ''].filter(Boolean).join(' ');
         cells += `<div class="${cls}" data-lp-date="${key}">${d}</div>`;
       }
 
-      // Selected day view
+      const now = new Date();
+      const dow = now.getDay() === 0 ? 7 : now.getDay();
+      const monday = new Date(now); monday.setDate(now.getDate() - dow + 1);
+      const weekdays = Array.from({length: 5}, (_, i) => {
+        const d = new Date(monday); d.setDate(monday.getDate() + i);
+        const key = dateKeyOf(d);
+        const plans = plansByDay[key] || [];
+        const has = plans.length > 0;
+        const isToday = key === todayKey;
+        const isPast = key < todayKey;
+        let pillClass = '', statusIcon = '';
+        if (has) { pillClass = 'ok'; statusIcon = '✓'; }
+        else if (isPast) { pillClass = 'missed'; statusIcon = '✗'; }
+        else { pillClass = 'pending'; statusIcon = '·'; }
+        if (isToday) pillClass += ' today';
+        return `<div class="week-pill ${pillClass}">
+          <div class="day">${shortDayName(key)}</div>
+          <div class="status">${statusIcon}</div>
+        </div>`;
+      }).join('');
+
       let detailHtml = '';
       if (state.lpCalSelected) {
         const selectedPlans = plansByDay[state.lpCalSelected] || [];
         const dayLabel = new Date(state.lpCalSelected + 'T00:00:00').toLocaleDateString([], { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+        const selWeekend = isWeekend(state.lpCalSelected);
         const isPast = state.lpCalSelected < todayKey;
-        const isFuture = state.lpCalSelected > todayKey;
-        const canUpload = !isFuture || true; // allow upload for any day
-
+        const canUpload = !selWeekend && !isPast;
+        let notice = '';
+        if (selWeekend) notice = `<div style="padding:10px 12px; border-radius:10px; background:rgba(148,163,184,0.1); border:1px solid rgba(148,163,184,0.3); color:var(--muted); font-size:12px; margin-bottom:10px;">🗓 ${t('lp_weekend_blocked')}</div>`;
+        else if (isPast && selectedPlans.length === 0) notice = `<div style="padding:10px 12px; border-radius:10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); color:#f87171; font-size:12px; margin-bottom:10px;">Past day — no plan was submitted.</div>`;
         detailHtml = `
-          <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <span>${escapeHtml(dayLabel)}</span>
             ${canUpload ? `<button id="btn-upload-lp" style="background:rgba(104,228,224,0.15);border:1px solid var(--cyan);color:var(--cyan);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:800;">+ ${t('lp_upload')}</button>` : ''}
           </div>
+          ${notice}
           ${selectedPlans.length === 0
             ? `<div class="empty"><strong>${t('lp_no_plans')}</strong></div>`
             : `<div class="lp-grid">${selectedPlans.map(p => `
@@ -1249,8 +1478,7 @@
                     <button class="view" data-lp-view="${p.id}">👁 ${t('lp_preview')}</button>
                     <button class="del" data-lp-del="${p.id}">${t('lp_delete')}</button>
                   </div>
-                </div>`).join('')}</div>`}
-        `;
+                </div>`).join('')}</div>`}`;
       } else {
         detailHtml = `<div class="empty"><strong>${t('lp_no_plan_selected')}</strong></div>`;
       }
@@ -1259,7 +1487,9 @@
         <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;text-shadow:0 0 20px rgba(0,255,204,0.35);">${t('lp_title')}</h1>
         <p style="font-size:12px;color:#94a3b8;margin:0 0 16px">${t('lp_sub')}</p>
         <div class="cal-wrap">
-          <div class="cal-header">
+          <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">${t('lp_this_week')}</div>
+          <div class="week-strip">${weekdays}</div>
+          <div class="cal-header" style="margin-top:16px;">
             <div class="cal-title">${escapeHtml(monthLabel)}</div>
             <div class="cal-nav">
               <button data-lp-cal-prev>‹</button>
@@ -1268,11 +1498,13 @@
             </div>
           </div>
           <div class="cal-grid">
-            ${['S','M','T','W','T','F','S'].map(d => `<div class="cal-dow">${d}</div>`).join('')}
+            ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => `<div class="cal-dow ${i === 0 || i === 6 ? 'weekend' : ''}">${d}</div>`).join('')}
             ${cells}
           </div>
           <div class="cal-legend">
             <span><i class="dot-submitted"></i> Plan submitted</span>
+            <span><i class="dot-pending"></i> Pending</span>
+            <span><i class="dot-weekend"></i> Weekend</span>
           </div>
         </div>
         ${detailHtml}
@@ -1296,55 +1528,36 @@
             </div>
             <form id="lp-form">
               <input type="text" name="title" placeholder="Plan Title (e.g. Week 1 - Mathematics)" required style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); background:rgba(0,0,0,0.3); color:#fff; margin-bottom:12px;" />
-              <input type="file" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="lp-file-input" id="lp-file" />
+              <input type="file" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="lp-file-input" id="lp-file" style="display:block; width:100%; padding:12px; border-radius:12px; background:rgba(0,0,0,0.3); border:1px dashed var(--line); color:#fff; margin-bottom:12px; cursor:pointer;" />
               <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">PDF, DOCX, JPG, PNG · Max 700 KB</div>
               <button type="submit" id="btn-submit-lp" class="btn btn-primary" style="padding:14px; font-size:15px;">${t('lp_submit')}</button>
             </form>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function bindLessonPlanEvents() {
-      // Calendar navigation
-      document.querySelectorAll('[data-lp-cal-prev]').forEach(b => b.onclick = () => {
-        state.lpCalMonth--; if (state.lpCalMonth < 0) { state.lpCalMonth = 11; state.lpCalYear--; }
-        renderTeacher();
-      });
-      document.querySelectorAll('[data-lp-cal-next]').forEach(b => b.onclick = () => {
-        state.lpCalMonth++; if (state.lpCalMonth > 11) { state.lpCalMonth = 0; state.lpCalYear++; }
-        renderTeacher();
-      });
+      document.querySelectorAll('[data-lp-cal-prev]').forEach(b => b.onclick = () => { state.lpCalMonth--; if (state.lpCalMonth < 0) { state.lpCalMonth = 11; state.lpCalYear--; } renderTeacher(); });
+      document.querySelectorAll('[data-lp-cal-next]').forEach(b => b.onclick = () => { state.lpCalMonth++; if (state.lpCalMonth > 11) { state.lpCalMonth = 0; state.lpCalYear++; } renderTeacher(); });
       document.querySelectorAll('[data-lp-cal-today]').forEach(b => b.onclick = () => {
         const n = new Date(); state.lpCalYear = n.getFullYear(); state.lpCalMonth = n.getMonth();
-        state.lpCalSelected = todayLocalDateKey();
-        renderTeacher();
+        state.lpCalSelected = todayLocalDateKey(); renderTeacher();
       });
-      document.querySelectorAll('[data-lp-date]').forEach(el => el.onclick = () => {
-        state.lpCalSelected = el.dataset.lpDate;
-        renderTeacher();
-      });
-      // Preview / delete per plan
+      document.querySelectorAll('[data-lp-date]').forEach(el => el.onclick = () => { state.lpCalSelected = el.dataset.lpDate; renderTeacher(); });
       document.querySelectorAll('[data-lp-view]').forEach(el => el.onclick = (e) => {
         e.stopPropagation();
         const plan = state.myLessonPlans.find(p => p.id === el.dataset.lpView);
         if (plan) openLessonPlanPreview(plan);
       });
-      document.querySelectorAll('[data-lp-del]').forEach(el => el.onclick = (e) => {
-        e.stopPropagation();
-        deleteLessonPlan(el.dataset.lpDel);
-      });
-      // Upload button
+      document.querySelectorAll('[data-lp-del]').forEach(el => el.onclick = (e) => { e.stopPropagation(); deleteLessonPlan(el.dataset.lpDel); });
       const btnUpload = document.getElementById('btn-upload-lp');
       if (btnUpload) btnUpload.onclick = openUploadModal;
-      // Upload modal
       const uClose = document.getElementById('lp-upload-close');
       const uModal = document.getElementById('lp-upload-modal');
       if (uClose) uClose.onclick = closeUploadModal;
       if (uModal) uModal.onclick = (e) => { if (e.target === uModal) closeUploadModal(); };
       const form = document.getElementById('lp-form');
       if (form) form.onsubmit = submitLessonPlan;
-      // Preview modal
       const pModal = document.getElementById('lp-preview-modal');
       if (pModal) {
         pModal.onclick = (e) => { if (e.target === pModal) closeLessonPlanPreview(); };
@@ -1354,6 +1567,8 @@
     }
 
     function openUploadModal() {
+      if (state.lpCalSelected && isWeekend(state.lpCalSelected)) { toast(t('lp_weekend_blocked'), 'warn'); return; }
+      if (state.lpCalSelected && state.lpCalSelected < todayLocalDateKey()) { toast('Cannot upload a plan for a past date.', 'warn'); return; }
       const m = document.getElementById('lp-upload-modal');
       if (!m) return;
       const label = document.getElementById('lp-upload-date-label');
@@ -1362,10 +1577,7 @@
       }
       m.classList.add('open');
     }
-    function closeUploadModal() {
-      const m = document.getElementById('lp-upload-modal');
-      if (m) m.classList.remove('open');
-    }
+    function closeUploadModal() { const m = document.getElementById('lp-upload-modal'); if (m) m.classList.remove('open'); }
 
     async function submitLessonPlan(e) {
       e.preventDefault();
@@ -1375,84 +1587,117 @@
       const file = fileInput.files[0];
       const title = form.elements.title.value.trim();
       if (!file || !title) return;
-      if (file.size > LP_MAX_BYTES) { toast(`File too large (${(file.size/1024).toFixed(0)}KB). Max 700KB.`, 'error'); return; }
+      if (state.lpCalSelected && isWeekend(state.lpCalSelected)) { toast(t('lp_weekend_blocked'), 'error'); return; }
+      if (file.size > LP_MAX_BYTES) { toast(`File too large (${(file.size/1024/1024).toFixed(1)}MB). Max ${(LP_MAX_BYTES/1024/1024).toFixed(0)}MB.`, 'error'); return; }
       btn.disabled = true; btn.textContent = t('lp_uploading');
+      try {
+        const forDate = state.lpCalSelected || todayLocalDateKey();
+        // Upload to Firebase Storage so the file becomes a real shareable link —
+        // admin and the teacher can both open/preview it without downloading,
+        // instead of the old approach of embedding the whole file as base64 in Firestore.
+        const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+        const path = `lesson_plans/${state.user.uid}/${Date.now()}_${safeName}`;
+        const sRef = storageRef(storage, path);
+        await uploadBytes(sRef, file, { contentType: file.type || 'application/octet-stream' });
+        const fileUrl = await getDownloadURL(sRef);
 
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          await addDoc(collection(db, 'lesson_plans'), {
-            teacherId: state.user.uid,
-            teacherName: state.profile?.fullName || state.user.email,
-            title: title,
-            fileName: file.name,
-            fileType: file.type,
-            fileBase64: reader.result,
-            submittedAt: serverTimestamp(),
-            forDate: state.lpCalSelected || todayLocalDateKey()
-          });
-          form.reset();
-          closeUploadModal();
-          toast('Lesson plan submitted!', 'success');
-        } catch (err) {
-          console.error(err);
-          toast(err.message || 'Upload failed.', 'error');
-        } finally {
-          btn.disabled = false; btn.textContent = t('lp_submit');
-        }
-      };
-      reader.readAsDataURL(file);
+        await addDoc(collection(db, 'lesson_plans'), {
+          teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email,
+          title: title,
+          fileName: file.name,
+          fileType: file.type,
+          fileUrl,
+          storagePath: path,
+          submittedAt: serverTimestamp(),
+          forDate
+        });
+        form.reset();
+        closeUploadModal();
+        toast('Lesson plan submitted!', 'success');
+      } catch (err) {
+        console.error(err);
+        toast(err.message || 'Upload failed.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = t('lp_submit');
+      }
     }
 
+    /* ==================== LESSON PLAN PREVIEW (inline, no forced download) ==================== */
     function openLessonPlanPreview(plan) {
       if (!plan) return;
-      const modal = document.getElementById('lp-preview-modal');
+      const modal   = document.getElementById('lp-preview-modal');
       const titleEl = document.getElementById('lp-preview-title');
-      const bodyEl = document.getElementById('lp-preview-body');
-      const dlBtn = document.getElementById('lp-preview-dl');
+      const bodyEl  = document.getElementById('lp-preview-body');
+      const dlBtn   = document.getElementById('lp-preview-dl');
       if (!modal || !bodyEl) return;
 
-      const src = plan.fileBase64 || plan.fileData || plan.fileUrl;
-      const mime = plan.fileType || '';
+      // fileUrl (Firebase Storage link) is the current format; fileBase64/fileData
+      // are kept only so lesson plans submitted before this change still open.
+      const src      = plan.fileUrl || plan.fileBase64 || plan.fileData;
+      const mime     = plan.fileType || '';
       const fileName = plan.fileName || 'file';
+      const lower    = fileName.toLowerCase();
+      const isHttpUrl = /^https?:\/\//i.test(src || '');
 
       titleEl.textContent = plan.title || fileName;
 
       if (src) {
-        dlBtn.href = src;
-        dlBtn.download = fileName;
-        dlBtn.style.display = '';
+        dlBtn.href = src; dlBtn.download = fileName; dlBtn.style.display = '';
       } else {
         dlBtn.style.display = 'none';
       }
 
       bodyEl.innerHTML = '';
-
       if (!src) {
-        bodyEl.innerHTML = `<div class="fallback"><div>No file attached.</div></div>`;
-      } else if (mime === 'application/pdf' || /\.pdf$/i.test(fileName)) {
-        bodyEl.innerHTML = `<object data="${escapeHtml(src)}" type="application/pdf">
-          <iframe src="${escapeHtml(src)}"></iframe>
-          <div class="fallback"><div>Your browser can't inline this PDF.</div><a href="${escapeHtml(src)}" target="_blank">Open in new tab</a></div>
-        </object>`;
-      } else if (mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(fileName)) {
-        bodyEl.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;background:#0b1220;"><img src="${escapeHtml(src)}" alt="Lesson plan" /></div>`;
-      } else if (/\.(docx?|pptx?|xlsx?)$/i.test(fileName)) {
-        // Office docs — data URIs can't be rendered by MS viewer, fallback to iframe
-        bodyEl.innerHTML = `<iframe src="${escapeHtml(src)}"></iframe>`;
-      } else {
-        bodyEl.innerHTML = `<iframe src="${escapeHtml(src)}"></iframe>`;
+        bodyEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#cbd5e1;">No file attached.</div>';
+        modal.classList.add('open');
+        return;
       }
 
+      const isPdf   = mime === 'application/pdf' || lower.endsWith('.pdf');
+      const isImage = mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lower);
+      const isDocx  = mime === 'application/msword' ||
+                      mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                      /\.(docx?|rtf)$/i.test(lower);
+
+      if (isImage) {
+        bodyEl.innerHTML = `
+          <div style="height:100%;display:flex;align-items:center;justify-content:center;background:#0b1220;padding:8px;">
+            <img src="${escapeHtml(src)}" alt="${escapeHtml(fileName)}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,0.4);" />
+          </div>`;
+        modal.classList.add('open');
+        return;
+      }
+
+      if (isPdf) {
+        modal.classList.add('open');
+        renderPdfInline(bodyEl, src);
+        return;
+      }
+
+      if (isDocx && isHttpUrl) {
+        // Microsoft's Office viewer renders the doc from its real URL — no download needed.
+        const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(src)}`;
+        bodyEl.innerHTML = `<iframe src="${escapeHtml(viewerUrl)}" style="width:100%;height:100%;border:none;background:#fff;" title="${escapeHtml(fileName)}"></iframe>`;
+        modal.classList.add('open');
+        return;
+      }
+
+      bodyEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center;color:#cbd5e1;background:#0b1220;">
+          <div style="font-size:42px;line-height:1;">📄</div>
+          <div style="font-size:15px;color:#fff;font-weight:700;">${escapeHtml(fileName)}</div>
+          <div style="font-size:13px;max-width:340px;line-height:1.6;">This file type can't be previewed inline. Download to view the full contents.</div>
+          <a href="${escapeHtml(src)}" download="${escapeHtml(fileName)}" style="padding:12px 18px;border-radius:10px;background:#0ea5e9;color:#fff;font-weight:700;text-decoration:none;">Download file</a>
+        </div>`;
       modal.classList.add('open');
     }
     function closeLessonPlanPreview() {
-      const m = document.getElementById('lp-preview-modal');
-      if (!m) return;
+      const m = document.getElementById('lp-preview-modal'); if (!m) return;
       m.classList.remove('open');
       setTimeout(() => { const b = document.getElementById('lp-preview-body'); if (b) b.innerHTML = ''; }, 320);
     }
-
     async function deleteLessonPlan(planId) {
       if (!confirm(t('lp_delete_confirm'))) return;
       try {
@@ -1483,7 +1728,18 @@
 
         state.subFeedbackThread = onSnapshot(threadRef, s => {
           state.feedbackThread = s.exists() ? { id: s.id, ...s.data() } : null;
-          if (state.view === 'teacher') renderTeacher();
+          document.querySelectorAll('[data-ttab="feedback"]').forEach(btn => {
+            const existing = btn.querySelector('.tab-badge');
+            if (existing) existing.remove();
+            const unread = state.feedbackThread?.unreadByTeacher || 0;
+            if (unread > 0) {
+              const b = document.createElement('span');
+              b.className = 'tab-badge';
+              b.textContent = unread > 9 ? '9+' : unread;
+              btn.appendChild(b);
+            }
+          });
+          if (state.teacherTab === 'feedback') renderTeacherChatMessages();
         }, err => console.error('[feedback thread]', err));
       }
 
@@ -1491,8 +1747,44 @@
         state.subFeedbackMsgs = onSnapshot(
           query(collection(db, 'feedback_threads', uid, 'messages'), orderBy('createdAt', 'asc')),
           snap => {
-            state.feedbackMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (state.teacherTab === 'feedback') renderTeacherChatMessages();
+            const serverMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            /* Match optimistic messages against server docs (by sender + text),
+               tracking consumed SERVER ids so one server message can't satisfy
+               more than one pending optimistic bubble. */
+            const consumedServerIds = new Set();
+            state.feedbackMessages.filter(m => m._pending).forEach(opt => {
+              const match = serverMessages.find(s =>
+                s.fromUid === opt.fromUid && s.text === opt.text && !consumedServerIds.has(s.id)
+              );
+              if (match) { consumedServerIds.add(match.id); opt._matched = true; }
+            });
+            const stillPending = state.feedbackMessages.filter(m => m._pending && !m._matched);
+
+            state.feedbackMessages = [...serverMessages, ...stillPending].sort((a, b) => {
+              const ta = toDate(a.createdAt)?.getTime() || 0;
+              const tb = toDate(b.createdAt)?.getTime() || 0;
+              return ta - tb;
+            });
+
+            /* Delivery ack for admin messages */
+            snap.docChanges().forEach(change => {
+              if (change.type !== 'added') return;
+              const msg = change.doc.data();
+              if (msg.fromRole !== 'admin') return;
+              if (msg.deliveredAt) return;
+              updateDoc(doc(db, 'feedback_threads', uid, 'messages', change.doc.id), {
+                deliveredAt: serverTimestamp(),
+                deliveredByUid: uid
+              }).catch(() => {});
+            });
+
+            if (state.teacherTab === 'feedback') {
+              const box = document.getElementById('fb-messages');
+              const nearBottom = box ? (box.scrollHeight - box.scrollTop - box.clientHeight) < 80 : true;
+              renderTeacherChatMessages();
+              if (box && nearBottom) box.scrollTop = box.scrollHeight;
+            }
           },
           err => console.error('[feedback msgs]', err)
         );
@@ -1503,341 +1795,388 @@
       return `
         <h1 style="font-size:22px;font-weight:900;margin:0 0 6px;color:#fff;">${t('fb_title')}</h1>
         <p style="font-size:13px;color:var(--muted);margin:0 0 16px;">${t('fb_sub')}</p>
-        <div class="chat-wrap">
+        <div class="chat-wrap" id="chat-wrap">
           <div class="chat-head">
             <div class="ch-icon">A</div>
             <div class="ch-text">
               <h3>${t('fb_admin_name')}</h3>
-              <p>${t('fb_admin_sub')}</p>
+              <p><span class="online-dot"></span>${t('fb_admin_sub')}</p>
             </div>
           </div>
           <div id="fb-messages"></div>
           <form id="fb-send-form" class="chat-form">
-            <input id="fb-send-input" class="input" placeholder="${t('fb_placeholder')}" autocomplete="off" style="padding:12px 14px;border-radius:12px;border:1px solid rgba(148,163,184,0.25);background:rgba(15,23,42,0.6);color:#e2e8f0;font-size:14px;" />
-            <button type="submit" class="btn btn-primary">${t('fb_send')}</button>
+            <input id="fb-send-input" class="input" placeholder="${t('fb_placeholder')}" autocomplete="off" />
+            <button type="submit" class="btn btn-primary" aria-label="${t('fb_send')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
           </form>
+          <button class="scroll-bottom-btn" id="fb-scroll-bottom" aria-label="Scroll to latest">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
         </div>`;
+    }
+
+    function msgStatusIcon(m) {
+      if (m.fromRole !== 'teacher') return '';
+      if (m._pending) return '<span class="msg-status pending">⏱</span>';
+      if (m.readAt) return '<span class="msg-status seen">✓✓</span>';
+      if (m.deliveredAt) return '<span class="msg-status">✓✓</span>';
+      return '<span class="msg-status">✓</span>';
     }
 
     function renderTeacherChatMessages() {
       const box = document.getElementById('fb-messages');
       if (!box) return;
-      // Mark read
-      if (state.feedbackThread && state.feedbackThread.unreadByTeacher > 0) {
-        updateDoc(doc(db, 'feedback_threads', state.user.uid), { unreadByTeacher: 0 }).catch(() => {});
-      }
+
+      if (state.teacherTab === 'feedback' && !document.hidden) markAdminMessagesAsRead();
+
       if (state.feedbackMessages.length === 0) {
-        box.innerHTML = `<div style="text-align:center;color:#64748b;font-size:12px;padding:30px;">${t('fb_empty')}</div>`;
+        box.innerHTML = `<div class="chat-empty">${t('fb_empty')}</div>`;
+        const sbtn = document.getElementById('fb-scroll-bottom');
+        if (sbtn) sbtn.classList.remove('show');
         return;
       }
-      box.innerHTML = state.feedbackMessages.map(m => {
+
+      const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+      let html = '';
+      let lastDateKey = '', lastFromRole = '', lastFromUid = '';
+
+      state.feedbackMessages.forEach(m => {
+        const d = toDate(m.createdAt);
+
+        if (d) {
+          const key = d.toDateString();
+          if (key !== lastDateKey) {
+            const isToday = d.toDateString() === new Date().toDateString();
+            const label = isToday ? t('today') : d.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' });
+            html += `<div class="msg-date-sep"><span>${label}</span></div>`;
+            lastDateKey = key;
+            lastFromRole = '';
+            lastFromUid = '';
+          }
+        }
+
         const mine = m.fromRole === 'teacher';
-        const when = toDate(m.createdAt)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '';
-        return `<div class="msg-row ${mine ? 'mine' : 'theirs'}">
-          <div class="msg-bubble">${escapeHtml(m.text)}</div>
-          <div class="msg-time">${escapeHtml(when)}</div>
+        const grouped = m.fromRole === lastFromRole && m.fromUid === lastFromUid;
+        html += `<div class="msg-row ${mine ? 'mine' : 'theirs'} ${grouped ? 'grouped' : ''}">
+          <div class="msg-bubble">${escapeHtml(m.text || '')}</div>
+          <div class="msg-meta">${fmtTime(m.createdAt)} ${msgStatusIcon(m)}</div>
         </div>`;
-      }).join('');
-      box.scrollTop = box.scrollHeight;
+        lastFromRole = m.fromRole;
+        lastFromUid  = m.fromUid;
+      });
+
+      box.innerHTML = html;
+      if (nearBottom) box.scrollTop = box.scrollHeight;
+      updateScrollBottomButton();
+    }
+
+    function updateScrollBottomButton() {
+      const box = document.getElementById('fb-messages');
+      const btn = document.getElementById('fb-scroll-bottom');
+      if (!box || !btn) return;
+      const dist = box.scrollHeight - box.scrollTop - box.clientHeight;
+      btn.classList.toggle('show', dist > 120);
+    }
+
+    async function markAdminMessagesAsRead() {
+      if (!state.user) return;
+      const uid = state.user.uid;
+      const unread = state.feedbackMessages.filter(m => m.fromRole === 'admin' && m.id && !m.readAt);
+      const unreadCounter = state.feedbackThread?.unreadByTeacher || 0;
+      if (unread.length === 0 && unreadCounter === 0) return;
+
+      await Promise.all(unread.map(m =>
+        updateDoc(doc(db, 'feedback_threads', uid, 'messages', m.id), { readAt: serverTimestamp() }).catch(() => {})
+      ));
+      if (unreadCounter > 0) {
+        updateDoc(doc(db, 'feedback_threads', uid), { unreadByTeacher: 0 }).catch(() => {});
+      }
     }
 
     function bindFeedbackEvents() {
-      setTimeout(renderTeacherChatMessages, 50);
-      const form = document.getElementById('fb-send-form');
-      if (form) {
+      const form  = document.getElementById('fb-send-form');
+      const input = document.getElementById('fb-send-input');
+      const box   = document.getElementById('fb-messages');
+      const sbtn  = document.getElementById('fb-scroll-bottom');
+
+      if (form && input) {
         form.onsubmit = async (e) => {
           e.preventDefault();
-          const input = document.getElementById('fb-send-input');
-          const text = (input.value || '').trim();
+          const text = input.value.trim();
           if (!text) return;
           input.value = '';
-          const uid = state.user.uid;
-          try {
-            await addDoc(collection(db, 'feedback_threads', uid, 'messages'), {
-              fromUid: uid, fromRole: 'teacher', text, createdAt: serverTimestamp()
-            });
-            await updateDoc(doc(db, 'feedback_threads', uid), {
-              lastMessage: text, lastMessageAt: serverTimestamp(),
-              lastSenderRole: 'teacher', unreadByAdmin: increment(1), unreadByTeacher: 0
-            });
-          } catch (err) {
-            console.error(err);
-            toast(t('fb_send_fail'), 'error');
-          }
+          await sendTeacherMessage(text);
         };
       }
-    }
 
-    /* ==================== SESSION CARD ==================== */
-    function teacherSessionCard(cpd, active) {
-      const myAtt = state.myAttendances.find(a => a.cpdId === cpd.id);
-      const status = myAtt?.state === 'active' ? 'live' : myAtt?.state === 'ended' ? 'ended' : cpdStatus(cpd);
-      const isLive = status === 'live'; const isEnded = status === 'ended';
-      let badge = '';
-      if (status === 'live') badge = `<span class="badge badge-live">● ${t('live')}</span>`;
-      else if (status === 'ongoing') badge = `<span class="badge badge-live">● ${t('ongoing')}</span>`;
-      else if (status === 'upcoming') badge = `<span class="badge badge-upcoming">${t('upcoming')}</span>`;
-      else if (status === 'ended') badge = myAtt?.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`;
-
-      let action = '';
-      if (isLive) action = `<button data-end="${myAtt.id}" class="btn btn-danger" style="font-size:15px">■ ${t('end')}</button>`;
-      else if (isEnded) action = '';
-      else if (myAtt) action = `<div style="padding:10px; text-align:center; font-size:13px; color:var(--muted)">✓ ${t('verified')}</div>`;
-      else if (status === 'ongoing') {
-        if (active) action = `<button disabled class="btn btn-ghost" style="font-size:13px">${t('finish_current')}</button>`;
-        else action = `<button data-attend="${cpd.id}" class="btn btn-primary">▶ ${t('attend')}</button>`;
-      } else if (status === 'upcoming') action = `<button disabled class="btn btn-ghost">${t('not_started')}</button>`;
-      else if (status === 'ended') action = `<button disabled class="btn btn-ghost">${t('ended')}</button>`;
-
-      return `<div class="t-session-card ${isLive ? 'live' : ''} ${isEnded ? 'ended' : ''}">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;"><h3 style="flex:1">${escapeHtml(cpd.title)}</h3>${badge}</div>
-        <div class="t-session-meta">
-          <span>⏰ ${fmtTime(cpd.startTime)} – ${fmtTime(cpd.endTime)}</span>
-          <span>📍 ${escapeHtml(cpd.venueName)}</span>
-          ${cpd.facilitator ? `<span>👤 ${escapeHtml(cpd.facilitator)}</span>` : ''}
-        </div>
-        ${action}
-      </div>`;
-    }
-
-    /* ==================== STATS ==================== */
-    function renderTeacherStats() {
-      const ended = state.myAttendances.filter(a => a.state === 'ended');
-      const verified = state.myAttendances.filter(a => a.verified).length;
-      const totalSessions = ended.length;
-      const verifiedRate = totalSessions > 0 ? Math.round(verified / totalSessions * 100) : 0;
-      const totalMinutes = ended.reduce((s, a) => {
-        const s1 = toDate(a.attendedAt)?.getTime();
-        const e1 = toDate(a.endedAt)?.getTime();
-        if (s1 && e1) return s + Math.max(0, (e1 - s1) / 60000);
-        return s;
-      }, 0);
-      const totalHours = (totalMinutes / 60).toFixed(1);
-      const now = new Date();
-      const thisMonthCount = state.myAttendances.filter(a => {
-        const ts = toDate(a.attendedAt)?.getTime();
-        return ts && ts >= new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-      }).length;
-
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const start = d.getTime();
-        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).getTime();
-        const count = state.myAttendances.filter(a => {
-          const ts = toDate(a.attendedAt)?.getTime();
-          return ts && ts >= start && ts <= end;
-        }).length;
-        months.push({ label: d.toLocaleString('en', { month: 'short' }), count });
-      }
-      const maxCount = Math.max(1, ...months.map(m => m.count));
-      const barsHtml = months.map(m => {
-        const h = (m.count / maxCount) * 100;
-        return `<div class="chart-col"><div class="chart-val">${m.count}</div><div class="chart-bar ${m.count > 0 ? 'active' : ''}" style="height: ${Math.max(h, 4)}%"></div><div class="chart-label">${m.label}</div></div>`;
-      }).join('');
-
-      return `
-        <h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;">${t('stats')}</h1>
-        <div class="analytics-grid">
-          <div class="analytics-card"><div class="val">${totalSessions}</div><div class="lbl">${t('sessions_attended')}</div></div>
-          <div class="analytics-card"><div class="val">${totalHours}h</div><div class="lbl">${t('total_hours')}</div></div>
-          <div class="analytics-card"><div class="val" style="color:var(--cyan)">${verifiedRate}%</div><div class="lbl">${t('verified_rate')}</div></div>
-          <div class="analytics-card"><div class="val" style="color:var(--lime)">${thisMonthCount}</div><div class="lbl">${t('this_month')}</div></div>
-        </div>
-        <div class="chart-container">
-          <h3>${t('sessions_this_month')}</h3>
-          <div class="chart-bars">${barsHtml}</div>
-        </div>
-      `;
-    }
-
-    /* ==================== HISTORY ==================== */
-    function renderTeacherHistory() {
-      const sorted = state.myAttendances
-        .filter(a => a.state === 'ended')
-        .sort((a, b) => (toDate(b.attendedAt)?.getTime() || 0) - (toDate(a.attendedAt)?.getTime() || 0));
-
-      if (sorted.length === 0) {
-        return `<h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;">${t('history')}</h1>
-          <div class="empty"><strong>${t('no_history')}</strong></div>`;
+      if (sbtn && box) {
+        sbtn.onclick = () => { box.scrollTop = box.scrollHeight; sbtn.classList.remove('show'); };
       }
 
-      const groups = {};
-      sorted.forEach(a => {
-        const d = toDate(a.attendedAt);
-        if (!d) return;
-        const key = d.toLocaleString('en', { month: 'long', year: 'numeric' });
-        (groups[key] = groups[key] || []).push(a);
-      });
+      if (box) {
+        box.onscroll = updateScrollBottomButton;
+        box.scrollTop = box.scrollHeight;
+        updateScrollBottomButton();
+      }
 
-      const html = Object.entries(groups).map(([month, items]) => {
-        const rows = items.map(a => {
-          const start = toDate(a.attendedAt);
-          const end = toDate(a.endedAt);
-          const dur = (start && end) ? formatMins(Math.round((end - start) / 60000)) : '';
-          return `<div class="hist-item">
-            <div class="hist-info">
-              <h4>${escapeHtml(a.cpdTitle || 'CPD Session')}</h4>
-              <p>${start ? start.toLocaleDateString([], { day: '2-digit', month: 'short' }) : '—'} · ${dur}</p>
-            </div>
-            ${a.verified ? `<span class="badge badge-verified">✓ ${t('verified')}</span>` : `<span class="badge badge-flagged">⚠ ${t('flagged')}</span>`}
-          </div>`;
-        }).join('');
-        return `<div class="hist-month">${escapeHtml(month)}</div>${rows}`;
-      }).join('');
-
-      return `<h1 style="font-size:22px;font-weight:900;margin:0 0 16px;color:#fff;">${t('history')}</h1>${html}`;
+      renderTeacherChatMessages();
     }
 
-    /* ==================== HANDLERS ==================== */
+    async function sendTeacherMessage(text) {
+      if (!text) return;
+      const uid = state.user.uid;
+      const tempId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+      const optimistic = {
+        id: tempId, _pending: true,
+        fromRole: 'teacher', fromUid: uid, text,
+        createdAt: new Date(), deliveredAt: null, readAt: null
+      };
+
+      state.feedbackMessages.push(optimistic);
+      const box = document.getElementById('fb-messages');
+      renderTeacherChatMessages();
+      if (box) box.scrollTop = box.scrollHeight;
+
+      try {
+        await addDoc(collection(db, 'feedback_threads', uid, 'messages'), {
+          fromRole: 'teacher',
+          fromUid: uid,
+          text,
+          teacherName: state.profile?.fullName || '',
+          createdAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'feedback_threads', uid), {
+          lastMessage: text,
+          lastMessageAt: serverTimestamp(),
+          lastSenderRole: 'teacher',
+          unreadByAdmin: increment(1)
+        });
+      } catch (err) {
+        console.error('[send message]', err);
+        toast(err?.message ? `${t('fb_send_fail')} (${err.message})` : t('fb_send_fail'), 'error');
+        state.feedbackMessages = state.feedbackMessages.filter(m => m.id !== tempId);
+        renderTeacherChatMessages();
+      }
+    }
+
+    /* ==================== ATTEND / END ==================== */
     async function handleAttend(cpdId, btn) {
       const cpd = state.cpds.find(c => c.id === cpdId);
-      if (!cpd) return;
-      const prevText = btn.textContent;
-      btn.disabled = true; btn.textContent = t('locating');
+      if (!cpd) return toast('Session not found', 'error');
+      if (state.myAttendances.find(a => a.state === 'active')) return toast(t('finish_current'), 'warn');
+
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin">◐</span> ${t('locating')}`;
       try {
         const pos = await getPositionOnce();
-        const venueLat = cpd.venueLat ?? cpd.lat ?? SCHOOL_LAT;
-        const venueLng = cpd.venueLng ?? cpd.lng ?? SCHOOL_LNG;
-        const radius = cpd.radiusMeters || SCHOOL_RADIUS;
-        const dist = distanceMeters(pos.lat, pos.lng, venueLat, venueLng);
-        if (dist > radius) {
-          toast(`You're ${Math.round(dist)}m from the venue. Move closer.`, 'error');
-          btn.disabled = false; btn.textContent = prevText;
-          return;
-        }
+        const radius = cpd.radius || SCHOOL_RADIUS;
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        if (dist > radius) throw new Error(`You must be at the venue (${Math.round(dist)}m away, max ${radius}m).`);
+
+        btn.innerHTML = `<span class="spin">◐</span> Verifying face...`;
         const selfie = await verifyFace();
-        if (!selfie) {
-          btn.disabled = false; btn.textContent = prevText;
-          return;
-        }
+        if (!selfie) { btn.disabled = false; btn.innerHTML = orig; return; }
+
+        btn.innerHTML = `<span class="spin">◐</span> ${t('finalizing')}`;
         await addDoc(collection(db, 'attendance'), {
           teacherId: state.user.uid,
           teacherName: state.profile?.fullName || state.user.email,
-          teacherEmail: state.user.email,
           cpdId: cpd.id,
           cpdTitle: cpd.title,
-          attendedAt: serverTimestamp(),
-          attendedLat: pos.lat, attendedLng: pos.lng,
-          attendedDistanceMeters: dist,
-          verified: dist <= radius && pos.accuracy < 100,
-          accuracy: pos.accuracy,
-          selfie: selfie,
-          state: 'active'
+          state: 'active',
+          startTime: serverTimestamp(),
+          startLat: pos.lat,
+          startLng: pos.lng,
+          liveLat: pos.lat,
+          liveLng: pos.lng,
+          selfie,
+          verifiedIn: true
         });
-        showThankYouModal(false);
+        toast('Attendance recorded!', 'success');
+        ensureWatchForActive();
       } catch (err) {
-        toast(err.message || 'Check-in failed.', 'error');
-        btn.disabled = false; btn.textContent = prevText;
+        toast(err.message || 'Attendance failed.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
       }
     }
 
-    async function handleEnd(attendanceId, btn) {
-      if (!confirm('End your CPD session now?')) return;
-      const prevText = btn.textContent;
-      btn.disabled = true; btn.textContent = t('finalizing');
+    async function handleEnd(attId, btn) {
+      const att = state.myAttendances.find(a => a.id === attId);
+      if (!att) return;
+      const cpd = state.cpds.find(c => c.id === att.cpdId);
+      if (!cpd) return toast('Session not found', 'error');
+
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin">◐</span> ${t('locating')}`;
       try {
-        await updateDoc(doc(db, 'attendance', attendanceId), {
-          endedAt: serverTimestamp(),
-          state: 'ended'
+        const pos = await getPositionOnce();
+        const radius = cpd.radius || SCHOOL_RADIUS;
+        const dist = distanceMeters(pos.lat, pos.lng, cpd.venueLat, cpd.venueLng);
+        if (dist > radius) throw new Error(`You must be at the venue to end (${Math.round(dist)}m away).`);
+
+        btn.innerHTML = `<span class="spin">◐</span> Verifying face...`;
+        const selfie = await verifyFace();
+        if (!selfie) { btn.disabled = false; btn.innerHTML = orig; return; }
+
+        btn.innerHTML = `<span class="spin">◐</span> ${t('finalizing')}`;
+        await updateDoc(doc(db, 'attendance', att.id), {
+          state: 'completed',
+          endTime: serverTimestamp(),
+          endLat: pos.lat,
+          endLng: pos.lng,
+          selfieOut: selfie,
+          verifiedOut: true
         });
         clearWatch();
-        toast('Session ended.', 'success');
+        showThankYouModal(false);
       } catch (err) {
-        toast(err.message, 'error');
-        btn.disabled = false; btn.textContent = prevText;
-      }
-    }
-
-    async function handleDailySignIn(btn) {
-      const prevText = btn.textContent;
-      btn.disabled = true; btn.textContent = t('daily_wait');
-      try {
-        const pos = await getPositionOnce();
-        const dist = distanceMeters(pos.lat, pos.lng, SCHOOL_LAT, SCHOOL_LNG);
-        if (dist > SCHOOL_RADIUS) {
-          toast(`${t('daily_out_of_range')} (${Math.round(dist)}m)`, 'error');
-          btn.disabled = false; btn.textContent = prevText;
-          return;
-        }
-        const selfie = await verifyFace();
-        if (!selfie) {
-          btn.disabled = false; btn.textContent = prevText;
-          return;
-        }
-        const now = new Date();
-        const nowMin = getMinutesSinceMidnight(now);
-        const lateMinutes = Math.max(0, nowMin - state.settings.startTime);
-        const todayKey = todayLocalDateKey();
-        const dailyId = `${state.user.uid}_${todayKey}`;
-        await setDoc(doc(db, 'daily_attendance', dailyId), {
-          teacherId: state.user.uid,
-          teacherName: state.profile?.fullName || state.user.email,
-          teacherEmail: state.user.email,
-          date: todayKey,
-          signInAt: serverTimestamp(),
-          signInLat: pos.lat, signInLng: pos.lng,
-          signInDistanceMeters: dist,
-          lateMinutes,
-          verified: true,
-          selfieIn: selfie,
-          state: 'in'
-        });
-        showThankYouModal(true);
-      } catch (err) {
-        toast(err.message || 'Sign in failed.', 'error');
-        btn.disabled = false; btn.textContent = prevText;
-      }
-    }
-
-    async function handleDailySignOut(btn) {
-      const prevText = btn.textContent;
-      btn.disabled = true; btn.textContent = t('daily_wait');
-      try {
-        const pos = await getPositionOnce();
-        const dist = distanceMeters(pos.lat, pos.lng, SCHOOL_LAT, SCHOOL_LNG);
-        if (dist > SCHOOL_RADIUS) {
-          toast(`${t('daily_out_of_range')} (${Math.round(dist)}m)`, 'error');
-          btn.disabled = false; btn.textContent = prevText;
-          return;
-        }
-        const selfie = await verifyFace();
-        if (!selfie) {
-          btn.disabled = false; btn.textContent = prevText;
-          return;
-        }
-        const now = new Date();
-        const nowMin = getMinutesSinceMidnight(now);
-        const earlyLeaveMinutes = Math.max(0, state.settings.endTime - nowMin);
-        const todayKey = todayLocalDateKey();
-        const dailyId = `${state.user.uid}_${todayKey}`;
-        await updateDoc(doc(db, 'daily_attendance', dailyId), {
-          signOutAt: serverTimestamp(),
-          signOutLat: pos.lat, signOutLng: pos.lng,
-          signOutDistanceMeters: dist,
-          earlyLeaveMinutes,
-          selfieOut: selfie,
-          state: 'out'
-        });
-        toast('Signed out.', 'success');
-      } catch (err) {
-        toast(err.message || 'Sign out failed.', 'error');
-        btn.disabled = false; btn.textContent = prevText;
+        toast(err.message || 'End failed.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
       }
     }
 
     function ensureWatchForActive() {
       const active = state.myAttendances.find(a => a.state === 'active');
       if (!active) { clearWatch(); return; }
-      if (state.watchingFor === active.id && state.watchId != null) return;
+      if (state.watchingFor === active.id) return;
       clearWatch();
       state.watchingFor = active.id;
       state.watchId = navigator.geolocation.watchPosition(
+        pos => {
+          updateDoc(doc(db, 'attendance', active.id), {
+            liveLat: pos.coords.latitude,
+            liveLng: pos.coords.longitude,
+            lastLiveAt: serverTimestamp()
+          }).catch(() => {});
+        },
         () => {},
-        () => {},
-        { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
+        { enableHighAccuracy: true, maximumAge: 30000 }
       );
     }
+
+    /* ==================== DAILY SIGN IN / OUT ==================== */
+    async function handleDailySignIn(btn) {
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin">◐</span> ${t('locating')}`;
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, SCHOOL_LAT, SCHOOL_LNG);
+        if (dist > SCHOOL_RADIUS) throw new Error(`${t('daily_out_of_range')} (${Math.round(dist)}m)`);
+
+        btn.innerHTML = `<span class="spin">◐</span> Verifying face...`;
+        const selfie = await verifyFace();
+        if (!selfie) { btn.disabled = false; btn.innerHTML = orig; return; }
+
+        const today = todayLocalDateKey();
+        const nowMins = getMinutesSinceMidnight(new Date());
+        const lateMinutes = Math.max(0, nowMins - state.settings.startTime);
+
+        await setDoc(doc(db, 'daily_attendance', `${state.user.uid}_${today}`), {
+          teacherId: state.user.uid,
+          teacherName: state.profile?.fullName || state.user.email,
+          date: today,
+          state: 'in',
+          signInAt: serverTimestamp(),
+          signInLat: pos.lat,
+          signInLng: pos.lng,
+          signInSelfie: selfie,
+          lateMinutes,
+          verifiedIn: true
+        });
+        toast('Signed in!', 'success');
+        showThankYouModal(true);
+      } catch (err) {
+        toast(err.message || 'Sign-in failed.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }
+    }
+
+    async function handleDailySignOut(btn) {
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin">◐</span> ${t('locating')}`;
+      try {
+        const pos = await getPositionOnce();
+        const dist = distanceMeters(pos.lat, pos.lng, SCHOOL_LAT, SCHOOL_LNG);
+        if (dist > SCHOOL_RADIUS) throw new Error(`${t('daily_out_of_range')} (${Math.round(dist)}m)`);
+
+        btn.innerHTML = `<span class="spin">◐</span> Verifying face...`;
+        const selfie = await verifyFace();
+        if (!selfie) { btn.disabled = false; btn.innerHTML = orig; return; }
+
+        const today = todayLocalDateKey();
+        const nowMins = getMinutesSinceMidnight(new Date());
+        const earlyLeaveMinutes = Math.max(0, state.settings.endTime - nowMins);
+
+        await updateDoc(doc(db, 'daily_attendance', `${state.user.uid}_${today}`), {
+          state: 'out',
+          signOutAt: serverTimestamp(),
+          signOutLat: pos.lat,
+          signOutLng: pos.lng,
+          signOutSelfie: selfie,
+          earlyLeaveMinutes,
+          verifiedOut: true
+        });
+        toast('Signed out!', 'success');
+        showThankYouModal(true);
+      } catch (err) {
+        toast(err.message || 'Sign-out failed.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }
+    }
   </script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 </body>
 </html>
